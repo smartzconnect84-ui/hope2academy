@@ -1,6 +1,8 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, GraduationCap, Menu, X } from "lucide-react";
+import { Heart, GraduationCap, Menu, X, LogIn, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth, ROLE_LABEL } from "@/hooks/use-auth";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -15,14 +17,24 @@ const nav = [
 export function SiteLayout() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { user, primaryRole } = useAuth();
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border">
+      <motion.header
+        initial={{ y: -40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.22,1,0.36,1] }}
+        className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border"
+      >
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-            <span className="inline-flex h-9 w-9 rounded-full bg-primary text-primary-foreground items-center justify-center">
+          <Link to="/" className="group flex items-center gap-2 font-bold text-lg tracking-tight">
+            <motion.span
+              whileHover={{ rotate: 12, scale: 1.08 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="inline-flex h-9 w-9 rounded-full bg-primary text-primary-foreground items-center justify-center"
+            >
               <Heart className="h-4 w-4 fill-secondary text-secondary" />
-            </span>
+            </motion.span>
             <span>HOPE<span className="text-secondary">2</span>-LIBERIA</span>
           </Link>
           <nav className="hidden lg:flex items-center gap-7">
@@ -30,17 +42,34 @@ export function SiteLayout() {
               <Link
                 key={n.to}
                 to={n.to}
-                className={`text-sm font-medium transition-colors ${pathname === n.to ? "text-primary" : "text-foreground/70 hover:text-foreground"}`}
+                className={`relative text-sm font-medium transition-colors ${pathname === n.to ? "text-primary" : "text-foreground/70 hover:text-foreground"}`}
               >
                 {n.label}
+                {pathname === n.to && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
-            <Link
-              to="/get-involved"
-              className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition shadow-[var(--shadow-soft)]"
-            >
-              <GraduationCap className="h-4 w-4" /> School Portal
-            </Link>
+            {user ? (
+              <Link
+                to="/portal"
+                className="group inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-warm)] transition-all"
+              >
+                <User className="h-4 w-4" />
+                {primaryRole ? ROLE_LABEL[primaryRole] : "Portal"}
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 rounded-full bg-accent text-accent-foreground px-5 py-2.5 text-sm font-semibold hover:brightness-95 transition shadow-[var(--shadow-soft)]"
+              >
+                <LogIn className="h-4 w-4" /> Sign In
+              </Link>
+            )}
           </nav>
           <button
             className="lg:hidden p-2"
@@ -50,21 +79,29 @@ export function SiteLayout() {
             {open ? <X /> : <Menu />}
           </button>
         </div>
-        {open && (
-          <div className="lg:hidden border-t border-border bg-background">
-            <div className="container mx-auto px-6 py-4 flex flex-col gap-3">
-              {nav.map((n) => (
-                <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="text-foreground/80">
-                  {n.label}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="lg:hidden overflow-hidden border-t border-border bg-background"
+            >
+              <div className="container mx-auto px-6 py-4 flex flex-col gap-3">
+                {nav.map((n) => (
+                  <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="text-foreground/80">
+                    {n.label}
+                  </Link>
+                ))}
+                <Link to={user ? "/portal" : "/login"} onClick={() => setOpen(false)} className="text-primary font-semibold">
+                  {user ? "My Portal" : "Sign In"}
                 </Link>
-              ))}
-              <Link to="/get-involved" onClick={() => setOpen(false)} className="text-primary font-semibold">
-                Get Involved
-              </Link>
-            </div>
-          </div>
-        )}
-      </header>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
       <main className="flex-1">
         <Outlet />
       </main>
