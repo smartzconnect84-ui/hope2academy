@@ -12,12 +12,21 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetInvolvedRouteImport } from './routes/get-involved'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalIndexRouteImport } from './routes/portal.index'
+import { Route as PortalTeacherRouteImport } from './routes/portal.teacher'
+import { Route as PortalSuperadminRouteImport } from './routes/portal.superadmin'
+import { Route as PortalStudentRouteImport } from './routes/portal.student'
+import { Route as PortalProfileRouteImport } from './routes/portal.profile'
+import { Route as PortalParentRouteImport } from './routes/portal.parent'
+import { Route as PortalAlumniRouteImport } from './routes/portal.alumni'
+import { Route as PortalAdminRouteImport } from './routes/portal.admin'
 
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
@@ -32,6 +41,11 @@ const StoriesRoute = StoriesRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -64,6 +78,46 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalIndexRoute = PortalIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalTeacherRoute = PortalTeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalSuperadminRoute = PortalSuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalStudentRoute = PortalStudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalProfileRoute = PortalProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalParentRoute = PortalParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalAlumniRoute = PortalAlumniRouteImport.update({
+  id: '/alumni',
+  path: '/alumni',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalAdminRoute = PortalAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => PortalRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -72,9 +126,18 @@ export interface FileRoutesByFullPath {
   '/departments': typeof DepartmentsRoute
   '/get-involved': typeof GetInvolvedRoute
   '/login': typeof LoginRoute
+  '/portal': typeof PortalRouteWithChildren
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/alumni': typeof PortalAlumniRoute
+  '/portal/parent': typeof PortalParentRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/student': typeof PortalStudentRoute
+  '/portal/superadmin': typeof PortalSuperadminRoute
+  '/portal/teacher': typeof PortalTeacherRoute
+  '/portal/': typeof PortalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +149,14 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/alumni': typeof PortalAlumniRoute
+  '/portal/parent': typeof PortalParentRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/student': typeof PortalStudentRoute
+  '/portal/superadmin': typeof PortalSuperadminRoute
+  '/portal/teacher': typeof PortalTeacherRoute
+  '/portal': typeof PortalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,9 +166,18 @@ export interface FileRoutesById {
   '/departments': typeof DepartmentsRoute
   '/get-involved': typeof GetInvolvedRoute
   '/login': typeof LoginRoute
+  '/portal': typeof PortalRouteWithChildren
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
+  '/portal/admin': typeof PortalAdminRoute
+  '/portal/alumni': typeof PortalAlumniRoute
+  '/portal/parent': typeof PortalParentRoute
+  '/portal/profile': typeof PortalProfileRoute
+  '/portal/student': typeof PortalStudentRoute
+  '/portal/superadmin': typeof PortalSuperadminRoute
+  '/portal/teacher': typeof PortalTeacherRoute
+  '/portal/': typeof PortalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,9 +188,18 @@ export interface FileRouteTypes {
     | '/departments'
     | '/get-involved'
     | '/login'
+    | '/portal'
     | '/projects'
     | '/stories'
     | '/team'
+    | '/portal/admin'
+    | '/portal/alumni'
+    | '/portal/parent'
+    | '/portal/profile'
+    | '/portal/student'
+    | '/portal/superadmin'
+    | '/portal/teacher'
+    | '/portal/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +211,14 @@ export interface FileRouteTypes {
     | '/projects'
     | '/stories'
     | '/team'
+    | '/portal/admin'
+    | '/portal/alumni'
+    | '/portal/parent'
+    | '/portal/profile'
+    | '/portal/student'
+    | '/portal/superadmin'
+    | '/portal/teacher'
+    | '/portal'
   id:
     | '__root__'
     | '/'
@@ -130,9 +227,18 @@ export interface FileRouteTypes {
     | '/departments'
     | '/get-involved'
     | '/login'
+    | '/portal'
     | '/projects'
     | '/stories'
     | '/team'
+    | '/portal/admin'
+    | '/portal/alumni'
+    | '/portal/parent'
+    | '/portal/profile'
+    | '/portal/student'
+    | '/portal/superadmin'
+    | '/portal/teacher'
+    | '/portal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -142,6 +248,7 @@ export interface RootRouteChildren {
   DepartmentsRoute: typeof DepartmentsRoute
   GetInvolvedRoute: typeof GetInvolvedRoute
   LoginRoute: typeof LoginRoute
+  PortalRoute: typeof PortalRouteWithChildren
   ProjectsRoute: typeof ProjectsRoute
   StoriesRoute: typeof StoriesRoute
   TeamRoute: typeof TeamRoute
@@ -168,6 +275,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -212,8 +326,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/': {
+      id: '/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/teacher': {
+      id: '/portal/teacher'
+      path: '/teacher'
+      fullPath: '/portal/teacher'
+      preLoaderRoute: typeof PortalTeacherRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/superadmin': {
+      id: '/portal/superadmin'
+      path: '/superadmin'
+      fullPath: '/portal/superadmin'
+      preLoaderRoute: typeof PortalSuperadminRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/student': {
+      id: '/portal/student'
+      path: '/student'
+      fullPath: '/portal/student'
+      preLoaderRoute: typeof PortalStudentRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/profile': {
+      id: '/portal/profile'
+      path: '/profile'
+      fullPath: '/portal/profile'
+      preLoaderRoute: typeof PortalProfileRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/parent': {
+      id: '/portal/parent'
+      path: '/parent'
+      fullPath: '/portal/parent'
+      preLoaderRoute: typeof PortalParentRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/alumni': {
+      id: '/portal/alumni'
+      path: '/alumni'
+      fullPath: '/portal/alumni'
+      preLoaderRoute: typeof PortalAlumniRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/admin': {
+      id: '/portal/admin'
+      path: '/admin'
+      fullPath: '/portal/admin'
+      preLoaderRoute: typeof PortalAdminRouteImport
+      parentRoute: typeof PortalRoute
+    }
   }
 }
+
+interface PortalRouteChildren {
+  PortalAdminRoute: typeof PortalAdminRoute
+  PortalAlumniRoute: typeof PortalAlumniRoute
+  PortalParentRoute: typeof PortalParentRoute
+  PortalProfileRoute: typeof PortalProfileRoute
+  PortalStudentRoute: typeof PortalStudentRoute
+  PortalSuperadminRoute: typeof PortalSuperadminRoute
+  PortalTeacherRoute: typeof PortalTeacherRoute
+  PortalIndexRoute: typeof PortalIndexRoute
+}
+
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalAdminRoute: PortalAdminRoute,
+  PortalAlumniRoute: PortalAlumniRoute,
+  PortalParentRoute: PortalParentRoute,
+  PortalProfileRoute: PortalProfileRoute,
+  PortalStudentRoute: PortalStudentRoute,
+  PortalSuperadminRoute: PortalSuperadminRoute,
+  PortalTeacherRoute: PortalTeacherRoute,
+  PortalIndexRoute: PortalIndexRoute,
+}
+
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -222,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   DepartmentsRoute: DepartmentsRoute,
   GetInvolvedRoute: GetInvolvedRoute,
   LoginRoute: LoginRoute,
+  PortalRoute: PortalRouteWithChildren,
   ProjectsRoute: ProjectsRoute,
   StoriesRoute: StoriesRoute,
   TeamRoute: TeamRoute,
@@ -229,3 +425,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
