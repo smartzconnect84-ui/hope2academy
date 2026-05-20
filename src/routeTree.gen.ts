@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const TeamRoute = TeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DepartmentsRoute = DepartmentsRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/departments': typeof DepartmentsRoute
+  '/projects': typeof ProjectsRoute
   '/team': typeof TeamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/departments': typeof DepartmentsRoute
+  '/projects': typeof ProjectsRoute
   '/team': typeof TeamRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/departments': typeof DepartmentsRoute
+  '/projects': typeof ProjectsRoute
   '/team': typeof TeamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/departments' | '/team'
+  fullPaths: '/' | '/about' | '/departments' | '/projects' | '/team'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/departments' | '/team'
-  id: '__root__' | '/' | '/about' | '/departments' | '/team'
+  to: '/' | '/about' | '/departments' | '/projects' | '/team'
+  id: '__root__' | '/' | '/about' | '/departments' | '/projects' | '/team'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   DepartmentsRoute: typeof DepartmentsRoute
+  ProjectsRoute: typeof ProjectsRoute
   TeamRoute: typeof TeamRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/departments': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   DepartmentsRoute: DepartmentsRoute,
+  ProjectsRoute: ProjectsRoute,
   TeamRoute: TeamRoute,
 }
 export const routeTree = rootRouteImport
