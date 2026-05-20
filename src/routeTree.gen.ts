@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as GetInvolvedRouteImport } from './routes/get-involved'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -31,6 +32,11 @@ const StoriesRoute = StoriesRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GetInvolvedRoute = GetInvolvedRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
   '/get-involved': typeof GetInvolvedRoute
+  '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
   '/get-involved': typeof GetInvolvedRoute
+  '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
   '/get-involved': typeof GetInvolvedRoute
+  '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/departments'
     | '/get-involved'
+    | '/login'
     | '/projects'
     | '/stories'
     | '/team'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/departments'
     | '/get-involved'
+    | '/login'
     | '/projects'
     | '/stories'
     | '/team'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/departments'
     | '/get-involved'
+    | '/login'
     | '/projects'
     | '/stories'
     | '/team'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DepartmentsRoute: typeof DepartmentsRoute
   GetInvolvedRoute: typeof GetInvolvedRoute
+  LoginRoute: typeof LoginRoute
   ProjectsRoute: typeof ProjectsRoute
   StoriesRoute: typeof StoriesRoute
   TeamRoute: typeof TeamRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/get-involved': {
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DepartmentsRoute: DepartmentsRoute,
   GetInvolvedRoute: GetInvolvedRoute,
+  LoginRoute: LoginRoute,
   ProjectsRoute: ProjectsRoute,
   StoriesRoute: StoriesRoute,
   TeamRoute: TeamRoute,
@@ -208,3 +229,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
