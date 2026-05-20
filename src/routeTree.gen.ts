@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as StoriesRouteImport } from './routes/stories'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as GetInvolvedRouteImport } from './routes/get-involved'
 import { Route as DepartmentsRouteImport } from './routes/departments'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AboutRouteImport } from './routes/about'
@@ -30,6 +31,11 @@ const StoriesRoute = StoriesRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GetInvolvedRoute = GetInvolvedRouteImport.update({
+  id: '/get-involved',
+  path: '/get-involved',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DepartmentsRoute = DepartmentsRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
+  '/get-involved': typeof GetInvolvedRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
+  '/get-involved': typeof GetInvolvedRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
   '/departments': typeof DepartmentsRoute
+  '/get-involved': typeof GetInvolvedRoute
   '/projects': typeof ProjectsRoute
   '/stories': typeof StoriesRoute
   '/team': typeof TeamRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/departments'
+    | '/get-involved'
     | '/projects'
     | '/stories'
     | '/team'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/departments'
+    | '/get-involved'
     | '/projects'
     | '/stories'
     | '/team'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/contact'
     | '/departments'
+    | '/get-involved'
     | '/projects'
     | '/stories'
     | '/team'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
   DepartmentsRoute: typeof DepartmentsRoute
+  GetInvolvedRoute: typeof GetInvolvedRoute
   ProjectsRoute: typeof ProjectsRoute
   StoriesRoute: typeof StoriesRoute
   TeamRoute: typeof TeamRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/get-involved': {
+      id: '/get-involved'
+      path: '/get-involved'
+      fullPath: '/get-involved'
+      preLoaderRoute: typeof GetInvolvedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/departments': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
   DepartmentsRoute: DepartmentsRoute,
+  GetInvolvedRoute: GetInvolvedRoute,
   ProjectsRoute: ProjectsRoute,
   StoriesRoute: StoriesRoute,
   TeamRoute: TeamRoute,
