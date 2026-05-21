@@ -6,9 +6,8 @@ import {
   LogOut, Settings, Bell, Award, FileText, UserCog, Shield,
   Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
-  ChevronDown,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { toast } from "sonner";
 
 type NavItem = { to?: string; label: string; icon: any; soon?: boolean };
