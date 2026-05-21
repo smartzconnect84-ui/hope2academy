@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Users, GraduationCap, UserPlus, Activity, Loader2 } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, APPWRITE, Query } from "@/integrations/appwrite/client";
 import { useAuth, type AppRole, ROLE_LABEL } from "@/hooks/use-auth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
 import { toast } from "sonner";
@@ -27,22 +27,39 @@ function AdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data: profiles } = await supabase.from("profiles").select("id, full_name, email").order("created_at", { ascending: false });
-    const { data: ur } = await supabase.from("user_roles").select("user_id, role");
-    const map = new Map<string, AppRole>();
-    (ur ?? []).forEach((r: any) => { map.set(r.user_id, r.role as AppRole); });
-    setRows((profiles ?? []).map((p: any) => ({ ...p, role: map.get(p.id) ?? null })));
-    setLoading(false);
+    try {
+      const res = await databases.listDocuments(
+        APPWRITE.databaseId,
+        APPWRITE.collections.profiles,
+        [Query.orderDesc("$createdAt"), Query.limit(200)],
+      );
+      setRows(res.documents.map((d: any) => ({
+        id: d.$id,
+        full_name: d.full_name ?? null,
+        email: d.email ?? null,
+        role: (d.role as AppRole) ?? null,
+      })));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not load users");
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 
   const changeRole = async (uid: string, role: AppRole) => {
-    const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", uid);
-    if (delErr) return toast.error(delErr.message);
-    const { error } = await supabase.from("user_roles").insert({ user_id: uid, role });
-    if (error) return toast.error(error.message);
-    toast.success(`Role updated to ${ROLE_LABEL[role]}`);
-    load();
+    try {
+      await databases.updateDocument(
+        APPWRITE.databaseId,
+        APPWRITE.collections.profiles,
+        uid,
+        { role },
+      );
+      toast.success(`Role updated to ${ROLE_LABEL[role]}`);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not change role");
+    }
   };
 
   return (

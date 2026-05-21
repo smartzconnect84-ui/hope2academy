@@ -4,30 +4,114 @@ import { useAuth, ROLE_LABEL, type AppRole } from "@/hooks/use-auth";
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, Calendar, Heart,
   LogOut, Settings, Bell, Award, FileText, UserCog, Shield,
+  Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
+  DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
+import { toast } from "sonner";
 
-const navByRole: Record<AppRole, Array<{ to: string; label: string; icon: any }>> = {
+type NavItem = { to?: string; label: string; icon: any; soon?: boolean };
+type NavGroup = { group: string; items: NavItem[] };
+
+const navByRole: Record<AppRole, NavGroup[]> = {
   superadmin: [
-    { to: "/portal/superadmin", label: "Overview", icon: Shield },
-    { to: "/portal/admin", label: "All Users", icon: Users },
-    { to: "/portal/teacher", label: "Staff View", icon: GraduationCap },
+    { group: "Overview", items: [
+      { to: "/portal/superadmin", label: "Dashboard", icon: Shield },
+      { to: "/portal/admin", label: "User Management", icon: Users },
+      { label: "Analytics", icon: BarChart3, soon: true },
+    ]},
+    { group: "Content", items: [
+      { label: "Pages (CMS)", icon: FileText, soon: true },
+      { label: "Posts & Stories", icon: Newspaper, soon: true },
+      { label: "Media Library", icon: ImageIcon, soon: true },
+      { label: "Site Settings", icon: Settings, soon: true },
+    ]},
+    { group: "Operations", items: [
+      { label: "Departments", icon: FolderTree, soon: true },
+      { label: "Announcements", icon: Megaphone, soon: true },
+      { label: "Audit Logs", icon: ClipboardList, soon: true },
+    ]},
   ],
   admin: [
-    { to: "/portal/admin", label: "Overview", icon: LayoutDashboard },
-    { to: "/portal/teacher", label: "Teachers", icon: GraduationCap },
+    { group: "Overview", items: [
+      { to: "/portal/admin", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/portal/admin", label: "User Management", icon: Users },
+    ]},
+    { group: "Academics", items: [
+      { label: "Classes & Grades", icon: GraduationCap, soon: true },
+      { label: "Timetable", icon: Calendar, soon: true },
+      { label: "Attendance", icon: ClipboardList, soon: true },
+    ]},
+    { group: "Content", items: [
+      { label: "Stories & News", icon: Newspaper, soon: true },
+      { label: "Media Library", icon: ImageIcon, soon: true },
+    ]},
+    { group: "Community", items: [
+      { label: "Announcements", icon: Megaphone, soon: true },
+      { label: "Messages", icon: MessageSquare, soon: true },
+    ]},
   ],
-  teacher: [{ to: "/portal/teacher", label: "Dashboard", icon: BookOpen }],
-  student: [{ to: "/portal/student", label: "Dashboard", icon: GraduationCap }],
-  parent: [{ to: "/portal/parent", label: "Dashboard", icon: Heart }],
-  alumni: [{ to: "/portal/alumni", label: "Dashboard", icon: Award }],
+  teacher: [
+    { group: "Teaching", items: [
+      { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },
+      { label: "My Classes", icon: BookOpen, soon: true },
+      { label: "Lesson Plans", icon: FileText, soon: true },
+      { label: "Assignments", icon: ClipboardList, soon: true },
+      { label: "Grade Book", icon: Award, soon: true },
+      { label: "Attendance", icon: Calendar, soon: true },
+    ]},
+    { group: "Community", items: [
+      { label: "Messages", icon: MessageSquare, soon: true },
+      { label: "Resources", icon: Library, soon: true },
+    ]},
+  ],
+  student: [
+    { group: "Learning", items: [
+      { to: "/portal/student", label: "Dashboard", icon: LayoutDashboard },
+      { label: "My Courses", icon: BookOpen, soon: true },
+      { label: "Assignments", icon: ClipboardList, soon: true },
+      { label: "Grades & Reports", icon: Award, soon: true },
+      { label: "Timetable", icon: Calendar, soon: true },
+      { label: "Library", icon: Library, soon: true },
+    ]},
+    { group: "Life", items: [
+      { label: "Announcements", icon: Megaphone, soon: true },
+      { label: "Messages", icon: MessageSquare, soon: true },
+    ]},
+  ],
+  parent: [
+    { group: "My Family", items: [
+      { to: "/portal/parent", label: "Dashboard", icon: LayoutDashboard },
+      { label: "Children", icon: Heart, soon: true },
+      { label: "Grades & Progress", icon: Award, soon: true },
+      { label: "Attendance", icon: Calendar, soon: true },
+      { label: "Fees & Donations", icon: DollarSign, soon: true },
+    ]},
+    { group: "Community", items: [
+      { label: "Announcements", icon: Megaphone, soon: true },
+      { label: "Messages", icon: MessageSquare, soon: true },
+    ]},
+  ],
+  alumni: [
+    { group: "Network", items: [
+      { to: "/portal/alumni", label: "Dashboard", icon: LayoutDashboard },
+      { label: "Alumni Directory", icon: Users, soon: true },
+      { label: "Events & Reunions", icon: Calendar, soon: true },
+      { label: "Job Board", icon: Briefcase, soon: true },
+      { label: "Mentorship", icon: Heart, soon: true },
+    ]},
+    { group: "Give Back", items: [
+      { label: "Donations", icon: DollarSign, soon: true },
+      { label: "Stories", icon: Newspaper, soon: true },
+    ]},
+  ],
 };
 
 export function PortalShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
   const { profile, primaryRole, signOut } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const items = primaryRole ? navByRole[primaryRole] : [];
+  const groups = primaryRole ? navByRole[primaryRole] : [];
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-muted/30">
@@ -51,24 +135,47 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               </div>
             </div>
 
-            <nav className="mt-6 space-y-1">
-              {items.map((it) => (
-                <Link
-                  key={it.to}
-                  to={it.to}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-                    pathname === it.to
-                      ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
-                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <it.icon className="h-4 w-4" />
-                  {it.label}
-                </Link>
+            <nav className="mt-6 space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+              {groups.map((g) => (
+                <div key={g.group}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-3 mb-1.5">{g.group}</p>
+                  <div className="space-y-0.5">
+                    {g.items.map((it, idx) => {
+                      const Icon = it.icon;
+                      const active = it.to && pathname === it.to;
+                      const classes = `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                        active
+                          ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
+                          : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                      }`;
+                      if (it.to && !it.soon) {
+                        return (
+                          <Link key={`${g.group}-${idx}`} to={it.to} className={classes}>
+                            <Icon className="h-4 w-4" /> <span className="flex-1">{it.label}</span>
+                          </Link>
+                        );
+                      }
+                      return (
+                        <button
+                          key={`${g.group}-${idx}`}
+                          onClick={() => toast.info(`${it.label} — coming soon`)}
+                          className={`${classes} w-full text-left`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="flex-1">{it.label}</span>
+                          <span className="text-[9px] uppercase tracking-wider opacity-60">Soon</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
-              <Link to="/portal/profile" className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${pathname === "/portal/profile" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}>
-                <UserCog className="h-4 w-4" /> My Profile
-              </Link>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-3 mb-1.5">Account</p>
+                <Link to="/portal/profile" className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${pathname === "/portal/profile" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}>
+                  <UserCog className="h-4 w-4" /> My Profile
+                </Link>
+              </div>
             </nav>
 
             <button

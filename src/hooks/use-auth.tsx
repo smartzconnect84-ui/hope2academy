@@ -1,11 +1,18 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { account, databases, APPWRITE, ID, type AppRole, ROLE_LABEL } from "@/integrations/appwrite/client";
 
-export type AppRole = "superadmin" | "admin" | "teacher" | "student" | "parent" | "alumni";
+export type { AppRole };
+export { ROLE_LABEL };
+
+export interface AppwriteUser {
+  $id: string;
+  email: string;
+  name: string;
+}
 
 export interface Profile {
-  id: string;
+  $id: string;
+  userId: string;
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
@@ -20,11 +27,11 @@ export interface Profile {
   subjects: string[] | null;
   graduation_year: number | null;
   linked_children: string[] | null;
+  role: AppRole;
 }
 
 interface AuthCtx {
-  user: User | null;
-  session: Session | null;
+  user: AppwriteUser | null;
   profile: Profile | null;
   roles: AppRole[];
   primaryRole: AppRole | null;
@@ -35,58 +42,66 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-const ROLE_PRIORITY: AppRole[] = ["superadmin", "admin", "teacher", "parent", "student", "alumni"];
+async function loadOrCreateProfile(userId: string, email: string, name: string): Promise<Profile | null> {
+  try {
+    const doc = await databases.getDocument(APPWRITE.databaseId, APPWRITE.collections.profiles, userId);
+    return doc as unknown as Profile;
+  } catch {
+    try {
+      const created = await databases.createDocument(
+        APPWRITE.databaseId,
+        APPWRITE.collections.profiles,
+        userId,
+        {
+          userId,
+          email,
+          full_name: name || email,
+          role: "alumni",
+        }
+      );
+      return created as unknown as Profile;
+    } catch (e) {
+      console.error("[Appwrite] could not create profile — collection may not exist yet:", e);
+      return null;
+    }
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AppwriteUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadProfile = async (uid: string) => {
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile((p as Profile) ?? null);
-    setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+  const hydrate = async () => {
+    try {
+      const me = await account.get();
+      const u: AppwriteUser = { $id: me.$id, email: me.email, name: me.name };
+      setUser(u);
+      const p = await loadOrCreateProfile(u.$id, u.email, u.name);
+      setProfile(p);
+    } catch {
+      setUser(null);
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        setTimeout(() => { loadProfile(s.user.id); }, 0);
-      } else {
-        setProfile(null);
-        setRoles([]);
-      }
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      if (data.session?.user) loadProfile(data.session.user.id).finally(() => setLoading(false));
-      else setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
-  }, []);
-
-  const primaryRole = roles.length
-    ? (ROLE_PRIORITY.find((r) => roles.includes(r)) ?? roles[0])
-    : null;
+  useEffect(() => { hydrate(); }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try { await account.deleteSession("current"); } catch {}
+    setUser(null);
+    setProfile(null);
   };
 
-  const refresh = async () => {
-    if (user) await loadProfile(user.id);
-  };
+  const refresh = async () => { await hydrate(); };
+
+  const primaryRole: AppRole | null = profile?.role ?? null;
+  const roles: AppRole[] = primaryRole ? [primaryRole] : [];
 
   return (
-    <Ctx.Provider value={{ user, session, profile, roles, primaryRole, loading, signOut, refresh }}>
+    <Ctx.Provider value={{ user, profile, roles, primaryRole, loading, signOut, refresh }}>
       {children}
     </Ctx.Provider>
   );
@@ -97,12 +112,3 @@ export function useAuth() {
   if (!v) throw new Error("useAuth must be used inside AuthProvider");
   return v;
 }
-
-export const ROLE_LABEL: Record<AppRole, string> = {
-  superadmin: "Super Admin",
-  admin: "Admin",
-  teacher: "Teacher",
-  student: "Student",
-  parent: "Parent",
-  alumni: "Alumni",
-};
