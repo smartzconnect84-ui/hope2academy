@@ -5,7 +5,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal } from "@/components/Motion";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, APPWRITE } from "@/integrations/appwrite/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,18 +30,27 @@ function ProfilePage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      full_name: form.full_name,
-      phone: form.phone,
-      address: form.address,
-      bio: form.bio,
-      date_of_birth: form.date_of_birth || null,
-      emergency_contact: form.emergency_contact,
-    }).eq("id", user.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Profile saved");
-    refresh();
+    try {
+      await databases.updateDocument(
+        APPWRITE.databaseId,
+        APPWRITE.collections.profiles,
+        user.$id,
+        {
+          full_name: form.full_name,
+          phone: form.phone,
+          address: form.address,
+          bio: form.bio,
+          date_of_birth: form.date_of_birth || null,
+          emergency_contact: form.emergency_contact,
+        }
+      );
+      toast.success("Profile saved");
+      refresh();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Could not save");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

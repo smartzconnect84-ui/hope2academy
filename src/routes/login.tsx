@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { account } from "@/integrations/appwrite/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,14 +34,16 @@ function LoginPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setSubmitting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      await account.createEmailPasswordSession(email, password);
+      await refresh();
+      toast.success("Welcome back");
+      navigate({ to: "/portal" });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Sign-in failed");
+    } finally {
+      setSubmitting(false);
     }
-    toast.success("Welcome back");
-    navigate({ to: "/portal" });
   };
 
   return (
