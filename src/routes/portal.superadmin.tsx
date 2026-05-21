@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Shield, Users, GraduationCap, Database, TrendingUp } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, APPWRITE, Query } from "@/integrations/appwrite/client";
 import { StaggerGroup, Reveal } from "@/components/Motion";
 
 export const Route = createFileRoute("/portal/superadmin")({
@@ -18,11 +18,16 @@ function SuperAdminPage() {
   const [counts, setCounts] = useState({ users: 0, roles: 0 });
   useEffect(() => {
     (async () => {
-      const [{ count: u }, { count: r }] = await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("user_roles").select("*", { count: "exact", head: true }),
-      ]);
-      setCounts({ users: u ?? 0, roles: r ?? 0 });
+      try {
+        const res = await databases.listDocuments(
+          APPWRITE.databaseId,
+          APPWRITE.collections.profiles,
+          [Query.limit(1)],
+        );
+        setCounts({ users: res.total, roles: res.total });
+      } catch {
+        setCounts({ users: 0, roles: 0 });
+      }
     })();
   }, []);
   return (
