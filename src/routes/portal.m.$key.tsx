@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState, type ReactNode, type ReactElement } from "react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
@@ -22,7 +22,7 @@ type ModuleDef = {
   subtitle: string;
   icon: any;
   allow?: AppRole[];
-  render: () => JSX.Element;
+  render: () => ReactElement;
 };
 
 function Toolbar({ children, action }: { children?: React.ReactNode; action?: React.ReactNode }) {
@@ -42,7 +42,7 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`rounded-2xl bg-card border border-border shadow-[var(--shadow-soft)] ${className}`}>{children}</div>;
 }
 
-function TableShell({ head, rows }: { head: string[]; rows: (string | number | JSX.Element)[][] }) {
+function TableShell({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
