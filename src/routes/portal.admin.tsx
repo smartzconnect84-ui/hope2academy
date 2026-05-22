@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Users, GraduationCap, UserPlus, Activity, Loader2 } from "lucide-react";
+import { Users, GraduationCap, UserPlus, Activity, Loader2, Trash2, Plus } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { databases, APPWRITE, Query } from "@/integrations/appwrite/client";
+import { mockAuth, type MockUser } from "@/lib/mock-backend";
 import { useAuth, type AppRole, ROLE_LABEL } from "@/hooks/use-auth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/portal/admin")({
   component: () => (
@@ -17,28 +21,19 @@ export const Route = createFileRoute("/portal/admin")({
   ),
 });
 
-interface Row { id: string; full_name: string | null; email: string | null; role: AppRole | null }
-
 function AdminPage() {
   const { roles } = useAuth();
   const isSuper = roles.includes("superadmin");
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<MockUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [newUser, setNewUser] = useState<{ email: string; name: string; role: AppRole }>({ email: "", name: "", role: "student" });
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await databases.listDocuments(
-        APPWRITE.databaseId,
-        APPWRITE.collections.profiles,
-        [Query.orderDesc("$createdAt"), Query.limit(200)],
-      );
-      setRows(res.documents.map((d: any) => ({
-        id: d.$id,
-        full_name: d.full_name ?? null,
-        email: d.email ?? null,
-        role: (d.role as AppRole) ?? null,
-      })));
+      const list = await mockAuth.listUsers();
+      setRows(list);
     } catch (e: any) {
       toast.error(e?.message ?? "Could not load users");
     } finally {
@@ -49,16 +44,30 @@ function AdminPage() {
 
   const changeRole = async (uid: string, role: AppRole) => {
     try {
-      await databases.updateDocument(
-        APPWRITE.databaseId,
-        APPWRITE.collections.profiles,
-        uid,
-        { role },
-      );
+      await mockAuth.changeRole(uid, role);
       toast.success(`Role updated to ${ROLE_LABEL[role]}`);
       load();
     } catch (e: any) {
       toast.error(e?.message ?? "Could not change role");
+    }
+  };
+
+  const removeUser = async (uid: string) => {
+    await mockAuth.deleteUser(uid);
+    toast.success("User removed");
+    load();
+  };
+
+  const createUser = async () => {
+    if (!newUser.email || !newUser.name) { toast.error("Name and email required"); return; }
+    try {
+      await mockAuth.createUser(newUser);
+      toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}`);
+      setOpen(false);
+      setNewUser({ email: "", name: "", role: "student" });
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not create user");
     }
   };
 
@@ -75,8 +84,36 @@ function AdminPage() {
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
             <h2 className="font-display text-xl font-semibold">All Users</h2>
-            <p className="text-sm text-muted-foreground">Assign roles. New users default to Alumni.</p>
+            <p className="text-sm text-muted-foreground">Invite, assign roles, and manage your school directory.</p>
           </div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2"><Plus className="h-4 w-4"/> Invite user</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Invite a new user</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Full name</Label><Input value={newUser.name} onChange={e=>setNewUser({...newUser, name:e.target.value})} placeholder="Jane Doe"/></div>
+                <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={e=>setNewUser({...newUser, email:e.target.value})} placeholder="jane@hope2.demo"/></div>
+                <div>
+                  <Label>Role</Label>
+                  <Select value={newUser.role} onValueChange={(v)=>setNewUser({...newUser, role: v as AppRole})}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                      {(["alumni","student","parent","teacher","admin",...(isSuper?["superadmin" as AppRole]:[])] as AppRole[]).map(rr=> (
+                        <SelectItem key={rr} value={rr}>{ROLE_LABEL[rr]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">Default password: <span className="font-mono">demo1234</span></p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
+                <Button onClick={createUser}>Send invite</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         {loading ? (
           <div className="p-10 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary"/></div>
@@ -92,10 +129,10 @@ function AdminPage() {
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground grid place-items-center font-semibold">
-                    {(r.full_name ?? r.email ?? "U").slice(0,1).toUpperCase()}
+                    {(r.name ?? r.email ?? "U").slice(0,1).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{r.full_name ?? "—"}</p>
+                    <p className="font-medium truncate">{r.name ?? "—"}</p>
                     <p className="text-xs text-muted-foreground truncate">{r.email}</p>
                   </div>
                 </div>
@@ -108,6 +145,7 @@ function AdminPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button variant="ghost" size="icon" onClick={()=>removeUser(r.id)} aria-label="Delete user"><Trash2 className="h-4 w-4 text-destructive"/></Button>
                 </div>
               </motion.div>
             ))}
