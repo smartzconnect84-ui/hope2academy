@@ -5,7 +5,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal } from "@/components/Motion";
 import { useAuth } from "@/hooks/use-auth";
-import { databases, APPWRITE } from "@/integrations/appwrite/client";
+import { mockAuth } from "@/lib/mock-backend";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,19 +31,14 @@ function ProfilePage() {
     if (!user) return;
     setSaving(true);
     try {
-      await databases.updateDocument(
-        APPWRITE.databaseId,
-        APPWRITE.collections.profiles,
-        user.$id,
-        {
-          full_name: form.full_name,
-          phone: form.phone,
-          address: form.address,
-          bio: form.bio,
-          date_of_birth: form.date_of_birth || null,
-          emergency_contact: form.emergency_contact,
-        }
-      );
+      await mockAuth.updateProfile(user.$id, {
+        name: form.full_name,
+        phone: form.phone,
+        address: form.address,
+        bio: form.bio,
+        date_of_birth: form.date_of_birth || null,
+        emergency_contact: form.emergency_contact,
+      });
       toast.success("Profile saved");
       refresh();
     } catch (err: any) {
