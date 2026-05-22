@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Shield, Users, GraduationCap, Database, TrendingUp } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { databases, APPWRITE, Query } from "@/integrations/appwrite/client";
+import { mockAuth } from "@/lib/mock-backend";
 import { StaggerGroup, Reveal } from "@/components/Motion";
 
 export const Route = createFileRoute("/portal/superadmin")({
@@ -18,16 +18,8 @@ function SuperAdminPage() {
   const [counts, setCounts] = useState({ users: 0, roles: 0 });
   useEffect(() => {
     (async () => {
-      try {
-        const res = await databases.listDocuments(
-          APPWRITE.databaseId,
-          APPWRITE.collections.profiles,
-          [Query.limit(1)],
-        );
-        setCounts({ users: res.total, roles: res.total });
-      } catch {
-        setCounts({ users: 0, roles: 0 });
-      }
+      const all = await mockAuth.listUsers();
+      setCounts({ users: all.length, roles: all.length });
     })();
   }, []);
   return (
