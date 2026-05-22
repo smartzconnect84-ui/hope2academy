@@ -8,28 +8,29 @@ import {
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
 } from "lucide-react";
 import { type ReactNode } from "react";
-import { toast } from "sonner";
 
-type NavItem = { to?: string; label: string; icon: any; soon?: boolean };
+type NavItem = { to: string; label: string; icon: any };
 type NavGroup = { group: string; items: NavItem[] };
+
+const m = (key: string) => `/portal/m/${key}`;
 
 const navByRole: Record<AppRole, NavGroup[]> = {
   superadmin: [
     { group: "Overview", items: [
       { to: "/portal/superadmin", label: "Dashboard", icon: Shield },
       { to: "/portal/admin", label: "User Management", icon: Users },
-      { label: "Analytics", icon: BarChart3, soon: true },
+      { to: m("analytics"), label: "Analytics", icon: BarChart3 },
     ]},
     { group: "Content", items: [
-      { label: "Pages (CMS)", icon: FileText, soon: true },
-      { label: "Posts & Stories", icon: Newspaper, soon: true },
-      { label: "Media Library", icon: ImageIcon, soon: true },
-      { label: "Site Settings", icon: Settings, soon: true },
+      { to: m("pages"), label: "Pages (CMS)", icon: FileText },
+      { to: m("posts"), label: "Posts & Stories", icon: Newspaper },
+      { to: m("media"), label: "Media Library", icon: ImageIcon },
+      { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
     { group: "Operations", items: [
-      { label: "Departments", icon: FolderTree, soon: true },
-      { label: "Announcements", icon: Megaphone, soon: true },
-      { label: "Audit Logs", icon: ClipboardList, soon: true },
+      { to: m("departments"), label: "Departments", icon: FolderTree },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("audit"), label: "Audit Logs", icon: ClipboardList },
     ]},
   ],
   admin: [
@@ -38,71 +39,72 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/admin", label: "User Management", icon: Users },
     ]},
     { group: "Academics", items: [
-      { label: "Classes & Grades", icon: GraduationCap, soon: true },
-      { label: "Timetable", icon: Calendar, soon: true },
-      { label: "Attendance", icon: ClipboardList, soon: true },
+      { to: m("classes"), label: "Classes", icon: GraduationCap },
+      { to: m("timetable"), label: "Timetable", icon: Calendar },
+      { to: m("attendance"), label: "Attendance", icon: ClipboardList },
+      { to: m("grades"), label: "Grades", icon: Award },
     ]},
     { group: "Content", items: [
-      { label: "Stories & News", icon: Newspaper, soon: true },
-      { label: "Media Library", icon: ImageIcon, soon: true },
+      { to: m("posts"), label: "Stories & News", icon: Newspaper },
+      { to: m("media"), label: "Media Library", icon: ImageIcon },
     ]},
     { group: "Community", items: [
-      { label: "Announcements", icon: Megaphone, soon: true },
-      { label: "Messages", icon: MessageSquare, soon: true },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
   teacher: [
     { group: "Teaching", items: [
       { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },
-      { label: "My Classes", icon: BookOpen, soon: true },
-      { label: "Lesson Plans", icon: FileText, soon: true },
-      { label: "Assignments", icon: ClipboardList, soon: true },
-      { label: "Grade Book", icon: Award, soon: true },
-      { label: "Attendance", icon: Calendar, soon: true },
+      { to: m("classes"), label: "My Classes", icon: BookOpen },
+      { to: m("assignments"), label: "Assignments", icon: ClipboardList },
+      { to: m("grades"), label: "Grade Book", icon: Award },
+      { to: m("attendance"), label: "Attendance", icon: Calendar },
+      { to: m("timetable"), label: "Timetable", icon: Calendar },
     ]},
     { group: "Community", items: [
-      { label: "Messages", icon: MessageSquare, soon: true },
-      { label: "Resources", icon: Library, soon: true },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("resources"), label: "Resources", icon: Library },
     ]},
   ],
   student: [
     { group: "Learning", items: [
       { to: "/portal/student", label: "Dashboard", icon: LayoutDashboard },
-      { label: "My Courses", icon: BookOpen, soon: true },
-      { label: "Assignments", icon: ClipboardList, soon: true },
-      { label: "Grades & Reports", icon: Award, soon: true },
-      { label: "Timetable", icon: Calendar, soon: true },
-      { label: "Library", icon: Library, soon: true },
+      { to: m("classes"), label: "My Courses", icon: BookOpen },
+      { to: m("assignments"), label: "Assignments", icon: ClipboardList },
+      { to: m("grades"), label: "Grades & Reports", icon: Award },
+      { to: m("timetable"), label: "Timetable", icon: Calendar },
+      { to: m("library"), label: "Library", icon: Library },
     ]},
     { group: "Life", items: [
-      { label: "Announcements", icon: Megaphone, soon: true },
-      { label: "Messages", icon: MessageSquare, soon: true },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
   parent: [
     { group: "My Family", items: [
       { to: "/portal/parent", label: "Dashboard", icon: LayoutDashboard },
-      { label: "Children", icon: Heart, soon: true },
-      { label: "Grades & Progress", icon: Award, soon: true },
-      { label: "Attendance", icon: Calendar, soon: true },
-      { label: "Fees & Donations", icon: DollarSign, soon: true },
+      { to: m("children"), label: "Children", icon: Heart },
+      { to: m("grades"), label: "Grades & Progress", icon: Award },
+      { to: m("attendance"), label: "Attendance", icon: Calendar },
+      { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
     ]},
     { group: "Community", items: [
-      { label: "Announcements", icon: Megaphone, soon: true },
-      { label: "Messages", icon: MessageSquare, soon: true },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
   alumni: [
     { group: "Network", items: [
       { to: "/portal/alumni", label: "Dashboard", icon: LayoutDashboard },
-      { label: "Alumni Directory", icon: Users, soon: true },
-      { label: "Events & Reunions", icon: Calendar, soon: true },
-      { label: "Job Board", icon: Briefcase, soon: true },
-      { label: "Mentorship", icon: Heart, soon: true },
+      { to: m("directory"), label: "Alumni Directory", icon: Users },
+      { to: m("events"), label: "Events & Reunions", icon: Calendar },
+      { to: m("jobs"), label: "Job Board", icon: Briefcase },
+      { to: m("mentorship"), label: "Mentorship", icon: Heart },
     ]},
     { group: "Give Back", items: [
-      { label: "Donations", icon: DollarSign, soon: true },
-      { label: "Stories", icon: Newspaper, soon: true },
+      { to: m("donations"), label: "Donations", icon: DollarSign },
+      { to: m("posts"), label: "Stories", icon: Newspaper },
     ]},
   ],
 };
@@ -142,29 +144,16 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
                   <div className="space-y-0.5">
                     {g.items.map((it, idx) => {
                       const Icon = it.icon;
-                      const active = it.to && pathname === it.to;
+                      const active = pathname === it.to;
                       const classes = `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                         active
                           ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
                           : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       }`;
-                      if (it.to && !it.soon) {
-                        return (
-                          <Link key={`${g.group}-${idx}`} to={it.to} className={classes}>
-                            <Icon className="h-4 w-4" /> <span className="flex-1">{it.label}</span>
-                          </Link>
-                        );
-                      }
                       return (
-                        <button
-                          key={`${g.group}-${idx}`}
-                          onClick={() => toast.info(`${it.label} — coming soon`)}
-                          className={`${classes} w-full text-left`}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span className="flex-1">{it.label}</span>
-                          <span className="text-[9px] uppercase tracking-wider opacity-60">Soon</span>
-                        </button>
+                        <Link key={`${g.group}-${idx}`} to={it.to} className={classes}>
+                          <Icon className="h-4 w-4" /> <span className="flex-1">{it.label}</span>
+                        </Link>
                       );
                     })}
                   </div>
