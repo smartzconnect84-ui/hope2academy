@@ -65,7 +65,7 @@ export function SiteLayout() {
                           <div className="rounded-2xl bg-card border border-border shadow-[var(--shadow-warm)] p-2">
                             {n.children.map((c) => (
                               <Link
-                                key={c.to}
+                                key={c.id}
                                 to={c.to}
                                 className="block rounded-xl px-3 py-2.5 hover:bg-muted transition"
                               >
@@ -82,7 +82,7 @@ export function SiteLayout() {
               }
               return (
                 <Link
-                  key={n.to}
+                  key={n.id}
                   to={n.to!}
                   className={`relative px-3 py-2 text-sm font-medium rounded-full transition-colors ${active ? "text-primary" : "text-foreground/75 hover:text-foreground"}`}
                 >
@@ -143,12 +143,12 @@ export function SiteLayout() {
             >
               <div className="container mx-auto px-6 py-4 flex flex-col gap-1">
                 {NAV.flatMap((n) =>
-                  n.children
-                    ? [<p key={n.label} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{n.label}</p>,
+                  n.children && n.children.length > 0
+                    ? [<p key={n.id} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{n.label}</p>,
                        ...n.children.map(c => (
-                        <Link key={c.to} to={c.to} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{c.label}</Link>
+                        <Link key={c.id} to={c.to} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{c.label}</Link>
                        ))]
-                    : [<Link key={n.to} to={n.to!} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{n.label}</Link>]
+                    : [<Link key={n.id} to={n.to!} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{n.label}</Link>]
                 )}
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Link to="/get-involved" onClick={() => setOpen(false)} className="rounded-full bg-secondary text-secondary-foreground px-4 py-2.5 text-sm font-semibold text-center">Donate</Link>
