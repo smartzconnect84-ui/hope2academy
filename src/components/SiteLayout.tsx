@@ -3,29 +3,7 @@ import { useState } from "react";
 import { Heart, Menu, X, LogIn, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, ROLE_LABEL } from "@/hooks/use-auth";
-
-type NavLink = { to: string; label: string; description?: string };
-type NavEntry = { to?: string; label: string; children?: NavLink[] };
-
-const NAV: NavEntry[] = [
-  { to: "/", label: "Home" },
-  {
-    label: "About",
-    children: [
-      { to: "/about", label: "Our Story", description: "Mission, vision, history" },
-      { to: "/team", label: "Leadership & Team", description: "The people behind HOPE2" },
-    ],
-  },
-  {
-    label: "Programs",
-    children: [
-      { to: "/departments", label: "Departments", description: "Education, Health, Water, Community" },
-      { to: "/projects", label: "Projects", description: "Active initiatives across Liberia" },
-    ],
-  },
-  { to: "/stories", label: "Stories" },
-  { to: "/contact", label: "Contact" },
-];
+import { cmsStore, useCmsVersion, type NavItem } from "@/lib/cms-store";
 
 const FOOTER_LINKS = [
   { to: "/about", label: "About" },
@@ -41,6 +19,8 @@ export function SiteLayout() {
   const [hover, setHover] = useState<string | null>(null);
   const { pathname } = useLocation();
   const { user, primaryRole } = useAuth();
+  useCmsVersion(); // re-render when CMS nav changes
+  const NAV: NavItem[] = cmsStore.listNav();
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <motion.header
