@@ -3,29 +3,7 @@ import { useState } from "react";
 import { Heart, Menu, X, LogIn, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, ROLE_LABEL } from "@/hooks/use-auth";
-
-type NavLink = { to: string; label: string; description?: string };
-type NavEntry = { to?: string; label: string; children?: NavLink[] };
-
-const NAV: NavEntry[] = [
-  { to: "/", label: "Home" },
-  {
-    label: "About",
-    children: [
-      { to: "/about", label: "Our Story", description: "Mission, vision, history" },
-      { to: "/team", label: "Leadership & Team", description: "The people behind HOPE2" },
-    ],
-  },
-  {
-    label: "Programs",
-    children: [
-      { to: "/departments", label: "Departments", description: "Education, Health, Water, Community" },
-      { to: "/projects", label: "Projects", description: "Active initiatives across Liberia" },
-    ],
-  },
-  { to: "/stories", label: "Stories" },
-  { to: "/contact", label: "Contact" },
-];
+import { cmsStore, useCmsVersion, type NavItem } from "@/lib/cms-store";
 
 const FOOTER_LINKS = [
   { to: "/about", label: "About" },
@@ -41,6 +19,8 @@ export function SiteLayout() {
   const [hover, setHover] = useState<string | null>(null);
   const { pathname } = useLocation();
   const { user, primaryRole } = useAuth();
+  useCmsVersion(); // re-render when CMS nav changes
+  const NAV: NavItem[] = cmsStore.listNav();
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <motion.header
@@ -85,7 +65,7 @@ export function SiteLayout() {
                           <div className="rounded-2xl bg-card border border-border shadow-[var(--shadow-warm)] p-2">
                             {n.children.map((c) => (
                               <Link
-                                key={c.to}
+                                key={c.id}
                                 to={c.to}
                                 className="block rounded-xl px-3 py-2.5 hover:bg-muted transition"
                               >
@@ -102,7 +82,7 @@ export function SiteLayout() {
               }
               return (
                 <Link
-                  key={n.to}
+                  key={n.id}
                   to={n.to!}
                   className={`relative px-3 py-2 text-sm font-medium rounded-full transition-colors ${active ? "text-primary" : "text-foreground/75 hover:text-foreground"}`}
                 >
@@ -163,12 +143,12 @@ export function SiteLayout() {
             >
               <div className="container mx-auto px-6 py-4 flex flex-col gap-1">
                 {NAV.flatMap((n) =>
-                  n.children
-                    ? [<p key={n.label} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{n.label}</p>,
+                  n.children && n.children.length > 0
+                    ? [<p key={n.id} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{n.label}</p>,
                        ...n.children.map(c => (
-                        <Link key={c.to} to={c.to} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{c.label}</Link>
+                        <Link key={c.id} to={c.to} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{c.label}</Link>
                        ))]
-                    : [<Link key={n.to} to={n.to!} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{n.label}</Link>]
+                    : [<Link key={n.id} to={n.to!} onClick={() => setOpen(false)} className="px-2 py-2 rounded-lg hover:bg-muted text-foreground/80">{n.label}</Link>]
                 )}
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <Link to="/get-involved" onClick={() => setOpen(false)} className="rounded-full bg-secondary text-secondary-foreground px-4 py-2.5 text-sm font-semibold text-center">Donate</Link>

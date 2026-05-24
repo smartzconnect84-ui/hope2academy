@@ -6,6 +6,7 @@ import {
   LogOut, Settings, Bell, Award, FileText, UserCog, Shield,
   Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
+  ListTree,
 } from "lucide-react";
 import { type ReactNode } from "react";
 
@@ -25,6 +26,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("pages"), label: "Pages (CMS)", icon: FileText },
       { to: m("posts"), label: "Posts & Stories", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
+      { to: m("navigation"), label: "Navigation", icon: ListTree },
       { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
     { group: "Operations", items: [

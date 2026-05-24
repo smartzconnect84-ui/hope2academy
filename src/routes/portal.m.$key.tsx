@@ -13,9 +13,14 @@ import {
   DollarSign, Briefcase, Library, FileText, Image as ImageIcon, Newspaper,
   MessageSquare, Megaphone, BarChart3, FolderTree, Settings, Search,
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
+  Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
+import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ModuleDef = {
   title: string;
@@ -417,18 +422,8 @@ const MODULES: Record<string, ModuleDef> = {
   // ----- CMS / Super-admin
   pages: {
     title: "Pages (CMS)", subtitle: "Manage public website pages", icon: FileText,
-    render: () => {
-      const data = mockDb.list<any>("pages");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> New page</Button>}/>
-          <TableShell
-            head={["Title", "Slug", "Status", "Updated", ""]}
-            rows={data.map(p => [p.title, <code className="text-xs">{p.slug}</code>, statusBadge(p.status), p.updated, <Button size="sm" variant="outline">Edit</Button>])}
-          />
-        </>
-      );
-    },
+    allow: ["superadmin", "admin"],
+    render: () => <PagesModule/>,
   },
   posts: {
     title: "Posts & Stories", subtitle: "Editorial content for the website", icon: Newspaper,
@@ -447,29 +442,15 @@ const MODULES: Record<string, ModuleDef> = {
   },
   media: {
     title: "Media Library", subtitle: "Images, videos and documents", icon: ImageIcon,
-    render: () => {
-      const data = mockDb.list<any>("media");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Upload className="h-4 w-4"/> Upload media</Button>}/>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.map((m: any, i) => (
-              <Reveal key={m.id} delay={i*0.03}>
-                <Card className="overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/30 grid place-items-center">
-                    <ImageIcon className="h-8 w-8 text-primary/70"/>
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium truncate">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">{m.folder} · {m.size}</p>
-                  </div>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    allow: ["superadmin", "admin"],
+    render: () => <MediaModule/>,
+  },
+  navigation: {
+    title: "Navigation",
+    subtitle: "Manage the public website menu",
+    icon: ListTree,
+    allow: ["superadmin"],
+    render: () => <NavigationModule/>,
   },
   settings: {
     title: "Site Settings", subtitle: "Branding, contact and configuration", icon: Settings,
@@ -567,6 +548,312 @@ const MODULES: Record<string, ModuleDef> = {
 export const Route = createFileRoute("/portal/m/$key")({
   component: ModuleRoute,
 });
+
+// =========================================================================
+// CMS — Pages module
+// =========================================================================
+function PagesModule() {
+  useCmsVersion();
+  const [editing, setEditing] = useState<CmsPage | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [q, setQ] = useState("");
+
+  const pages = cmsStore.listPages().filter(p =>
+    !q || p.title.toLowerCase().includes(q.toLowerCase()) || p.slug.toLowerCase().includes(q.toLowerCase())
+  );
+
+  const remove = (p: CmsPage) => {
+    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
+    cmsStore.deletePage(p.id);
+    toast.success("Page deleted");
+  };
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search pages…" className="pl-9 bg-card" />
+        </div>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New page</Button>
+      </div>
+
+      <TableShell
+        head={["Title", "Slug", "Status", "Updated", ""]}
+        rows={pages.map(p => [
+          <span className="font-medium">{p.title}</span>,
+          <code className="text-xs text-muted-foreground">{p.slug}</code>,
+          statusBadge(p.status),
+          p.updated,
+          <div className="flex items-center gap-2 justify-end">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(p)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+            <Button size="sm" variant="ghost" onClick={()=>remove(p)} aria-label="Delete"><Trash2 className="h-4 w-4 text-destructive"/></Button>
+          </div>,
+        ])}
+      />
+
+      {(editing || creating) && (
+        <PageEditor
+          page={editing}
+          onClose={() => { setEditing(null); setCreating(false); }}
+        />
+      )}
+    </>
+  );
+}
+
+function PageEditor({ page, onClose }: { page: CmsPage | null; onClose: () => void }) {
+  const [form, setForm] = useState<Partial<CmsPage>>(page ?? { title: "", slug: "/", body: "", status: "Draft" });
+  const save = (status?: "Draft" | "Published") => {
+    if (!form.title || !form.slug) { toast.error("Title and slug are required"); return; }
+    if (!form.slug.startsWith("/")) form.slug = "/" + form.slug;
+    const saved = cmsStore.upsertPage({ ...form, status: status ?? form.status });
+    toast.success(`Saved "${saved.title}"${saved.status === "Published" ? " — published" : ""}`);
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{page ? "Edit page" : "New page"}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label>Title</Label><Input value={form.title ?? ""} onChange={e=>setForm({...form, title:e.target.value})} placeholder="About Us"/></div>
+            <div><Label>Slug</Label><Input value={form.slug ?? ""} onChange={e=>setForm({...form, slug:e.target.value})} placeholder="/about"/></div>
+          </div>
+          <div>
+            <Label>Excerpt</Label>
+            <Input value={form.excerpt ?? ""} onChange={e=>setForm({...form, excerpt:e.target.value})} placeholder="Short summary shown in listings"/>
+          </div>
+          <div>
+            <Label>Body (Markdown)</Label>
+            <Textarea rows={10} value={form.body ?? ""} onChange={e=>setForm({...form, body:e.target.value})} placeholder="Write your page content here…"/>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label>SEO title</Label><Input value={form.seoTitle ?? ""} onChange={e=>setForm({...form, seoTitle:e.target.value})}/></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={form.status ?? "Draft"} onValueChange={(v)=>setForm({...form, status: v as any})}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Published">Published</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <Label>SEO description</Label>
+            <Textarea rows={2} value={form.seoDescription ?? ""} onChange={e=>setForm({...form, seoDescription:e.target.value})}/>
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={()=>save("Draft")}>Save draft</Button>
+          <Button onClick={()=>save("Published")}>Publish</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
+// CMS — Media Library
+// =========================================================================
+function MediaModule() {
+  useCmsVersion();
+  const [folder, setFolder] = useState<string>("All");
+  const [renaming, setRenaming] = useState<CmsMedia | null>(null);
+  const media = cmsStore.listMedia();
+  const folders = ["All", ...Array.from(new Set(media.map(m => m.folder))).filter(Boolean)];
+  const filtered = folder === "All" ? media : media.filter(m => m.folder === folder);
+
+  const onUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const limit = 4 * 1024 * 1024;
+    for (const f of Array.from(files)) {
+      if (f.size > limit) { toast.error(`${f.name} is larger than 4 MB`); continue; }
+      try {
+        const url = await readFileAsDataUrl(f);
+        cmsStore.addMedia({ name: f.name, type: f.type || "application/octet-stream", size: f.size, folder: folder === "All" ? "Uploads" : folder, url });
+      } catch { toast.error(`Failed to upload ${f.name}`); }
+    }
+    toast.success("Upload complete");
+  };
+
+  const fmt = (b: number) => b < 1024 ? `${b} B` : b < 1024*1024 ? `${(b/1024).toFixed(1)} KB` : `${(b/1024/1024).toFixed(1)} MB`;
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {folders.map(f => (
+            <button key={f} onClick={()=>setFolder(f)} className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap ${folder===f ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70 hover:bg-muted/70"}`}>{f}</button>
+          ))}
+        </div>
+        <div className="flex-1"/>
+        <label className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium cursor-pointer hover:opacity-90">
+          <Upload className="h-4 w-4"/> Upload media
+          <input type="file" multiple className="hidden" onChange={e=>{ onUpload(e.target.files); e.currentTarget.value=""; }}/>
+        </label>
+      </div>
+
+      {filtered.length === 0 ? (
+        <Card className="p-12 text-center">
+          <ImageIcon className="h-10 w-10 text-primary/70 mx-auto"/>
+          <h3 className="mt-3 font-display text-xl font-semibold">No media yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Upload images, videos or documents to use across the site.</p>
+        </Card>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filtered.map((m, i) => (
+            <Reveal key={m.id} delay={i*0.03}>
+              <Card className="overflow-hidden group">
+                <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/20 grid place-items-center overflow-hidden">
+                  {m.type.startsWith("image/") ? (
+                    <img src={m.url} alt={m.alt ?? m.name} className="h-full w-full object-cover"/>
+                  ) : m.type.startsWith("video/") ? (
+                    <video src={m.url} className="h-full w-full object-cover" muted/>
+                  ) : (
+                    <FileText className="h-10 w-10 text-primary/70"/>
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium truncate" title={m.name}>{m.name}</p>
+                  <p className="text-xs text-muted-foreground">{m.folder} · {fmt(m.size)}</p>
+                  <div className="mt-2 flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-8 px-2" onClick={()=>{ navigator.clipboard.writeText(m.url); toast.success("URL copied"); }}><Copy className="h-3.5 w-3.5"/></Button>
+                    <Button size="sm" variant="ghost" className="h-8 px-2" onClick={()=>setRenaming(m)}><Edit3 className="h-3.5 w-3.5"/></Button>
+                    <Button size="sm" variant="ghost" className="h-8 px-2 ml-auto" onClick={()=>{ cmsStore.deleteMedia(m.id); toast.success("Removed"); }}><Trash2 className="h-3.5 w-3.5 text-destructive"/></Button>
+                  </div>
+                </div>
+              </Card>
+            </Reveal>
+          ))}
+        </div>
+      )}
+
+      {renaming && (
+        <Dialog open onOpenChange={(o)=>!o && setRenaming(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Edit media</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>File name</Label><Input value={renaming.name} onChange={e=>setRenaming({...renaming, name:e.target.value})}/></div>
+              <div><Label>Folder</Label><Input value={renaming.folder} onChange={e=>setRenaming({...renaming, folder:e.target.value})}/></div>
+              <div><Label>Alt text</Label><Input value={renaming.alt ?? ""} onChange={e=>setRenaming({...renaming, alt:e.target.value})}/></div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={()=>setRenaming(null)}>Cancel</Button>
+              <Button onClick={()=>{ cmsStore.updateMedia(renaming.id, { name: renaming.name, folder: renaming.folder, alt: renaming.alt }); toast.success("Saved"); setRenaming(null); }}>Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
+
+// =========================================================================
+// CMS — Navigation Manager
+// =========================================================================
+function NavigationModule() {
+  useCmsVersion();
+  const [items, setItems] = useState<NavItem[]>(() => cmsStore.listNav());
+  const dirty = JSON.stringify(items) !== JSON.stringify(cmsStore.listNav());
+
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    setItems(next);
+  };
+  const moveChild = (pi: number, ci: number, dir: -1 | 1) => {
+    const parent = items[pi]; if (!parent.children) return;
+    const j = ci + dir; if (j < 0 || j >= parent.children.length) return;
+    const cs = [...parent.children]; [cs[ci], cs[j]] = [cs[j], cs[ci]];
+    const next = [...items]; next[pi] = { ...parent, children: cs }; setItems(next);
+  };
+  const update = (i: number, patch: Partial<NavItem>) => {
+    const next = [...items]; next[i] = { ...next[i], ...patch }; setItems(next);
+  };
+  const updateChild = (pi: number, ci: number, patch: Partial<NavItem["children"] extends (infer T)[] | undefined ? T : never>) => {
+    const parent = items[pi]; if (!parent.children) return;
+    const cs = [...parent.children]; cs[ci] = { ...cs[ci], ...patch } as any;
+    const next = [...items]; next[pi] = { ...parent, children: cs }; setItems(next);
+  };
+  const addItem = () => setItems([...items, { id: cmsStore.newId(), label: "New link", to: "/" }]);
+  const addChild = (pi: number) => {
+    const parent = items[pi];
+    const cs = parent.children ?? [];
+    const next = [...items];
+    next[pi] = { ...parent, to: undefined, children: [...cs, { id: cmsStore.newId(), label: "New sub-link", to: "/" }] };
+    setItems(next);
+  };
+  const removeItem = (i: number) => setItems(items.filter((_, x) => x !== i));
+  const removeChild = (pi: number, ci: number) => {
+    const parent = items[pi]; if (!parent.children) return;
+    const cs = parent.children.filter((_, x) => x !== ci);
+    const next = [...items];
+    next[pi] = { ...parent, children: cs.length ? cs : undefined };
+    setItems(next);
+  };
+
+  return (
+    <>
+      <Card className="p-5 mb-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <h3 className="font-display text-lg font-semibold">Public website menu</h3>
+          <p className="text-sm text-muted-foreground">Drag-free editor: reorder, add or remove items. Changes apply immediately on save.</p>
+        </div>
+        <Button variant="outline" className="gap-2" onClick={addItem}><Plus className="h-4 w-4"/> Add item</Button>
+        <Button variant="ghost" className="gap-2" onClick={()=>{ if(confirm("Reset to defaults?")) { cmsStore.resetNav(); setItems(cmsStore.listNav()); toast.success("Reset to defaults"); } }}><RotateCcw className="h-4 w-4"/> Reset</Button>
+        <Button disabled={!dirty} onClick={()=>{ cmsStore.saveNav(items); toast.success("Menu published"); }}>Save changes</Button>
+      </Card>
+
+      <div className="space-y-3">
+        {items.map((it, i) => (
+          <Card key={it.id} className="p-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>move(i,-1)} disabled={i===0}><ChevronUp className="h-4 w-4"/></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={()=>move(i,1)} disabled={i===items.length-1}><ChevronDownIcon className="h-4 w-4"/></Button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3 flex-1">
+                <div><Label className="text-xs">Label</Label><Input value={it.label} onChange={e=>update(i,{ label: e.target.value })}/></div>
+                <div><Label className="text-xs">Path {it.children && it.children.length > 0 && <span className="text-muted-foreground">(ignored — has children)</span>}</Label>
+                  <Input value={it.to ?? ""} placeholder="/about" disabled={!!(it.children && it.children.length>0)} onChange={e=>update(i,{ to: e.target.value })}/>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>addChild(i)}><Plus className="h-3.5 w-3.5"/>Sub-link</Button>
+                <Button size="sm" variant="ghost" onClick={()=>removeItem(i)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+              </div>
+            </div>
+
+            {it.children && it.children.length > 0 && (
+              <div className="mt-4 pl-6 border-l-2 border-muted space-y-2">
+                {it.children.map((c, ci) => (
+                  <div key={c.id} className="flex flex-col md:flex-row md:items-center gap-2 bg-muted/30 rounded-lg p-2.5">
+                    <div className="flex flex-col gap-1">
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={()=>moveChild(i,ci,-1)} disabled={ci===0}><ChevronUp className="h-3 w-3"/></Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={()=>moveChild(i,ci,1)} disabled={ci===(it.children!.length-1)}><ChevronDownIcon className="h-3 w-3"/></Button>
+                    </div>
+                    <div className="grid sm:grid-cols-3 gap-2 flex-1">
+                      <Input value={c.label} onChange={e=>updateChild(i,ci,{ label: e.target.value } as any)} placeholder="Label"/>
+                      <Input value={c.to} onChange={e=>updateChild(i,ci,{ to: e.target.value } as any)} placeholder="/path"/>
+                      <Input value={c.description ?? ""} onChange={e=>updateChild(i,ci,{ description: e.target.value } as any)} placeholder="Short description"/>
+                    </div>
+                    <Button size="icon" variant="ghost" onClick={()=>removeChild(i,ci)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+    </>
+  );
+}
 
 function ModuleRoute() {
   const { key } = useParams({ from: "/portal/m/$key" });
