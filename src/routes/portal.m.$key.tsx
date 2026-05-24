@@ -13,9 +13,14 @@ import {
   DollarSign, Briefcase, Library, FileText, Image as ImageIcon, Newspaper,
   MessageSquare, Megaphone, BarChart3, FolderTree, Settings, Search,
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
+  Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
+import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ModuleDef = {
   title: string;
