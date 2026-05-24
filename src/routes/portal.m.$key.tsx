@@ -422,18 +422,8 @@ const MODULES: Record<string, ModuleDef> = {
   // ----- CMS / Super-admin
   pages: {
     title: "Pages (CMS)", subtitle: "Manage public website pages", icon: FileText,
-    render: () => {
-      const data = mockDb.list<any>("pages");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> New page</Button>}/>
-          <TableShell
-            head={["Title", "Slug", "Status", "Updated", ""]}
-            rows={data.map(p => [p.title, <code className="text-xs">{p.slug}</code>, statusBadge(p.status), p.updated, <Button size="sm" variant="outline">Edit</Button>])}
-          />
-        </>
-      );
-    },
+    allow: ["superadmin", "admin"],
+    render: () => <PagesModule/>,
   },
   posts: {
     title: "Posts & Stories", subtitle: "Editorial content for the website", icon: Newspaper,
@@ -452,29 +442,15 @@ const MODULES: Record<string, ModuleDef> = {
   },
   media: {
     title: "Media Library", subtitle: "Images, videos and documents", icon: ImageIcon,
-    render: () => {
-      const data = mockDb.list<any>("media");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Upload className="h-4 w-4"/> Upload media</Button>}/>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {data.map((m: any, i) => (
-              <Reveal key={m.id} delay={i*0.03}>
-                <Card className="overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/30 grid place-items-center">
-                    <ImageIcon className="h-8 w-8 text-primary/70"/>
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium truncate">{m.name}</p>
-                    <p className="text-xs text-muted-foreground">{m.folder} · {m.size}</p>
-                  </div>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    allow: ["superadmin", "admin"],
+    render: () => <MediaModule/>,
+  },
+  navigation: {
+    title: "Navigation",
+    subtitle: "Manage the public website menu",
+    icon: ListTree,
+    allow: ["superadmin"],
+    render: () => <NavigationModule/>,
   },
   settings: {
     title: "Site Settings", subtitle: "Branding, contact and configuration", icon: Settings,
