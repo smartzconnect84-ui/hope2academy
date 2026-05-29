@@ -852,7 +852,7 @@ function NavigationModule() {
 }
 
 function ModuleRoute() {
-  const { key } = useParams({ from: "/portal/m/$key" });
+  const { key } = useParams();
   const def = MODULES[key];
 
   if (!def) {

@@ -8,7 +8,7 @@ function PortalRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) return;
-    if (!user) { navigate({ to: "/login" }); return; }
+    if (!user) { navigate("/login"); return; }
     if (primaryRole) navigate({ to: `/portal/${primaryRole}` as any });
   }, [loading, user, primaryRole, navigate]);
   return (

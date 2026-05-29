@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from "@tanstack/react-router";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Heart, Menu, X, LogIn, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

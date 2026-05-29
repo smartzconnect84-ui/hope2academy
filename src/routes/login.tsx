@@ -21,7 +21,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/portal" });
+    if (!loading && user) navigate("/portal");
   }, [user, loading, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ function LoginPage() {
       await mockAuth.signIn(email, password);
       await refresh();
       toast.success("Welcome back");
-      navigate({ to: "/portal" });
+      navigate("/portal");
     } catch (err: any) {
       toast.error(err?.message ?? "Sign-in failed");
     } finally {
@@ -46,7 +46,7 @@ function LoginPage() {
       await mockAuth.signIn(e, p);
       await refresh();
       toast.success("Signed in as demo user");
-      navigate({ to: "/portal" });
+      navigate("/portal");
     } catch (err: any) {
       toast.error(err?.message ?? "Sign-in failed");
     } finally { setSubmitting(false); }
