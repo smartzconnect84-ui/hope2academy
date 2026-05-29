@@ -72,7 +72,7 @@ function Field({ label, children, full }: { label: string; children: React.React
   );
 }
 
-function __RouteInlineComponent() {
+function RouteComponent() {
   return (
     <RequireAuth>
       <ProfilePage />
@@ -80,4 +80,4 @@ function __RouteInlineComponent() {
   );
 }
 
-export default __RouteInlineComponent;
+export default RouteComponent;

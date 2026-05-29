@@ -38,12 +38,12 @@ function AlumniPage() {
   );
 }
 
-function __RouteInlineComponent() {
+function RouteComponent() {
   return (
-    <RequireAuth>
+    <RequireAuth allow={["alumni","superadmin"]}>
       <AlumniPage />
     </RequireAuth>
   );
 }
 
-export default __RouteInlineComponent;
+export default RouteComponent;

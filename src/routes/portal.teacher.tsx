@@ -41,9 +41,12 @@ function TeacherPage() {
   );
 }
 
-function __RouteInlineComponent() {
+function RouteComponent() {
   return (
-    <RequireAuth allow={["superadmin";
+    <RequireAuth allow={["teacher","superadmin"]}>
+      <TeacherPage />
+    </RequireAuth>
+  );
 }
 
-export default __RouteInlineComponent;
+export default RouteComponent;

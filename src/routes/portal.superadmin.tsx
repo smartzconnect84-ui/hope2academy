@@ -48,7 +48,7 @@ function SuperAdminPage() {
   );
 }
 
-function __RouteInlineComponent() {
+function RouteComponent() {
   return (
     <RequireAuth allow={["superadmin"]}>
       <SuperAdminPage />
@@ -56,4 +56,4 @@ function __RouteInlineComponent() {
   );
 }
 
-export default __RouteInlineComponent;
+export default RouteComponent;

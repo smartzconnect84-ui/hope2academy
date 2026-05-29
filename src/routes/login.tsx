@@ -9,13 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Sign In — HOPE2-LIBERIA Portal" },
-      { name: "description", content: "Access your HOPE2-LIBERIA portal: Super Admin, Admin, Teacher, Student, Parent and Alumni dashboards." },
-    ],
-  }),
+,
   component: LoginPage,
 });
 
@@ -169,3 +163,5 @@ function LoginPage() {
     </div>
   );
 }
+
+export default LoginPage;
