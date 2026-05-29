@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { PageHeader } from "@/components/PageHeader";
 import school from "@/assets/hope/project-school-C5dtR3hs.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
@@ -7,9 +7,7 @@ import healthImg from "@/assets/hope/dept-health-xwwilth4.jpg";
 import eduImg from "@/assets/hope/dept-education-aYewL80F.jpg";
 import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 
-export const Route = createFileRoute("/projects")({
-  component: Projects,
-  head: () => ({ meta: [{ title: "Projects — HOPE2-LIBERIA" }, { name: "description", content: "Real impact you can see, count, and trust." }, { property: "og:image", content: school }] }),
+,
 });
 
 const projects = [
@@ -65,3 +63,5 @@ function Projects() {
     </div>
   );
 }
+
+export default Projects;

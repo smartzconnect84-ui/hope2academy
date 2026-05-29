@@ -1,11 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Heart, HandHelping, Building2 } from "lucide-react";
 
-export const Route = createFileRoute("/get-involved")({
-  component: GetInvolved,
-  head: () => ({ meta: [{ title: "Get Involved — HOPE2-LIBERIA" }, { name: "description", content: "Donate, volunteer, or partner with HOPE2-LIBERIA." }] }),
+,
 });
 
 function GetInvolved() {
@@ -88,3 +86,5 @@ function Field({ label, type = "text" }: { label: string; type?: string }) {
     </div>
   );
 }
+
+export default GetInvolved;

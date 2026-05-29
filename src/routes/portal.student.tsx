@@ -1,17 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { BookOpen, Award, Calendar, GraduationCap } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal, StaggerGroup } from "@/components/Motion";
 import { useAuth } from "@/hooks/use-auth";
-
-export const Route = createFileRoute("/portal/student")({
-  component: () => (
-    <RequireAuth allow={["superadmin","admin","student"]}>
-      <StudentPage />
-    </RequireAuth>
-  ),
-});
 
 function StudentPage() {
   const { profile } = useAuth();
@@ -41,3 +33,10 @@ function StudentPage() {
     </PortalShell>
   );
 }
+
+function __RouteInlineComponent() {
+  return (
+    <RequireAuth allow={["superadmin";
+}
+
+export default __RouteInlineComponent;

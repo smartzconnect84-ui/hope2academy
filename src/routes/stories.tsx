@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import classroom from "@/assets/hope/story-classroom-D9IJEfzp.jpg";
 import well from "@/assets/hope/story-well-6CEMCBHm.jpg";
@@ -7,9 +7,7 @@ import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
 import school from "@/assets/hope/project-school-C5dtR3hs.jpg";
 
-export const Route = createFileRoute("/stories")({
-  component: Stories,
-  head: () => ({ meta: [{ title: "Stories — HOPE2-LIBERIA" }, { name: "description", content: "Voices from the ground: authentic reports from Liberian communities." }, { property: "og:image", content: classroom }] }),
+,
 });
 
 const stories = [
@@ -87,3 +85,5 @@ function Stories() {
     </div>
   );
 }
+
+export default Stories;

@@ -1,11 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import portrait from "@/assets/hope/about-portrait-eKNmGVTA.jpg";
 import { HeartHandshake, ShieldCheck, Sprout, Users } from "lucide-react";
 
-export const Route = createFileRoute("/about")({
-  component: About,
-  head: () => ({ meta: [{ title: "About — HOPE2-LIBERIA" }, { name: "description", content: "Founded by Liberians, for Liberians — our story of rebuilding hope." }, { property: "og:image", content: portrait }] }),
+,
 });
 
 const values = [
@@ -71,3 +69,5 @@ function About() {
     </div>
   );
 }
+
+export default About;

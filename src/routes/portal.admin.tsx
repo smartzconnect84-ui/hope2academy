@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useEffect, useState } from "react";
 import { Users, GraduationCap, UserPlus, Activity, Loader2, Trash2, Plus } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
@@ -12,14 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-export const Route = createFileRoute("/portal/admin")({
-  component: () => (
-    <RequireAuth allow={["superadmin", "admin"]}>
-      <AdminPage />
-    </RequireAuth>
-  ),
-});
 
 function AdminPage() {
   const { roles } = useAuth();
@@ -156,3 +148,10 @@ function AdminPage() {
     </PortalShell>
   );
 }
+
+function __RouteInlineComponent() {
+  return (
+    <RequireAuth allow={["superadmin";
+}
+
+export default __RouteInlineComponent;

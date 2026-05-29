@@ -1,13 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import edu from "@/assets/hope/dept-education-aYewL80F.jpg";
 import health from "@/assets/hope/dept-health-xwwilth4.jpg";
 import community from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
 import outreach from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 
-export const Route = createFileRoute("/departments")({
-  component: Departments,
-  head: () => ({ meta: [{ title: "Departments — HOPE2-LIBERIA" }, { name: "description", content: "Four pillars: Education, Health, Community Development, Outreach." }] }),
+,
 });
 
 const pillars = [
@@ -65,3 +63,5 @@ function Departments() {
     </div>
   );
 }
+
+export default Departments;
