@@ -1,4 +1,4 @@
-import { createFileRoute, useParams, Link } from "@tanstack/react-router";
+import { useParams, Link } from "react-router-dom";
 import { useState, type ReactNode, type ReactElement } from "react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -545,10 +545,6 @@ const MODULES: Record<string, ModuleDef> = {
   },
 };
 
-export const Route = createFileRoute("/portal/m/$key")({
-  component: ModuleRoute,
-});
-
 // =========================================================================
 // CMS — Pages module
 // =========================================================================
@@ -856,7 +852,7 @@ function NavigationModule() {
 }
 
 function ModuleRoute() {
-  const { key } = useParams({ from: "/portal/m/$key" });
+  const { key } = useParams();
   const def = MODULES[key];
 
   if (!def) {
@@ -880,3 +876,5 @@ function ModuleRoute() {
     </RequireAuth>
   );
 }
+
+export default ModuleRoute;

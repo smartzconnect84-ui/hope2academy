@@ -1,18 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useEffect, useState } from "react";
 import { Shield, Users, GraduationCap, Database, TrendingUp } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { mockAuth } from "@/lib/mock-backend";
 import { StaggerGroup, Reveal } from "@/components/Motion";
-
-export const Route = createFileRoute("/portal/superadmin")({
-  component: () => (
-    <RequireAuth allow={["superadmin"]}>
-      <SuperAdminPage />
-    </RequireAuth>
-  ),
-});
 
 function SuperAdminPage() {
   const [counts, setCounts] = useState({ users: 0, roles: 0 });
@@ -55,3 +47,13 @@ function SuperAdminPage() {
     </PortalShell>
   );
 }
+
+function RouteComponent() {
+  return (
+    <RequireAuth allow={["superadmin"]}>
+      <SuperAdminPage />
+    </RequireAuth>
+  );
+}
+
+export default RouteComponent;

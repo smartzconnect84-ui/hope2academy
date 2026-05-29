@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, LogIn, Mail, Lock, Loader2, Copy, Sparkles } from "lucide-react";
@@ -9,15 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Sign In — HOPE2-LIBERIA Portal" },
-      { name: "description", content: "Access your HOPE2-LIBERIA portal: Super Admin, Admin, Teacher, Student, Parent and Alumni dashboards." },
-    ],
-  }),
-  component: LoginPage,
-});
 
 function LoginPage() {
   const { user, loading, refresh } = useAuth();
@@ -27,7 +18,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/portal" });
+    if (!loading && user) navigate("/portal");
   }, [user, loading, navigate]);
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -37,7 +28,7 @@ function LoginPage() {
       await mockAuth.signIn(email, password);
       await refresh();
       toast.success("Welcome back");
-      navigate({ to: "/portal" });
+      navigate("/portal");
     } catch (err: any) {
       toast.error(err?.message ?? "Sign-in failed");
     } finally {
@@ -52,7 +43,7 @@ function LoginPage() {
       await mockAuth.signIn(e, p);
       await refresh();
       toast.success("Signed in as demo user");
-      navigate({ to: "/portal" });
+      navigate("/portal");
     } catch (err: any) {
       toast.error(err?.message ?? "Sign-in failed");
     } finally { setSubmitting(false); }
@@ -169,3 +160,5 @@ function LoginPage() {
     </div>
   );
 }
+
+export default LoginPage;

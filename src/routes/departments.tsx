@@ -1,14 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import edu from "@/assets/hope/dept-education-aYewL80F.jpg";
 import health from "@/assets/hope/dept-health-xwwilth4.jpg";
 import community from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
 import outreach from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 
-export const Route = createFileRoute("/departments")({
-  component: Departments,
-  head: () => ({ meta: [{ title: "Departments — HOPE2-LIBERIA" }, { name: "description", content: "Four pillars: Education, Health, Community Development, Outreach." }] }),
-});
 
 const pillars = [
   { img: edu, id: "education", roman: "I", pillar: "Pillar I — Learning that lasts a lifetime", title: "Education", tag: "Every child, a future.", impactN: "1,840", impactL: "Students sponsored", director: "Grace Kollie, Director of Education", est: "Established 2014", area: "Active in Montserrado, Bong, Nimba & Lofa", body: ["Liberian children deserve a desk, a book, and a teacher who believes in them. We invest in the long arc of a child's mind — from first grade to first job.", "Our Education pillar partners with 38 public and community schools across four counties, providing tuition support, learning materials, and teacher development for children whose families cannot afford the cost of staying in school.", "Every scholarship is paired with a mentor and a six-month progress check. We measure success not by enrolment alone, but by attendance, literacy growth, and graduation — and we publish the numbers every quarter."], bullets: ["Tuition & uniform support for 1,840 students", "Annual scholarships for top performers entering secondary school", "Library kits & solar-powered reading rooms in 22 schools", "Teacher-training workshops in early literacy & STEM", "Girl-child retention program in rural districts"] },
@@ -65,3 +61,5 @@ function Departments() {
     </div>
   );
 }
+
+export default Departments;

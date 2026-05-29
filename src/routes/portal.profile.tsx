@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { useEffect, useState } from "react";
 import { Loader2, Save } from "lucide-react";
 import { PortalShell } from "@/components/PortalShell";
@@ -11,14 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-export const Route = createFileRoute("/portal/profile")({
-  component: () => (
-    <RequireAuth>
-      <ProfilePage />
-    </RequireAuth>
-  ),
-});
 
 function ProfilePage() {
   const { profile, user, refresh } = useAuth();
@@ -79,3 +71,13 @@ function Field({ label, children, full }: { label: string; children: React.React
     </div>
   );
 }
+
+function RouteComponent() {
+  return (
+    <RequireAuth>
+      <ProfilePage />
+    </RequireAuth>
+  );
+}
+
+export default RouteComponent;

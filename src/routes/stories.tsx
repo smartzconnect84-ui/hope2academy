@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import classroom from "@/assets/hope/story-classroom-D9IJEfzp.jpg";
 import well from "@/assets/hope/story-well-6CEMCBHm.jpg";
@@ -7,10 +7,6 @@ import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
 import school from "@/assets/hope/project-school-C5dtR3hs.jpg";
 
-export const Route = createFileRoute("/stories")({
-  component: Stories,
-  head: () => ({ meta: [{ title: "Stories — HOPE2-LIBERIA" }, { name: "description", content: "Voices from the ground: authentic reports from Liberian communities." }, { property: "og:image", content: classroom }] }),
-});
 
 const stories = [
   { img: well, tag: "Community", date: "March 28, 2026", read: "3 min", title: "Clean water flows again in Gbarnga: Well #142 is live", excerpt: "After six weeks of community-led drilling, the village of Gbarnga gathered to draw the first bucket from a borehole that will serve over 1,200 people.", author: "Samuel Toe", role: "Field Coordinator", initials: "ST" },
@@ -87,3 +83,5 @@ function Stories() {
     </div>
   );
 }
+
+export default Stories;

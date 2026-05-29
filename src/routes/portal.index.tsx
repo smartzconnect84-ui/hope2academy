@@ -1,18 +1,14 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-
-export const Route = createFileRoute("/portal/")({
-  component: PortalRedirect,
-});
 
 function PortalRedirect() {
   const { loading, user, primaryRole } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (loading) return;
-    if (!user) { navigate({ to: "/login" }); return; }
+    if (!user) { navigate("/login"); return; }
     if (primaryRole) navigate({ to: `/portal/${primaryRole}` as any });
   }, [loading, user, primaryRole, navigate]);
   return (
@@ -21,3 +17,5 @@ function PortalRedirect() {
     </div>
   );
 }
+
+export default PortalRedirect;

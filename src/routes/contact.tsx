@@ -1,11 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { PageHeader } from "@/components/PageHeader";
 import { MapPin, Mail, Phone, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
-export const Route = createFileRoute("/contact")({
-  component: Contact,
-  head: () => ({ meta: [{ title: "Contact — HOPE2-LIBERIA" }, { name: "description", content: "Get in touch with HOPE2-LIBERIA." }] }),
-});
 
 function Contact() {
   return (
@@ -72,3 +68,5 @@ function Field({ label, type = "text" }: { label: string; type?: string }) {
     </div>
   );
 }
+
+export default Contact;

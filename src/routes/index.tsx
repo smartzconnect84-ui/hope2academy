@@ -1,20 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Heart, Droplet, BookOpen, Stethoscope, Home, ArrowRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { Reveal, StaggerGroup } from "@/components/Motion";
 import banner from "@/assets/hope/banner-1-CIHbaCOS.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
 
-export const Route = createFileRoute("/")({
-  component: Index,
-  head: () => ({
-    meta: [
-      { title: "HOPE2-LIBERIA — A movement of compassion across Liberia" },
-      { name: "description", content: "Education, health, water and community development built side-by-side with Liberian communities." },
-      { property: "og:image", content: banner },
-    ],
-  }),
-});
 
 const stats = [
   { value: "12,400+", label: "Lives Impacted" },
@@ -172,3 +162,5 @@ function Index() {
     </div>
   );
 }
+
+export default Index;

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+
 import { PageHeader } from "@/components/PageHeader";
 import { Linkedin, Mail } from "lucide-react";
 import t1 from "@/assets/hope/team-1-Bn-q5HvV.jpg";
@@ -8,10 +8,6 @@ import t4 from "@/assets/hope/team-4-2AMdCmzy.jpg";
 import t5 from "@/assets/hope/team-5-TEI3yivU.jpg";
 import t6 from "@/assets/hope/team-6-C_ZECXo7.jpg";
 
-export const Route = createFileRoute("/team")({
-  component: Team,
-  head: () => ({ meta: [{ title: "Team — HOPE2-LIBERIA" }, { name: "description", content: "Meet the Liberian-led team behind the mission." }] }),
-});
 
 const members = [
   { img: t1, name: "Rev. Samuel K. Doe", role: "Founder & Executive Director" },
@@ -54,3 +50,5 @@ function Team() {
     </div>
   );
 }
+
+export default Team;

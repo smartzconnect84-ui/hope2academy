@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth, ROLE_LABEL, type AppRole } from "@/hooks/use-auth";
 import {
@@ -170,7 +170,7 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
             </nav>
 
             <button
-              onClick={async () => { await signOut(); navigate({ to: "/" }); }}
+              onClick={async () => { await signOut(); navigate("/"); }}
               className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm font-medium hover:bg-secondary hover:text-secondary-foreground transition-colors"
             >
               <LogOut className="h-4 w-4" /> Sign out

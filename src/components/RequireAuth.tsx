@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 
@@ -8,7 +8,7 @@ export function RequireAuth({ children, allow }: { children: React.ReactNode; al
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
+    if (!loading && !user) navigate("/login");
   }, [user, loading, navigate]);
 
   if (loading || !user) {
