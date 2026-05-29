@@ -5,8 +5,6 @@ import { Reveal, StaggerGroup } from "@/components/Motion";
 import banner from "@/assets/hope/banner-1-CIHbaCOS.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
 
-,
-});
 
 const stats = [
   { value: "12,400+", label: "Lives Impacted" },

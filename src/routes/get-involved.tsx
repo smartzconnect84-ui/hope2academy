@@ -3,8 +3,6 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Heart, HandHelping, Building2 } from "lucide-react";
 
-,
-});
 
 function GetInvolved() {
   const [amount, setAmount] = useState(50);

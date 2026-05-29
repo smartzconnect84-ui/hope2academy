@@ -7,8 +7,6 @@ import healthImg from "@/assets/hope/dept-health-xwwilth4.jpg";
 import eduImg from "@/assets/hope/dept-education-aYewL80F.jpg";
 import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
 
-,
-});
 
 const projects = [
   { img: school, loc: "Bomi County", title: "Tubmanburg Primary School Rebuild", stat: "420 children enrolled" },

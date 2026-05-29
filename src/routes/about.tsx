@@ -3,8 +3,6 @@ import { PageHeader } from "@/components/PageHeader";
 import portrait from "@/assets/hope/about-portrait-eKNmGVTA.jpg";
 import { HeartHandshake, ShieldCheck, Sprout, Users } from "lucide-react";
 
-,
-});
 
 const values = [
   { icon: HeartHandshake, title: "Compassion", desc: "We meet every person with empathy, dignity, and unconditional respect." },

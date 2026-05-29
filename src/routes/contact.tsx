@@ -2,8 +2,6 @@
 import { PageHeader } from "@/components/PageHeader";
 import { MapPin, Mail, Phone, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
-,
-});
 
 function Contact() {
   return (

@@ -8,8 +8,6 @@ import t4 from "@/assets/hope/team-4-2AMdCmzy.jpg";
 import t5 from "@/assets/hope/team-5-TEI3yivU.jpg";
 import t6 from "@/assets/hope/team-6-C_ZECXo7.jpg";
 
-,
-});
 
 const members = [
   { img: t1, name: "Rev. Samuel K. Doe", role: "Founder & Executive Director" },
