@@ -299,8 +299,8 @@ function ensureSeedData() {
     { id: "lb3", title: "A Long Way Gone", author: "Ishmael Beah", available: 6 },
   ];
   d.settings = [
-    { id: "s1", key: "Site name", value: "HOPE2-LIBERIA" },
-    { id: "s2", key: "Contact email", value: "info@hope2liberia.org" },
+    { id: "s1", key: "Site name", value: "HOPE2 ACADEMY" },
+    { id: "s2", key: "Contact email", value: "info@hope2academy.org" },
     { id: "s3", key: "Primary color", value: "Crimson 600" },
     { id: "s4", key: "Timezone", value: "Africa/Monrovia" },
   ];

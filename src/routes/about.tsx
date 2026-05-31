@@ -14,7 +14,7 @@ const values = [
 function About() {
   return (
     <div>
-      <PageHeader eyebrow="Who We Are" title="A movement born from love for Liberia" lead="Founded by Liberians, for Liberians — HOPE2-LIBERIA exists to walk with communities as they rebuild stronger than before." />
+      <PageHeader eyebrow="Who We Are" title="A movement born from love for Liberia" lead="Founded by Liberians, for Liberians — HOPE2 ACADEMY exists to walk with communities as they rebuild stronger than before." />
       <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-14 items-center">
         <div className="relative">
           <img src={portrait} alt="Portrait of a Liberian elder smiling" className="rounded-3xl shadow-[var(--shadow-warm)] aspect-[4/5] object-cover" />
@@ -27,7 +27,7 @@ function About() {
           <span className="text-secondary font-semibold uppercase tracking-wider text-sm">Our Story</span>
           <h2 className="mt-3 text-4xl font-bold">Born from a single promise.</h2>
           <p className="mt-5 text-muted-foreground leading-relaxed">After years of civil unrest and the Ebola crisis left Liberia's communities fractured, a small group of nurses, teachers, and faith leaders made a quiet promise to one another: <em>we will not leave</em>.</p>
-          <p className="mt-4 text-muted-foreground leading-relaxed">That promise became HOPE2-LIBERIA. What started as a single clinic in Monrovia has grown into a national network serving 84+ communities with education, health, water, and dignity.</p>
+          <p className="mt-4 text-muted-foreground leading-relaxed">That promise became HOPE2 ACADEMY. What started as a single clinic in Monrovia has grown into a national network serving 84+ communities with education, health, water, and dignity.</p>
           <p className="mt-4 font-semibold text-primary">We are still keeping the promise.</p>
         </div>
       </section>

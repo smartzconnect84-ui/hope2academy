@@ -9,7 +9,7 @@ function ParentPage() {
   const { profile } = useAuth();
   const childCount = profile?.linked_children?.length ?? 0;
   return (
-    <PortalShell title="Parent Portal" subtitle="Follow your child's journey at HOPE2-LIBERIA">
+    <PortalShell title="Parent Portal" subtitle="Follow your child's journey at HOPE2 ACADEMY">
       <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Children" value={childCount || 1} />
         <StatCard icon={Calendar} label="Next Event" value="PTA" accent="accent" />

@@ -129,7 +129,7 @@ function Index() {
             <span className="text-secondary font-semibold uppercase tracking-wider text-sm">Our Mission</span>
             <h2 className="mt-3 text-5xl font-bold leading-tight">Hope is not a wish.<br />It's a plan.</h2>
             <p className="mt-6 text-lg text-muted-foreground">
-              For over a decade, HOPE2-LIBERIA has worked side-by-side with Liberian communities — listening first, building second. We don't bring solutions. We build them together.
+              For over a decade, HOPE2 ACADEMY has worked side-by-side with Liberian communities — listening first, building second. We don't bring solutions. We build them together.
             </p>
             <ul className="mt-6 space-y-3">
               {[

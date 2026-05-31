@@ -65,7 +65,7 @@ function LoginPage() {
         >
           <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-4 py-1.5 text-xs font-semibold tracking-widest uppercase">
             <Heart className="h-3.5 w-3.5 fill-accent text-accent" />
-            HOPE2-LIBERIA Portal
+            HOPE2 ACADEMY Portal
           </div>
           <h1 className="font-display text-5xl xl:text-6xl font-semibold leading-[1.05] mt-6">
             Welcome back to the<br />movement of compassion.
@@ -109,7 +109,7 @@ function LoginPage() {
               </div>
               <div>
                 <h2 className="font-display text-2xl font-semibold">Sign in</h2>
-                <p className="text-xs text-muted-foreground">Access your HOPE2-LIBERIA portal</p>
+                <p className="text-xs text-muted-foreground">Access your HOPE2 ACADEMY portal</p>
               </div>
             </div>
 
@@ -118,7 +118,7 @@ function LoginPage() {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative mt-1.5">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" required value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@hope2liberia.org" className="pl-9" />
+                  <Input id="email" type="email" required value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@hope2academy.org" className="pl-9" />
                 </div>
               </div>
               <div>

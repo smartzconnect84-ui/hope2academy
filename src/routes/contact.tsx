@@ -9,8 +9,8 @@ function Contact() {
       <PageHeader eyebrow="Get in Touch" title="Let's talk about hope" lead="Whether you have a question, a partnership idea, or just want to say hello — we're listening." />
       <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-14">
         <div className="space-y-8">
-          <Info icon={MapPin} title="Visit Us" lines={["HOPE2-LIBERIA HQ", "Sinkor, Tubman Boulevard", "Monrovia, Liberia"]} />
-          <Info icon={Mail} title="Email" lines={["info@hope2liberia.org", "partnerships@hope2liberia.org"]} />
+          <Info icon={MapPin} title="Visit Us" lines={["HOPE2 ACADEMY HQ", "Sinkor, Tubman Boulevard", "Monrovia, Liberia"]} />
+          <Info icon={Mail} title="Email" lines={["info@hope2academy.org", "partnerships@hope2academy.org"]} />
           <Info icon={Phone} title="Phone" lines={["+231 770 000 000", "Mon–Fri · 9am–5pm GMT"]} />
           <div>
             <h3 className="font-bold text-lg">Follow Our Journey</h3>

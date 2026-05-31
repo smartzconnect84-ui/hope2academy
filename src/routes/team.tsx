@@ -44,7 +44,7 @@ function Team() {
         </div>
         <blockquote className="mt-20 max-w-3xl mx-auto text-center text-2xl md:text-3xl italic text-foreground/80" style={{ fontFamily: "var(--font-display)" }}>
           "We are not visitors to Liberia. We are her sons and daughters, building the country we love."
-          <footer className="mt-4 text-sm not-italic text-muted-foreground">— The HOPE2-LIBERIA Team</footer>
+          <footer className="mt-4 text-sm not-italic text-muted-foreground">— The HOPE2 ACADEMY Team</footer>
         </blockquote>
       </section>
     </div>

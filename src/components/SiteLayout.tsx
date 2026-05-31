@@ -184,12 +184,12 @@ export function SiteLayout() {
           <div>
             <h4 className="font-semibold mb-3 text-accent">Contact</h4>
             <p className="text-sm text-primary-foreground/80">
-              Sinkor, Tubman Boulevard<br />Monrovia, Liberia<br />info@hope2liberia.org
+              Sinkor, Tubman Boulevard<br />Monrovia, Liberia<br />info@hope2academy.org
             </p>
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 py-6 text-center text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} HOPE2-LIBERIA. Built with hope.
+          © {new Date().getFullYear()} HOPE2 ACADEMY. Built with hope.
         </div>
       </footer>
     </div>

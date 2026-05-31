@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 function AlumniPage() {
   const { profile } = useAuth();
   return (
-    <PortalShell title="Alumni Portal" subtitle={profile?.graduation_year ? `Class of ${profile.graduation_year}` : "Stay connected with HOPE2-LIBERIA"}>
+    <PortalShell title="Alumni Portal" subtitle={profile?.graduation_year ? `Class of ${profile.graduation_year}` : "Stay connected with HOPE2 ACADEMY"}>
       <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Users} label="Alumni Network" value="1,240" />
         <StatCard icon={Calendar} label="Next Reunion" value="Dec" accent="accent" />
