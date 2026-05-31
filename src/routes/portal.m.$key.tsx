@@ -852,8 +852,8 @@ function NavigationModule() {
 }
 
 function ModuleRoute() {
-  const { key } = useParams();
-  const def = MODULES[key];
+  const { key } = useParams<{ key: string }>();
+  const def = key ? MODULES[key] : undefined;
 
   if (!def) {
     return (
