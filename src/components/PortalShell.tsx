@@ -9,6 +9,12 @@ import {
   ListTree,
 } from "lucide-react";
 import { type ReactNode } from "react";
+import {
+  Sidebar, SidebarProvider, SidebarTrigger, SidebarContent, SidebarHeader,
+  SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
+  SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 type NavItem = { to: string; label: string; icon: any };
 type NavGroup = { group: string; items: NavItem[] };
@@ -118,85 +124,104 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
   const groups = primaryRole ? navByRole[primaryRole] : [];
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-muted/30">
-      <div className="container mx-auto px-4 py-8 grid lg:grid-cols-[260px_1fr] gap-6">
-        <motion.aside
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="lg:sticky lg:top-24 lg:self-start"
-        >
-          <div className="rounded-2xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-bold">
+    <SidebarProvider>
+      <div className="flex min-h-[calc(100vh-5rem)] w-full bg-muted/30">
+        <Sidebar collapsible="icon" className="top-20 !h-[calc(100svh-5rem)]">
+          <SidebarHeader>
+            <div className="flex items-center gap-3 px-2 py-2">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-bold">
                 {(profile?.full_name ?? profile?.email ?? "U").slice(0, 1).toUpperCase()}
               </div>
-              <div className="min-w-0">
-                <p className="font-semibold truncate">{profile?.full_name ?? "User"}</p>
+              <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+                <p className="font-semibold truncate text-sm">{profile?.full_name ?? "User"}</p>
                 <span className="inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   {primaryRole ? ROLE_LABEL[primaryRole] : "—"}
                 </span>
               </div>
             </div>
-
-            <nav className="mt-6 space-y-5 max-h-[60vh] overflow-y-auto pr-1">
-              {groups.map((g) => (
-                <div key={g.group}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-3 mb-1.5">{g.group}</p>
-                  <div className="space-y-0.5">
+          </SidebarHeader>
+          <SidebarContent>
+            {groups.map((g) => (
+              <SidebarGroup key={g.group}>
+                <SidebarGroupLabel>{g.group}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
                     {g.items.map((it, idx) => {
                       const Icon = it.icon;
                       const active = pathname === it.to;
-                      const classes = `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                        active
-                          ? "bg-primary text-primary-foreground shadow-[var(--shadow-soft)]"
-                          : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                      }`;
                       return (
-                        <Link key={`${g.group}-${idx}`} to={it.to} className={classes}>
-                          <Icon className="h-4 w-4" /> <span className="flex-1">{it.label}</span>
-                        </Link>
+                        <SidebarMenuItem key={`${g.group}-${idx}`}>
+                          <SidebarMenuButton asChild isActive={active} tooltip={it.label}>
+                            <Link to={it.to}>
+                              <Icon className="h-4 w-4" />
+                              <span>{it.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
                       );
                     })}
-                  </div>
-                </div>
-              ))}
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-3 mb-1.5">Account</p>
-                <Link to="/portal/profile" className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all ${pathname === "/portal/profile" ? "bg-primary text-primary-foreground" : "text-foreground/70 hover:bg-muted"}`}>
-                  <UserCog className="h-4 w-4" /> My Profile
-                </Link>
-              </div>
-            </nav>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+            <SidebarGroup>
+              <SidebarGroupLabel>Account</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname === "/portal/profile"} tooltip="My Profile">
+                      <Link to="/portal/profile">
+                        <UserCog className="h-4 w-4" />
+                        <span>My Profile</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <SidebarSeparator />
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Sign out"
+                  onClick={async () => { await signOut(); navigate("/"); }}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign out</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
 
-            <button
-              onClick={async () => { await signOut(); navigate("/"); }}
-              className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm font-medium hover:bg-secondary hover:text-secondary-foreground transition-colors"
-            >
-              <LogOut className="h-4 w-4" /> Sign out
-            </button>
-          </div>
-        </motion.aside>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="sticky top-20 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 backdrop-blur px-4">
+            <SidebarTrigger />
+            <div className="h-5 w-px bg-border mx-1" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-sm font-semibold">{title}</p>
+            </div>
+            <button className="h-9 w-9 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-4 w-4" /></button>
+            <button className="hidden sm:grid h-9 w-9 rounded-full bg-card border border-border place-items-center hover:bg-muted"><Settings className="h-4 w-4" /></button>
+          </header>
 
-        <motion.main
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="font-display text-3xl md:text-4xl font-semibold">{title}</h1>
-              {subtitle && <p className="mt-1 text-muted-foreground">{subtitle}</p>}
+          <motion.main
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8"
+          >
+            <div className="mb-6">
+              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold">{title}</h1>
+              {subtitle && <p className="mt-1 text-sm sm:text-base text-muted-foreground">{subtitle}</p>}
             </div>
-            <div className="hidden md:flex items-center gap-2">
-              <button className="h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-4 w-4" /></button>
-              <button className="h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Settings className="h-4 w-4" /></button>
-            </div>
-          </div>
-          {children}
-        </motion.main>
+            {children}
+          </motion.main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
 
