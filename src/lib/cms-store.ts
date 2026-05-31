@@ -62,18 +62,18 @@ const now = () => new Date().toISOString().slice(0, 10);
 // ---------- Seed defaults ----------
 const DEFAULT_PAGES: CmsPage[] = [
   { id: "p_home",    title: "Home",       slug: "/",            status: "Published", updated: now(),
-    body: "Welcome to HOPE2-LIBERIA — a movement of compassion across Liberia.",
-    seoTitle: "HOPE2-LIBERIA — Compassion in Action",
+    body: "Welcome to HOPE2 ACADEMY — a movement of compassion across Liberia.",
+    seoTitle: "HOPE2 ACADEMY — Compassion in Action",
     seoDescription: "Education, Health, Water and Community programs across Liberia." },
   { id: "p_about",   title: "About",      slug: "/about",       status: "Published", updated: now(),
     body: "Our mission is to walk with Liberian communities as they rebuild stronger than before.",
-    seoTitle: "About HOPE2-LIBERIA", seoDescription: "Mission, vision and history." },
+    seoTitle: "About HOPE2 ACADEMY", seoDescription: "Mission, vision and history." },
   { id: "p_progs",   title: "Programs",   slug: "/departments", status: "Published", updated: now(),
     body: "Education, Health, Water & Sanitation, and Community Development.",
     seoTitle: "Our Programs", seoDescription: "Departments and initiatives." },
   { id: "p_contact", title: "Contact",    slug: "/contact",     status: "Published", updated: now(),
-    body: "Sinkor, Tubman Boulevard, Monrovia, Liberia. info@hope2liberia.org",
-    seoTitle: "Contact HOPE2-LIBERIA", seoDescription: "Get in touch with our team." },
+    body: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia. info@hope2academy.org. Office hours: Mon–Fri 7:00 AM – 4:00 PM.",
+    seoTitle: "Contact HOPE2 ACADEMY", seoDescription: "Get in touch with our team." },
 ];
 
 const DEFAULT_NAV: NavItem[] = [

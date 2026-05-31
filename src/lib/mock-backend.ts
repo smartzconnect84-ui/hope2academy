@@ -73,7 +73,7 @@ function seedIfEmpty() {
   const base: Partial<Record<AppRole, Partial<MockUser>>> = {
     superadmin: { bio: "Director of Programs and Governance." },
     admin: { department: "Operations", bio: "Manages campuses and staffing." },
-    teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Sinkor Campus." },
+    teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
     student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
     parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
     alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
@@ -86,7 +86,8 @@ function seedIfEmpty() {
     name: c.name,
     role: c.role,
     phone: `+231 77 010 ${1000 + i}`,
-    address: "Sinkor, Tubman Boulevard, Monrovia, Liberia",
+    address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia",
+    officeHours: "Mon–Fri · 7:00 AM – 4:00 PM",
     createdAt: now,
     ...(base[c.role] ?? {}),
   }));
@@ -218,7 +219,7 @@ function ensureSeedData() {
     { day: "Friday",    slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "09:00", s: "Grade 10 — Biology" }, { t: "15:00", s: "Assembly" }] },
   ];
   d.announcements = [
-    { id: "an1", title: "Parent-Teacher meeting Friday 4pm", body: "All parents invited to Sinkor auditorium.", audience: "All", date: "2026-05-22" },
+    { id: "an1", title: "Parent-Teacher meeting Friday 4pm", body: "All parents invited to Marshall Road auditorium.", audience: "All", date: "2026-05-22" },
     { id: "an2", title: "Library now open until 7pm", body: "Extended hours for exam season.", audience: "Students", date: "2026-05-20" },
     { id: "an3", title: "Vaccination drive complete", body: "All participants reported healthy.", audience: "Parents", date: "2026-05-19" },
     { id: "an4", title: "Donor visit on Tuesday", body: "Staff please prepare classroom showcases.", audience: "Staff", date: "2026-05-18" },
@@ -239,8 +240,8 @@ function ensureSeedData() {
   ];
   d.events = [
     { id: "e1", title: "Monrovia Alumni Mixer", date: "2026-08-12", location: "Royal Hotel" },
-    { id: "e2", title: "Annual Reunion", date: "2026-12-21", location: "Sinkor Campus" },
-    { id: "e3", title: "Career Fair", date: "2027-01-14", location: "Sinkor Campus" },
+    { id: "e2", title: "Annual Reunion", date: "2026-12-21", location: "Marshall Road Campus" },
+    { id: "e3", title: "Career Fair", date: "2027-01-14", location: "Marshall Road Campus" },
   ];
   d.jobs = [
     { id: "j1", title: "Junior Software Engineer", company: "Liberia Telecoms", location: "Monrovia", posted: "2026-05-12" },
@@ -299,8 +300,8 @@ function ensureSeedData() {
     { id: "lb3", title: "A Long Way Gone", author: "Ishmael Beah", available: 6 },
   ];
   d.settings = [
-    { id: "s1", key: "Site name", value: "HOPE2-LIBERIA" },
-    { id: "s2", key: "Contact email", value: "info@hope2liberia.org" },
+    { id: "s1", key: "Site name", value: "HOPE2 ACADEMY" },
+    { id: "s2", key: "Contact email", value: "info@hope2academy.org" },
     { id: "s3", key: "Primary color", value: "Crimson 600" },
     { id: "s4", key: "Timezone", value: "Africa/Monrovia" },
   ];

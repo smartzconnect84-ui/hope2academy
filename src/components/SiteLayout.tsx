@@ -38,7 +38,7 @@ export function SiteLayout() {
             >
               <Heart className="h-4 w-4 fill-secondary text-secondary" />
             </motion.span>
-            <span>HOPE<span className="text-secondary">2</span>-LIBERIA</span>
+            <span>HOPE<span className="text-secondary">2</span> ACADEMY</span>
           </Link>
           <nav className="hidden lg:flex items-center gap-1" onMouseLeave={() => setHover(null)}>
             {NAV.map((n) => {
@@ -167,7 +167,7 @@ export function SiteLayout() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 font-bold text-xl">
               <Heart className="h-5 w-5 fill-accent text-accent" />
-              HOPE<span className="text-accent">2</span>-LIBERIA
+              HOPE<span className="text-accent">2</span> ACADEMY
             </div>
             <p className="mt-4 text-primary-foreground/80 max-w-md">
               A movement of compassion across Liberia — walking with communities as they rebuild stronger than before.
@@ -184,12 +184,15 @@ export function SiteLayout() {
           <div>
             <h4 className="font-semibold mb-3 text-accent">Contact</h4>
             <p className="text-sm text-primary-foreground/80">
-              Sinkor, Tubman Boulevard<br />Monrovia, Liberia<br />info@hope2liberia.org
+              Barber's Joe Town, Marshall Road<br />Lower Margibi County, Liberia<br />info@hope2academy.org
+            </p>
+            <p className="mt-3 text-xs text-primary-foreground/70">
+              Office hours<br />Mon–Fri · 7:00 AM – 4:00 PM
             </p>
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 py-6 text-center text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} HOPE2-LIBERIA. Built with hope.
+          © {new Date().getFullYear()} HOPE2 ACADEMY. Built with hope.
         </div>
       </footer>
     </div>

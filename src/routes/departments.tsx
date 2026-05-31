@@ -16,7 +16,7 @@ const pillars = [
 function Departments() {
   return (
     <div>
-      <PageHeader eyebrow="Our Four Pillars" title="Four pillars. One unwavering mission." lead='"We do not bring solutions to Liberia. We build them, together, beside her people." — The HOPE2-LIBERIA Charter' />
+      <PageHeader eyebrow="Our Four Pillars" title="Four pillars. One unwavering mission." lead='"We do not bring solutions to Liberia. We build them, together, beside her people." — The HOPE2 ACADEMY Charter' />
       {pillars.map((p, i) => (
         <section key={p.id} id={p.id} className={`py-20 ${i % 2 === 1 ? "bg-muted" : ""}`}>
           <div className={`container mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center ${i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}`}>
