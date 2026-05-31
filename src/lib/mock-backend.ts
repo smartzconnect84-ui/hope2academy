@@ -86,7 +86,8 @@ function seedIfEmpty() {
     name: c.name,
     role: c.role,
     phone: `+231 77 010 ${1000 + i}`,
-    address: "Sinkor, Tubman Boulevard, Monrovia, Liberia",
+    address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia",
+    officeHours: "Mon–Fri · 7:00 AM – 4:00 PM",
     createdAt: now,
     ...(base[c.role] ?? {}),
   }));

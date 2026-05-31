@@ -72,7 +72,7 @@ const DEFAULT_PAGES: CmsPage[] = [
     body: "Education, Health, Water & Sanitation, and Community Development.",
     seoTitle: "Our Programs", seoDescription: "Departments and initiatives." },
   { id: "p_contact", title: "Contact",    slug: "/contact",     status: "Published", updated: now(),
-    body: "Sinkor, Tubman Boulevard, Monrovia, Liberia. info@hope2academy.org",
+    body: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia. info@hope2academy.org. Office hours: Mon–Fri 7:00 AM – 4:00 PM.",
     seoTitle: "Contact HOPE2 ACADEMY", seoDescription: "Get in touch with our team." },
 ];
 

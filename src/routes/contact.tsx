@@ -1,6 +1,6 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { MapPin, Mail, Phone, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { MapPin, Mail, Phone, Clock, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
 
 function Contact() {
@@ -9,9 +9,10 @@ function Contact() {
       <PageHeader eyebrow="Get in Touch" title="Let's talk about hope" lead="Whether you have a question, a partnership idea, or just want to say hello — we're listening." />
       <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-14">
         <div className="space-y-8">
-          <Info icon={MapPin} title="Visit Us" lines={["HOPE2 ACADEMY HQ", "Sinkor, Tubman Boulevard", "Monrovia, Liberia"]} />
+          <Info icon={MapPin} title="Visit Us" lines={["HOPE2 ACADEMY HQ", "Barber's Joe Town, Marshall Road", "Lower Margibi County, Liberia"]} />
           <Info icon={Mail} title="Email" lines={["info@hope2academy.org", "partnerships@hope2academy.org"]} />
-          <Info icon={Phone} title="Phone" lines={["+231 770 000 000", "Mon–Fri · 9am–5pm GMT"]} />
+          <Info icon={Phone} title="Phone" lines={["+231 770 000 000", "Mon–Fri · 7:00 AM – 4:00 PM"]} />
+          <Info icon={Clock} title="Office Hours" lines={["Monday – Friday", "7:00 AM – 4:00 PM"]} />
           <div>
             <h3 className="font-bold text-lg">Follow Our Journey</h3>
             <div className="mt-4 flex gap-3">
@@ -39,8 +40,8 @@ function Contact() {
         <div className="rounded-3xl border border-border bg-primary text-primary-foreground p-10 flex items-center gap-6">
           <MapPin className="h-10 w-10 text-accent" />
           <div>
-            <h3 className="text-xl font-bold">Monrovia, Liberia</h3>
-            <p className="opacity-80">Sinkor · Tubman Boulevard</p>
+            <h3 className="text-xl font-bold">Lower Margibi County, Liberia</h3>
+            <p className="opacity-80">Barber's Joe Town · Marshall Road</p>
           </div>
         </div>
       </section>
