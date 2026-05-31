@@ -9,7 +9,7 @@ function PortalRedirect() {
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/login"); return; }
-    if (primaryRole) navigate({ to: `/portal/${primaryRole}` as any });
+    if (primaryRole) navigate(`/portal/${primaryRole}`);
   }, [loading, user, primaryRole, navigate]);
   return (
     <div className="min-h-[60vh] grid place-items-center">
