@@ -21,6 +21,9 @@ export function SiteLayout() {
   const { user, primaryRole } = useAuth();
   useCmsVersion(); // re-render when CMS nav changes
   const NAV: NavItem[] = cmsStore.listNav();
+  // Hide public marketing chrome (nav + footer) once user is in the backend portal.
+  const inPortal = pathname.startsWith("/portal");
+  const hidePublicChrome = inPortal && !!user;
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <motion.header
@@ -40,6 +43,17 @@ export function SiteLayout() {
             </motion.span>
             <span>HOPE<span className="text-secondary">2</span> ACADEMY</span>
           </Link>
+          {hidePublicChrome ? (
+            <div className="hidden lg:flex items-center gap-3">
+              <Link
+                to="/portal"
+                className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold shadow-[var(--shadow-soft)]"
+              >
+                <User className="h-4 w-4" />
+                {primaryRole ? ROLE_LABEL[primaryRole] : "Portal"}
+              </Link>
+            </div>
+          ) : (
           <nav className="hidden lg:flex items-center gap-1" onMouseLeave={() => setHover(null)}>
             {NAV.map((n) => {
               const active = n.to ? pathname === n.to : n.children?.some(c => c.to === pathname);
@@ -124,8 +138,9 @@ export function SiteLayout() {
               </Link>
             )}
           </nav>
+          )}
           <button
-            className="lg:hidden p-2"
+            className={`lg:hidden p-2 ${hidePublicChrome ? "hidden" : ""}`}
             onClick={() => setOpen((o) => !o)}
             aria-label="Toggle menu"
           >
@@ -133,7 +148,7 @@ export function SiteLayout() {
           </button>
         </div>
         <AnimatePresence>
-          {open && (
+          {open && !hidePublicChrome && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -162,6 +177,7 @@ export function SiteLayout() {
       <main className="flex-1">
         <Outlet />
       </main>
+      {!hidePublicChrome && (
       <footer className="mt-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-6 py-16 grid md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
@@ -195,6 +211,7 @@ export function SiteLayout() {
           © {new Date().getFullYear()} HOPE2 ACADEMY. Built with hope.
         </div>
       </footer>
+      )}
     </div>
   );
 }
