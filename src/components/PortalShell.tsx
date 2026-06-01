@@ -123,18 +123,25 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
   const navigate = useNavigate();
   const groups = primaryRole ? navByRole[primaryRole] : [];
 
+  // Persist sidebar collapsed/expanded across refreshes & sessions via cookie set by SidebarProvider.
+  const sidebarDefaultOpen = (() => {
+    if (typeof document === "undefined") return true;
+    const m = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/);
+    return m ? m[1] === "true" : true;
+  })();
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={sidebarDefaultOpen}>
       <div className="flex min-h-[calc(100vh-5rem)] w-full bg-muted/30">
-        <Sidebar collapsible="icon" className="top-20 !h-[calc(100svh-5rem)]">
+        <Sidebar collapsible="icon" className="top-20 !h-[calc(100svh-5rem)] text-[15px]">
           <SidebarHeader>
-            <div className="flex items-center gap-3 px-2 py-2">
-              <div className="h-10 w-10 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-bold">
+            <div className="flex items-center gap-3 px-2 py-3">
+              <div className="h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-bold text-lg">
                 {(profile?.full_name ?? profile?.email ?? "U").slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="font-semibold truncate text-sm">{profile?.full_name ?? "User"}</p>
-                <span className="inline-block mt-0.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                <p className="font-semibold truncate text-base">{profile?.full_name ?? "User"}</p>
+                <span className="inline-block mt-1 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                   {primaryRole ? ROLE_LABEL[primaryRole] : "—"}
                 </span>
               </div>
@@ -143,7 +150,7 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
           <SidebarContent>
             {groups.map((g) => (
               <SidebarGroup key={g.group}>
-                <SidebarGroupLabel>{g.group}</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider">{g.group}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {g.items.map((it, idx) => {
@@ -151,9 +158,9 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
                       const active = pathname === it.to;
                       return (
                         <SidebarMenuItem key={`${g.group}-${idx}`}>
-                          <SidebarMenuButton asChild isActive={active} tooltip={it.label}>
+                          <SidebarMenuButton asChild isActive={active} tooltip={it.label} className="h-10 text-[14px]">
                             <Link to={it.to}>
-                              <Icon className="h-4 w-4" />
+                              <Icon className="h-[18px] w-[18px]" />
                               <span>{it.label}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -165,13 +172,13 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               </SidebarGroup>
             ))}
             <SidebarGroup>
-              <SidebarGroupLabel>Account</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-xs font-bold uppercase tracking-wider">Account</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === "/portal/profile"} tooltip="My Profile">
+                    <SidebarMenuButton asChild isActive={pathname === "/portal/profile"} tooltip="My Profile" className="h-10 text-[14px]">
                       <Link to="/portal/profile">
-                        <UserCog className="h-4 w-4" />
+                        <UserCog className="h-[18px] w-[18px]" />
                         <span>My Profile</span>
                       </Link>
                     </SidebarMenuButton>
@@ -186,9 +193,10 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Sign out"
+                  className="h-10 text-[14px]"
                   onClick={async () => { await signOut(); navigate("/"); }}
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-[18px] w-[18px]" />
                   <span>Sign out</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -197,25 +205,25 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
         </Sidebar>
 
         <div className="flex-1 min-w-0 flex flex-col">
-          <header className="sticky top-20 z-30 flex h-14 items-center gap-2 border-b border-border bg-background/80 backdrop-blur px-4">
+          <header className="sticky top-20 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 backdrop-blur px-5">
             <SidebarTrigger />
             <div className="h-5 w-px bg-border mx-1" />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-semibold">{title}</p>
+              <p className="truncate font-display text-base font-semibold">{title}</p>
             </div>
-            <button className="h-9 w-9 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-4 w-4" /></button>
-            <button className="hidden sm:grid h-9 w-9 rounded-full bg-card border border-border place-items-center hover:bg-muted"><Settings className="h-4 w-4" /></button>
+            <button className="h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-[18px] w-[18px]" /></button>
+            <button className="hidden sm:grid h-10 w-10 rounded-full bg-card border border-border place-items-center hover:bg-muted"><Settings className="h-[18px] w-[18px]" /></button>
           </header>
 
           <motion.main
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8"
+            className="flex-1 px-5 sm:px-8 lg:px-12 py-8 lg:py-10 text-[15px]"
           >
-            <div className="mb-6">
-              <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold">{title}</h1>
-              {subtitle && <p className="mt-1 text-sm sm:text-base text-muted-foreground">{subtitle}</p>}
+            <div className="mb-8">
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">{title}</h1>
+              {subtitle && <p className="mt-2 text-base sm:text-lg text-muted-foreground">{subtitle}</p>}
             </div>
             {children}
           </motion.main>
@@ -231,14 +239,14 @@ export function StatCard({ icon: Icon, label, value, delta, accent = "primary" }
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 300 }}
-      className="rounded-2xl bg-card border border-border p-5 shadow-[var(--shadow-soft)]"
+      className="rounded-2xl bg-card border border-border p-6 shadow-[var(--shadow-soft)]"
     >
       <div className="flex items-start justify-between">
-        <div className={`h-10 w-10 rounded-xl grid place-items-center ${bg}`}><Icon className="h-5 w-5" /></div>
-        {delta && <span className="text-xs font-semibold text-primary">{delta}</span>}
+        <div className={`h-12 w-12 rounded-xl grid place-items-center ${bg}`}><Icon className="h-6 w-6" /></div>
+        {delta && <span className="text-sm font-semibold text-primary">{delta}</span>}
       </div>
-      <p className="mt-4 text-3xl font-bold font-display">{value}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="mt-4 text-4xl font-bold font-display">{value}</p>
+      <p className="text-base text-muted-foreground">{label}</p>
     </motion.div>
   );
 }
