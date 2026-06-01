@@ -314,4 +314,40 @@ export const mockDb = {
     ensureSeedData();
     return (readData()[col] as T[]) ?? [];
   },
+  create<T extends { id?: string } = any>(col: string, item: T): T {
+    ensureSeedData();
+    const d = readData();
+    const withId = { ...item, id: item.id ?? `${col}_${Math.random().toString(36).slice(2, 9)}` } as T;
+    d[col] = [withId as any, ...((d[col] as any[]) ?? [])];
+    writeData(d);
+    return withId;
+  },
+  update<T extends { id: string } = any>(col: string, id: string, patch: Partial<T>): T | null {
+    ensureSeedData();
+    const d = readData();
+    const rows = (d[col] as any[]) ?? [];
+    const idx = rows.findIndex((r) => r.id === id);
+    if (idx === -1) return null;
+    rows[idx] = { ...rows[idx], ...patch };
+    d[col] = rows;
+    writeData(d);
+    return rows[idx];
+  },
+  remove(col: string, id: string): boolean {
+    ensureSeedData();
+    const d = readData();
+    const before = ((d[col] as any[]) ?? []).length;
+    d[col] = ((d[col] as any[]) ?? []).filter((r) => r.id !== id);
+    writeData(d);
+    return ((d[col] as any[]) ?? []).length < before;
+  },
+  reset(col?: string) {
+    if (!isBrowser()) return;
+    if (!col) { localStorage.removeItem(KEY_DATA); ensureSeedData(); return; }
+    const d = readData();
+    delete d[col];
+    delete d.__seeded;
+    writeData(d);
+    ensureSeedData();
+  },
 };
