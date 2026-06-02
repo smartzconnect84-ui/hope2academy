@@ -6,15 +6,20 @@ import {
   LogOut, Settings, Bell, Award, FileText, UserCog, Shield,
   Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
-  ListTree,
+  ListTree, Search as SearchIcon,
 } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   Sidebar, SidebarProvider, SidebarTrigger, SidebarContent, SidebarHeader,
   SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
   SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  CommandDialog, CommandInput, CommandList, CommandEmpty,
+  CommandGroup, CommandItem,
+} from "@/components/ui/command";
+import { mockDb } from "@/lib/mock-backend";
 
 type NavItem = { to: string; label: string; icon: any };
 type NavGroup = { group: string; items: NavItem[] };
@@ -211,6 +216,7 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
             <div className="min-w-0 flex-1">
               <p className="truncate font-display text-base font-semibold">{title}</p>
             </div>
+            <CommandPalette role={primaryRole} groups={groups} />
             <button className="h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-[18px] w-[18px]" /></button>
             <button className="hidden sm:grid h-10 w-10 rounded-full bg-card border border-border place-items-center hover:bg-muted"><Settings className="h-[18px] w-[18px]" /></button>
           </header>
@@ -230,6 +236,102 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
         </div>
       </div>
     </SidebarProvider>
+  );
+}
+
+function CommandPalette({ role, groups }: { role: AppRole | null; groups: NavGroup[] }) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault(); setOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const go = (to: string) => { setOpen(false); navigate(to); };
+  const classes = mockDb.list<any>("classes");
+  const assignments = mockDb.list<any>("assignments");
+  const directory = mockDb.list<any>("directory");
+  const posts = mockDb.list<any>("posts");
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="hidden md:inline-flex items-center gap-2 rounded-full border border-border bg-card pl-3 pr-2 py-1.5 text-sm text-muted-foreground hover:border-primary/40 transition"
+        aria-label="Open command palette"
+      >
+        <SearchIcon className="h-4 w-4" />
+        <span>Quick search…</span>
+        <kbd className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold">⌘K</kbd>
+      </button>
+      <button onClick={() => setOpen(true)} className="md:hidden h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted" aria-label="Search">
+        <SearchIcon className="h-[18px] w-[18px]" />
+      </button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput placeholder="Search modules, classes, assignments, people…" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading={role ? `${ROLE_LABEL[role]} modules` : "Modules"}>
+            {groups.flatMap((g) =>
+              g.items.map((it) => (
+                <CommandItem key={`${g.group}-${it.to}-${it.label}`} value={`${g.group} ${it.label}`} onSelect={() => go(it.to)}>
+                  <it.icon className="mr-2 h-4 w-4" />
+                  <span>{it.label}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{g.group}</span>
+                </CommandItem>
+              ))
+            )}
+          </CommandGroup>
+          {classes.length > 0 && (
+            <CommandGroup heading="Classes">
+              {classes.slice(0, 8).map((c) => (
+                <CommandItem key={c.id} value={`class ${c.name} ${c.teacher}`} onSelect={() => go("/portal/m/classes")}>
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  <span>{c.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{c.teacher}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {assignments.length > 0 && (
+            <CommandGroup heading="Assignments">
+              {assignments.slice(0, 8).map((a) => (
+                <CommandItem key={a.id} value={`assignment ${a.title} ${a.class}`} onSelect={() => go("/portal/m/assignments")}>
+                  <ClipboardList className="mr-2 h-4 w-4" />
+                  <span>{a.title}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{a.class}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {directory.length > 0 && (
+            <CommandGroup heading="People">
+              {directory.slice(0, 6).map((p) => (
+                <CommandItem key={p.id} value={`person ${p.name} ${p.role}`} onSelect={() => go("/portal/m/directory")}>
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>{p.name}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">Class of {p.year}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {posts.length > 0 && (
+            <CommandGroup heading="Posts">
+              {posts.slice(0, 6).map((p) => (
+                <CommandItem key={p.id} value={`post ${p.title}`} onSelect={() => go("/portal/m/posts")}>
+                  <Newspaper className="mr-2 h-4 w-4" />
+                  <span>{p.title}</span>
+                  <span className="ml-auto text-xs text-muted-foreground">{p.status}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+        </CommandList>
+      </CommandDialog>
+    </>
   );
 }
 
