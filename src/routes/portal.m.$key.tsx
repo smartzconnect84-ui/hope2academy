@@ -389,18 +389,25 @@ const MODULES: Record<string, ModuleDef> = {
   },
   posts: {
     title: "Posts & Stories", subtitle: "Editorial content for the website", icon: Newspaper,
-    render: () => {
-      const data = mockDb.list<any>("posts");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Write a post</Button>}/>
-          <TableShell
-            head={["Title", "Author", "Status", "Date", ""]}
-            rows={data.map(p => [p.title, p.author, statusBadge(p.status), p.date, <Button size="sm" variant="outline">Edit</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="posts"
+        itemLabel="post"
+        createLabel="Write a post"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "author", label: "Author", type: "text", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Published"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "author", label: "Author" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+          { key: "date", label: "Date" },
+        ]}
+      />
+    ),
   },
   media: {
     title: "Media Library", subtitle: "Images, videos and documents", icon: ImageIcon,
