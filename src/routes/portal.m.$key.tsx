@@ -93,38 +93,52 @@ const MODULES: Record<string, ModuleDef> = {
   },
   grades: {
     title: "Grades", subtitle: "Scores by student and subject", icon: Award,
-    render: () => {
-      const data = mockDb.list<any>("grades");
-      const avg = Math.round(data.reduce((s, g) => s + g.score, 0) / Math.max(1, data.length));
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={Award} label="Entries" value={data.length}/>
-            <StatCard icon={BarChart3} label="Class Average" value={`${avg}%`} accent="accent"/>
-            <StatCard icon={CheckCircle2} label="Above 90%" value={data.filter(d=>d.score>=90).length} accent="secondary"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Student", "Subject", "Score", "Grade", "Term"]}
-            rows={data.map(g => [g.student, g.subject, `${g.score}%`, <span className="font-display font-bold text-primary">{g.grade}</span>, g.term])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <GradesStats/>
+        <SimpleCrud
+          collection="grades"
+          itemLabel="grade entry"
+          fields={[
+            { name: "student", label: "Student", type: "text", required: true },
+            { name: "subject", label: "Subject", type: "text", required: true },
+            { name: "score", label: "Score (0-100)", type: "number", required: true },
+            { name: "grade", label: "Letter grade", type: "text", required: true, placeholder: "A, B+, …" },
+            { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3"], required: true },
+          ]}
+          columns={[
+            { key: "student", label: "Student" },
+            { key: "subject", label: "Subject" },
+            { key: "score", label: "Score", render: (v) => `${v}%` },
+            { key: "grade", label: "Grade", render: (v) => <span className="font-display font-bold text-primary">{v}</span> },
+            { key: "term", label: "Term" },
+          ]}
+        />
+      </>
+    ),
   },
   attendance: {
     title: "Attendance", subtitle: "Daily roll-call across classes", icon: Calendar,
-    render: () => {
-      const data = mockDb.list<any>("attendance");
-      return (
-        <>
-          <Toolbar/>
-          <TableShell
-            head={["Date", "Class", "Present", "Absent", "Late"]}
-            rows={data.map(a => [a.date, a.class, a.present, a.absent, a.late])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="attendance"
+        itemLabel="attendance record"
+        fields={[
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "present", label: "Present", type: "number", required: true },
+          { name: "absent", label: "Absent", type: "number", required: true },
+          { name: "late", label: "Late", type: "number" },
+        ]}
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "class", label: "Class" },
+          { key: "present", label: "Present" },
+          { key: "absent", label: "Absent" },
+          { key: "late", label: "Late" },
+        ]}
+      />
+    ),
   },
   timetable: {
     title: "Timetable", subtitle: "Weekly schedule", icon: Calendar,
@@ -153,78 +167,53 @@ const MODULES: Record<string, ModuleDef> = {
   },
   announcements: {
     title: "Announcements", subtitle: "School-wide notices", icon: Megaphone,
-    render: () => {
-      const data = mockDb.list<any>("announcements");
-      return (
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.map((a: any, i) => (
-            <Reveal key={a.id} delay={i*0.04}>
-              <Card className="p-5">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{a.audience}</Badge>
-                  <span className="text-xs text-muted-foreground">{a.date}</span>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold">{a.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{a.body}</p>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="announcements"
+        itemLabel="announcement"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "audience", label: "Audience", type: "select", options: ["All","Students","Parents","Staff","Alumni"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "body", label: "Body", type: "textarea", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "audience", label: "Audience", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "date", label: "Date" },
+        ]}
+      />
+    ),
   },
   messages: {
     title: "Messages", subtitle: "Direct messages and broadcasts", icon: MessageSquare,
-    render: () => {
-      const data = mockDb.list<any>("messages");
-      const unread = data.filter(m=>m.unread).length;
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={Inbox} label="Inbox" value={data.length}/>
-            <StatCard icon={Sparkles} label="Unread" value={unread} accent="accent"/>
-            <StatCard icon={CheckCircle2} label="Replied" value={data.length - unread} accent="secondary"/>
-          </StaggerGroup>
-          <Card className="divide-y divide-border">
-            {data.map((m: any) => (
-              <div key={m.id} className="p-4 hover:bg-muted/30 cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {m.unread && <span className="h-2 w-2 rounded-full bg-primary"/>}
-                    <p className="font-semibold">{m.from}</p>
-                    <span className="text-xs text-muted-foreground">→ {m.to}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{m.date}</span>
-                </div>
-                <p className="mt-1 text-sm font-medium">{m.subject}</p>
-                <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
-              </div>
-            ))}
-          </Card>
-        </>
-      );
-    },
+    render: () => <MessagesModule/>,
   },
   fees: {
     title: "Fees & Donations", subtitle: "Track tuition and contributions", icon: DollarSign,
-    render: () => {
-      const data = mockDb.list<any>("fees");
-      const outstanding = data.filter(f=>f.status==="Outstanding").reduce((s,f)=>s+f.amount,0);
-      const paid = data.filter(f=>f.status==="Paid").reduce((s,f)=>s+f.amount,0);
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`}/>
-            <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary"/>
-            <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Student", "Item", "Amount", "Due", "Status", ""]}
-            rows={data.map(f => [f.student, f.item, `$${f.amount}`, f.due, statusBadge(f.status), <Button size="sm" variant="outline" onClick={()=>toast.success("Receipt downloaded")}><Download className="h-3 w-3 mr-1"/>Receipt</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <FeesStats/>
+        <SimpleCrud
+          collection="fees"
+          itemLabel="fee"
+          fields={[
+            { name: "student", label: "Student", type: "text", required: true },
+            { name: "item", label: "Item", type: "text", required: true, placeholder: "Term tuition, Lab fee…" },
+            { name: "amount", label: "Amount (USD)", type: "number", required: true },
+            { name: "due", label: "Due date", type: "date", required: true },
+            { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
+          ]}
+          columns={[
+            { key: "student", label: "Student" },
+            { key: "item", label: "Item" },
+            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "due", label: "Due" },
+            { key: "status", label: "Status", render: (v) => statusBadge(v) },
+          ]}
+        />
+      </>
+    ),
   },
   children: {
     title: "My Children", subtitle: "Linked student records", icon: Heart,
@@ -255,79 +244,66 @@ const MODULES: Record<string, ModuleDef> = {
   },
   events: {
     title: "Events & Reunions", subtitle: "Upcoming alumni events", icon: Calendar,
-    render: () => {
-      const data = mockDb.list<any>("events");
-      return (
-        <div className="grid md:grid-cols-3 gap-4">
-          {data.map((e: any, i) => (
-            <Reveal key={e.id} delay={i*0.05}>
-              <Card className="p-5">
-                <Calendar className="h-6 w-6 text-primary"/>
-                <h3 className="mt-3 font-display text-lg font-semibold">{e.title}</h3>
-                <p className="text-sm text-muted-foreground">{e.location}</p>
-                <p className="mt-3 text-sm font-semibold text-primary">{e.date}</p>
-                <Button size="sm" className="mt-4 w-full">RSVP</Button>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="events"
+        itemLabel="event"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "location", label: "Location", type: "text", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "date", label: "Date" },
+          { key: "location", label: "Location" },
+        ]}
+      />
+    ),
   },
   jobs: {
     title: "Job Board", subtitle: "Opportunities shared with our network", icon: Briefcase,
-    render: () => {
-      const data = mockDb.list<any>("jobs");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Post a job</Button>}/>
-          <div className="grid md:grid-cols-2 gap-4">
-            {data.map((j: any, i) => (
-              <Reveal key={j.id} delay={i*0.04}>
-                <Card className="p-5 flex flex-col">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-display text-lg font-semibold">{j.title}</h3>
-                      <p className="text-sm text-muted-foreground">{j.company} · {j.location}</p>
-                    </div>
-                    <Badge variant="secondary">{j.posted}</Badge>
-                  </div>
-                  <Button variant="outline" className="mt-4 self-start gap-2">Apply <ArrowUpRight className="h-3.5 w-3.5"/></Button>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="jobs"
+        itemLabel="job"
+        createLabel="Post a job"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "company", label: "Company", type: "text", required: true },
+          { name: "location", label: "Location", type: "text", required: true },
+          { name: "posted", label: "Posted", type: "date", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "company", label: "Company" },
+          { key: "location", label: "Location" },
+          { key: "posted", label: "Posted" },
+        ]}
+      />
+    ),
   },
   directory: {
     title: "Alumni Directory", subtitle: "Reconnect with classmates", icon: Users,
-    render: () => {
-      const data = mockDb.list<any>("directory");
-      return (
-        <>
-          <Toolbar/>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.map((p: any, i) => (
-              <Reveal key={p.id} delay={i*0.04}>
-                <Card className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-accent to-primary text-primary-foreground grid place-items-center font-bold">{p.name[0]}</div>
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">Class of {p.year}</p>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm">{p.role}</p>
-                  <p className="text-xs text-muted-foreground">{p.city}</p>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="directory"
+        itemLabel="alumni"
+        createLabel="Add alumni"
+        fields={[
+          { name: "name", label: "Name", type: "text", required: true },
+          { name: "year", label: "Graduation year", type: "number", required: true },
+          { name: "role", label: "Current role", type: "text" },
+          { name: "city", label: "City", type: "text" },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "year", label: "Class of" },
+          { key: "role", label: "Role" },
+          { key: "city", label: "City" },
+        ]}
+      />
+    ),
   },
   mentorship: {
     title: "Mentorship", subtitle: "Guide a current student", icon: Heart,
@@ -342,60 +318,68 @@ const MODULES: Record<string, ModuleDef> = {
   },
   donations: {
     title: "Donations", subtitle: "Recent contributions to the school", icon: DollarSign,
-    render: () => {
-      const data = mockDb.list<any>("donations");
-      const total = data.reduce((s,d)=>s+d.amount,0);
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`}/>
-            <StatCard icon={Users} label="Donors" value={data.length} accent="accent"/>
-            <StatCard icon={Heart} label="Recurring" value={3} accent="secondary"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Donor", "Fund", "Amount", "Date"]}
-            rows={data.map(d => [d.donor, d.fund, `$${d.amount}`, d.date])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <DonationsStats/>
+        <SimpleCrud
+          collection="donations"
+          itemLabel="donation"
+          createLabel="Record donation"
+          fields={[
+            { name: "donor", label: "Donor", type: "text", required: true },
+            { name: "fund", label: "Fund", type: "select", options: ["Scholarship","Capital","Library","General"], required: true },
+            { name: "amount", label: "Amount (USD)", type: "number", required: true },
+            { name: "date", label: "Date", type: "date", required: true },
+          ]}
+          columns={[
+            { key: "donor", label: "Donor" },
+            { key: "fund", label: "Fund" },
+            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "date", label: "Date" },
+          ]}
+        />
+      </>
+    ),
   },
   library: {
     title: "Library", subtitle: "Catalog and availability", icon: Library,
-    render: () => {
-      const data = mockDb.list<any>("library");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Add title</Button>}/>
-          <TableShell
-            head={["Title", "Author", "Copies available", ""]}
-            rows={data.map(b => [b.title, b.author, b.available, <Button size="sm" variant="outline" onClick={()=>toast.success("Reserved")}>Reserve</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="library"
+        itemLabel="book"
+        createLabel="Add title"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "author", label: "Author", type: "text", required: true },
+          { name: "available", label: "Copies available", type: "number", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "author", label: "Author" },
+          { key: "available", label: "Available" },
+        ]}
+      />
+    ),
   },
   resources: {
     title: "Teaching Resources", subtitle: "Shared documents for staff", icon: Library,
-    render: () => {
-      const data = mockDb.list<any>("resources");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Upload className="h-4 w-4"/> Upload</Button>}/>
-          <Card className="divide-y divide-border">
-            {data.map((r: any) => (
-              <div key={r.id} className="p-4 flex items-center justify-between hover:bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-primary"/>
-                  <div><p className="font-medium">{r.title}</p><p className="text-xs text-muted-foreground">{r.type} · {r.size}</p></div>
-                </div>
-                <Button variant="ghost" size="sm" className="gap-2"><Download className="h-4 w-4"/>Download</Button>
-              </div>
-            ))}
-          </Card>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="resources"
+        itemLabel="resource"
+        createLabel="Add resource"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "type", label: "Type", type: "select", options: ["PDF","DOCX","XLSX","Link"], required: true },
+          { name: "size", label: "Size", type: "text", placeholder: "1.2 MB" },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type" },
+          { key: "size", label: "Size" },
+        ]}
+      />
+    ),
   },
   // ----- CMS / Super-admin
   pages: {
@@ -405,18 +389,25 @@ const MODULES: Record<string, ModuleDef> = {
   },
   posts: {
     title: "Posts & Stories", subtitle: "Editorial content for the website", icon: Newspaper,
-    render: () => {
-      const data = mockDb.list<any>("posts");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Write a post</Button>}/>
-          <TableShell
-            head={["Title", "Author", "Status", "Date", ""]}
-            rows={data.map(p => [p.title, p.author, statusBadge(p.status), p.date, <Button size="sm" variant="outline">Edit</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="posts"
+        itemLabel="post"
+        createLabel="Write a post"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "author", label: "Author", type: "text", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Published"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "author", label: "Author" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+          { key: "date", label: "Date" },
+        ]}
+      />
+    ),
   },
   media: {
     title: "Media Library", subtitle: "Images, videos and documents", icon: ImageIcon,
@@ -459,25 +450,23 @@ const MODULES: Record<string, ModuleDef> = {
   },
   departments: {
     title: "Departments", subtitle: "Organisational structure", icon: FolderTree,
-    render: () => {
-      const data = mockDb.list<any>("departments");
-      return (
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.map((d: any, i) => (
-            <Reveal key={d.id} delay={i*0.05}>
-              <Card className="p-5">
-                <div className="flex items-center gap-3">
-                  <FolderTree className="h-5 w-5 text-primary"/>
-                  <h3 className="font-display text-lg font-semibold">{d.name}</h3>
-                </div>
-                <p className="mt-3 text-sm">Lead: <span className="font-semibold">{d.lead}</span></p>
-                <p className="text-sm text-muted-foreground">{d.staff} staff members</p>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="departments"
+        itemLabel="department"
+        createLabel="Add department"
+        fields={[
+          { name: "name", label: "Department name", type: "text", required: true },
+          { name: "lead", label: "Department lead", type: "text", required: true },
+          { name: "staff", label: "Staff count", type: "number", required: true },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "lead", label: "Lead" },
+          { key: "staff", label: "Staff" },
+        ]}
+      />
+    ),
   },
   audit: {
     title: "Audit Logs", subtitle: "Recent administrator activity", icon: ClipboardList,
@@ -856,6 +845,239 @@ function ModuleRoute() {
 }
 
 export default ModuleRoute;
+
+// =========================================================================
+// Generic CRUD helper — drives most list modules
+// =========================================================================
+type FieldDef = {
+  name: string;
+  label: string;
+  type: "text" | "number" | "date" | "select" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+};
+type ColumnDef = { key: string; label: string; render?: (value: any, row: any) => ReactNode };
+
+function SimpleCrud({
+  collection,
+  itemLabel,
+  createLabel,
+  fields,
+  columns,
+}: {
+  collection: string;
+  itemLabel: string;
+  createLabel?: string;
+  fields: FieldDef[];
+  columns: ColumnDef[];
+}) {
+  const tick = useTick();
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<any | null>(null);
+  const [creating, setCreating] = useState(false);
+  const all = mockDb.list<any>(collection);
+  const rows = all.filter((r) =>
+    !q ||
+    columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
+  );
+  const remove = (row: any) => {
+    if (!confirm(`Delete this ${itemLabel}?`)) return;
+    mockDb.remove(collection, row.id);
+    toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} deleted`);
+    tick();
+  };
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${itemLabel}s…`} className="pl-9 bg-card" />
+        </div>
+        <Button className="gap-2" onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
+        </Button>
+      </div>
+      <TableShell
+        head={[...columns.map((c) => c.label), ""]}
+        rows={rows.map((r) => [
+          ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
+          <div className="flex items-center gap-2 justify-end">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
+              <Edit3 className="h-3.5 w-3.5" />Edit
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => remove(r)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>,
+        ])}
+      />
+      {(editing || creating) && (
+        <SimpleEditor
+          itemLabel={itemLabel}
+          fields={fields}
+          row={editing}
+          onClose={() => { setEditing(null); setCreating(false); tick(); }}
+          onSave={(values) => {
+            const normalized: any = {};
+            for (const f of fields) {
+              const v = values[f.name];
+              normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
+            }
+            if (editing) {
+              mockDb.update(collection, editing.id, normalized);
+              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} updated`);
+            } else {
+              mockDb.create(collection, normalized);
+              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} created`);
+            }
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function SimpleEditor({
+  itemLabel, fields, row, onClose, onSave,
+}: {
+  itemLabel: string;
+  fields: FieldDef[];
+  row: any | null;
+  onClose: () => void;
+  onSave: (values: Record<string, any>) => void;
+}) {
+  const [form, setForm] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    for (const f of fields) init[f.name] = row?.[f.name] ?? (f.type === "number" ? 0 : "");
+    return init;
+  });
+  const save = () => {
+    for (const f of fields) {
+      if (f.required && (form[f.name] === "" || form[f.name] === null || form[f.name] === undefined)) {
+        toast.error(`${f.label} is required`); return;
+      }
+    }
+    onSave(form); onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{row ? `Edit ${itemLabel}` : `New ${itemLabel}`}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          {fields.map((f) => (
+            <div key={f.name}>
+              <Label>{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
+              {f.type === "textarea" ? (
+                <Textarea rows={4} value={form[f.name] ?? ""} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} placeholder={f.placeholder} />
+              ) : f.type === "select" ? (
+                <Select value={String(form[f.name] ?? "")} onValueChange={(v) => setForm({ ...form, [f.name]: v })}>
+                  <SelectTrigger><SelectValue placeholder={f.placeholder ?? "Select…"} /></SelectTrigger>
+                  <SelectContent>
+                    {(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type={f.type}
+                  value={form[f.name] ?? ""}
+                  onChange={(e) => setForm({ ...form, [f.name]: f.type === "number" ? Number(e.target.value) : e.target.value })}
+                  placeholder={f.placeholder}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
+// Stat strips for modules that need quick KPIs above the CRUD table
+// =========================================================================
+function GradesStats() {
+  const data = mockDb.list<any>("grades");
+  const avg = Math.round(data.reduce((s, g) => s + Number(g.score || 0), 0) / Math.max(1, data.length));
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={Award} label="Entries" value={data.length} />
+      <StatCard icon={BarChart3} label="Class Average" value={`${avg}%`} accent="accent" />
+      <StatCard icon={CheckCircle2} label="Above 90%" value={data.filter((d) => Number(d.score) >= 90).length} accent="secondary" />
+    </StaggerGroup>
+  );
+}
+
+function FeesStats() {
+  const data = mockDb.list<any>("fees");
+  const outstanding = data.filter((f) => f.status === "Outstanding").reduce((s, f) => s + Number(f.amount || 0), 0);
+  const paid = data.filter((f) => f.status === "Paid").reduce((s, f) => s + Number(f.amount || 0), 0);
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`} />
+      <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary" />
+      <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent" />
+    </StaggerGroup>
+  );
+}
+
+function DonationsStats() {
+  const data = mockDb.list<any>("donations");
+  const total = data.reduce((s, d) => s + Number(d.amount || 0), 0);
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`} />
+      <StatCard icon={Users} label="Donors" value={data.length} accent="accent" />
+      <StatCard icon={Heart} label="Recurring" value={3} accent="secondary" />
+    </StaggerGroup>
+  );
+}
+
+// =========================================================================
+// Messages — inbox with mark read + delete
+// =========================================================================
+function MessagesModule() {
+  const tick = useTick();
+  const data = mockDb.list<any>("messages");
+  const unread = data.filter((m) => m.unread).length;
+  const markRead = (id: string) => { mockDb.update<any>("messages", id, { unread: false }); tick(); };
+  const remove = (id: string) => { mockDb.remove("messages", id); toast.success("Message deleted"); tick(); };
+  return (
+    <>
+      <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+        <StatCard icon={Inbox} label="Inbox" value={data.length} />
+        <StatCard icon={Sparkles} label="Unread" value={unread} accent="accent" />
+        <StatCard icon={CheckCircle2} label="Read" value={data.length - unread} accent="secondary" />
+      </StaggerGroup>
+      <Card className="divide-y divide-border">
+        {data.map((m: any) => (
+          <div key={m.id} className="p-4 hover:bg-muted/30 flex items-start gap-4">
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => markRead(m.id)}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {m.unread && <span className="h-2 w-2 rounded-full bg-primary" />}
+                  <p className="font-semibold">{m.from}</p>
+                  <span className="text-xs text-muted-foreground">→ {m.to}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{m.date}</span>
+              </div>
+              <p className="mt-1 text-sm font-medium">{m.subject}</p>
+              <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => remove(m.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+        {data.length === 0 && <p className="p-8 text-center text-muted-foreground">Inbox is empty.</p>}
+      </Card>
+    </>
+  );
+}
 
 // =========================================================================
 // Academics — Classes (full CRUD)
