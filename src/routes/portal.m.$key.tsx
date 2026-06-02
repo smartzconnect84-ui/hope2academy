@@ -85,33 +85,11 @@ function statusBadge(s: string) {
 const MODULES: Record<string, ModuleDef> = {
   classes: {
     title: "Classes", subtitle: "All active classes across campuses", icon: GraduationCap,
-    render: () => {
-      const data = mockDb.list<any>("classes");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> New class</Button>}/>
-          <TableShell
-            head={["Class", "Teacher", "Room", "Students", "Schedule"]}
-            rows={data.map(c => [c.name, c.teacher, c.room, c.students, c.schedule])}
-          />
-        </>
-      );
-    },
+    render: () => <ClassesModule/>,
   },
   assignments: {
     title: "Assignments", subtitle: "Track open and graded work", icon: ClipboardList,
-    render: () => {
-      const data = mockDb.list<any>("assignments");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> New assignment</Button>}/>
-          <TableShell
-            head={["Title", "Class", "Due", "Submissions", "Status"]}
-            rows={data.map(a => [a.title, a.class, a.due, `${a.submissions}`, statusBadge(a.status)])}
-          />
-        </>
-      );
-    },
+    render: () => <AssignmentsModule/>,
   },
   grades: {
     title: "Grades", subtitle: "Scores by student and subject", icon: Award,
