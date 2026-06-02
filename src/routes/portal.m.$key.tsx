@@ -1044,7 +1044,7 @@ function MessagesModule() {
   const tick = useTick();
   const data = mockDb.list<any>("messages");
   const unread = data.filter((m) => m.unread).length;
-  const markRead = (id: string) => { mockDb.update("messages", id, { unread: false }); tick(); };
+  const markRead = (id: string) => { mockDb.update<any>("messages", id, { unread: false }); tick(); };
   const remove = (id: string) => { mockDb.remove("messages", id); toast.success("Message deleted"); tick(); };
   return (
     <>
