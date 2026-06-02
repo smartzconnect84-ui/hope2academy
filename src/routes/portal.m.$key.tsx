@@ -847,6 +847,239 @@ function ModuleRoute() {
 export default ModuleRoute;
 
 // =========================================================================
+// Generic CRUD helper — drives most list modules
+// =========================================================================
+type FieldDef = {
+  name: string;
+  label: string;
+  type: "text" | "number" | "date" | "select" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+  options?: string[];
+};
+type ColumnDef = { key: string; label: string; render?: (value: any, row: any) => ReactNode };
+
+function SimpleCrud({
+  collection,
+  itemLabel,
+  createLabel,
+  fields,
+  columns,
+}: {
+  collection: string;
+  itemLabel: string;
+  createLabel?: string;
+  fields: FieldDef[];
+  columns: ColumnDef[];
+}) {
+  const tick = useTick();
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<any | null>(null);
+  const [creating, setCreating] = useState(false);
+  const all = mockDb.list<any>(collection);
+  const rows = all.filter((r) =>
+    !q ||
+    columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
+  );
+  const remove = (row: any) => {
+    if (!confirm(`Delete this ${itemLabel}?`)) return;
+    mockDb.remove(collection, row.id);
+    toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} deleted`);
+    tick();
+  };
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${itemLabel}s…`} className="pl-9 bg-card" />
+        </div>
+        <Button className="gap-2" onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
+        </Button>
+      </div>
+      <TableShell
+        head={[...columns.map((c) => c.label), ""]}
+        rows={rows.map((r) => [
+          ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
+          <div className="flex items-center gap-2 justify-end">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
+              <Edit3 className="h-3.5 w-3.5" />Edit
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => remove(r)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>,
+        ])}
+      />
+      {(editing || creating) && (
+        <SimpleEditor
+          itemLabel={itemLabel}
+          fields={fields}
+          row={editing}
+          onClose={() => { setEditing(null); setCreating(false); tick(); }}
+          onSave={(values) => {
+            const normalized: any = {};
+            for (const f of fields) {
+              const v = values[f.name];
+              normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
+            }
+            if (editing) {
+              mockDb.update(collection, editing.id, normalized);
+              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} updated`);
+            } else {
+              mockDb.create(collection, normalized);
+              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} created`);
+            }
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function SimpleEditor({
+  itemLabel, fields, row, onClose, onSave,
+}: {
+  itemLabel: string;
+  fields: FieldDef[];
+  row: any | null;
+  onClose: () => void;
+  onSave: (values: Record<string, any>) => void;
+}) {
+  const [form, setForm] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    for (const f of fields) init[f.name] = row?.[f.name] ?? (f.type === "number" ? 0 : "");
+    return init;
+  });
+  const save = () => {
+    for (const f of fields) {
+      if (f.required && (form[f.name] === "" || form[f.name] === null || form[f.name] === undefined)) {
+        toast.error(`${f.label} is required`); return;
+      }
+    }
+    onSave(form); onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{row ? `Edit ${itemLabel}` : `New ${itemLabel}`}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          {fields.map((f) => (
+            <div key={f.name}>
+              <Label>{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
+              {f.type === "textarea" ? (
+                <Textarea rows={4} value={form[f.name] ?? ""} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} placeholder={f.placeholder} />
+              ) : f.type === "select" ? (
+                <Select value={String(form[f.name] ?? "")} onValueChange={(v) => setForm({ ...form, [f.name]: v })}>
+                  <SelectTrigger><SelectValue placeholder={f.placeholder ?? "Select…"} /></SelectTrigger>
+                  <SelectContent>
+                    {(f.options ?? []).map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type={f.type}
+                  value={form[f.name] ?? ""}
+                  onChange={(e) => setForm({ ...form, [f.name]: f.type === "number" ? Number(e.target.value) : e.target.value })}
+                  placeholder={f.placeholder}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
+// Stat strips for modules that need quick KPIs above the CRUD table
+// =========================================================================
+function GradesStats() {
+  const data = mockDb.list<any>("grades");
+  const avg = Math.round(data.reduce((s, g) => s + Number(g.score || 0), 0) / Math.max(1, data.length));
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={Award} label="Entries" value={data.length} />
+      <StatCard icon={BarChart3} label="Class Average" value={`${avg}%`} accent="accent" />
+      <StatCard icon={CheckCircle2} label="Above 90%" value={data.filter((d) => Number(d.score) >= 90).length} accent="secondary" />
+    </StaggerGroup>
+  );
+}
+
+function FeesStats() {
+  const data = mockDb.list<any>("fees");
+  const outstanding = data.filter((f) => f.status === "Outstanding").reduce((s, f) => s + Number(f.amount || 0), 0);
+  const paid = data.filter((f) => f.status === "Paid").reduce((s, f) => s + Number(f.amount || 0), 0);
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`} />
+      <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary" />
+      <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent" />
+    </StaggerGroup>
+  );
+}
+
+function DonationsStats() {
+  const data = mockDb.list<any>("donations");
+  const total = data.reduce((s, d) => s + Number(d.amount || 0), 0);
+  return (
+    <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+      <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`} />
+      <StatCard icon={Users} label="Donors" value={data.length} accent="accent" />
+      <StatCard icon={Heart} label="Recurring" value={3} accent="secondary" />
+    </StaggerGroup>
+  );
+}
+
+// =========================================================================
+// Messages — inbox with mark read + delete
+// =========================================================================
+function MessagesModule() {
+  const tick = useTick();
+  const data = mockDb.list<any>("messages");
+  const unread = data.filter((m) => m.unread).length;
+  const markRead = (id: string) => { mockDb.update("messages", id, { unread: false }); tick(); };
+  const remove = (id: string) => { mockDb.remove("messages", id); toast.success("Message deleted"); tick(); };
+  return (
+    <>
+      <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
+        <StatCard icon={Inbox} label="Inbox" value={data.length} />
+        <StatCard icon={Sparkles} label="Unread" value={unread} accent="accent" />
+        <StatCard icon={CheckCircle2} label="Read" value={data.length - unread} accent="secondary" />
+      </StaggerGroup>
+      <Card className="divide-y divide-border">
+        {data.map((m: any) => (
+          <div key={m.id} className="p-4 hover:bg-muted/30 flex items-start gap-4">
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => markRead(m.id)}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {m.unread && <span className="h-2 w-2 rounded-full bg-primary" />}
+                  <p className="font-semibold">{m.from}</p>
+                  <span className="text-xs text-muted-foreground">→ {m.to}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{m.date}</span>
+              </div>
+              <p className="mt-1 text-sm font-medium">{m.subject}</p>
+              <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => remove(m.id)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+        {data.length === 0 && <p className="p-8 text-center text-muted-foreground">Inbox is empty.</p>}
+      </Card>
+    </>
+  );
+}
+
+// =========================================================================
 // Academics — Classes (full CRUD)
 // =========================================================================
 type ClassRow = { id: string; name: string; teacher: string; room: string; students: number; schedule: string };
