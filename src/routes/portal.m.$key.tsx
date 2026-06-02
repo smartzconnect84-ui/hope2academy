@@ -856,3 +856,190 @@ function ModuleRoute() {
 }
 
 export default ModuleRoute;
+
+// =========================================================================
+// Academics — Classes (full CRUD)
+// =========================================================================
+type ClassRow = { id: string; name: string; teacher: string; room: string; students: number; schedule: string };
+
+function useTick() {
+  const [, set] = useState(0);
+  return () => set((n) => n + 1);
+}
+
+function ClassesModule() {
+  const tick = useTick();
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<ClassRow | null>(null);
+  const [creating, setCreating] = useState(false);
+  const all = mockDb.list<ClassRow>("classes");
+  const rows = all.filter((c) => !q || `${c.name} ${c.teacher} ${c.room}`.toLowerCase().includes(q.toLowerCase()));
+  const remove = (c: ClassRow) => {
+    if (!confirm(`Delete class "${c.name}"?`)) return;
+    mockDb.remove("classes", c.id); toast.success("Class deleted"); tick();
+  };
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search classes…" className="pl-9 bg-card" />
+        </div>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New class</Button>
+      </div>
+      <TableShell
+        head={["Class", "Teacher", "Room", "Students", "Schedule", ""]}
+        rows={rows.map((c) => [
+          <span className="font-medium">{c.name}</span>,
+          c.teacher,
+          c.room,
+          c.students,
+          c.schedule,
+          <div className="flex items-center gap-2 justify-end">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(c)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+            <Button size="sm" variant="ghost" onClick={()=>remove(c)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+          </div>,
+        ])}
+      />
+      {(editing || creating) && (
+        <ClassEditor
+          row={editing}
+          onClose={()=>{ setEditing(null); setCreating(false); tick(); }}
+        />
+      )}
+    </>
+  );
+}
+
+function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => void }) {
+  const [form, setForm] = useState<Partial<ClassRow>>(row ?? { name: "", teacher: "", room: "", students: 0, schedule: "" });
+  const save = () => {
+    if (!form.name || !form.teacher) { toast.error("Name and teacher are required"); return; }
+    if (row) { mockDb.update<ClassRow>("classes", row.id, form); toast.success("Class updated"); }
+    else { mockDb.create<ClassRow>("classes", { ...(form as ClassRow), students: Number(form.students) || 0 }); toast.success("Class created"); }
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader><DialogTitle>{row ? "Edit class" : "New class"}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label>Class name</Label><Input value={form.name ?? ""} onChange={(e)=>setForm({...form, name:e.target.value})} placeholder="Grade 9 — Mathematics"/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Teacher</Label><Input value={form.teacher ?? ""} onChange={(e)=>setForm({...form, teacher:e.target.value})}/></div>
+            <div><Label>Room</Label><Input value={form.room ?? ""} onChange={(e)=>setForm({...form, room:e.target.value})}/></div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Students</Label><Input type="number" value={form.students ?? 0} onChange={(e)=>setForm({...form, students:Number(e.target.value)})}/></div>
+            <div><Label>Schedule</Label><Input value={form.schedule ?? ""} onChange={(e)=>setForm({...form, schedule:e.target.value})} placeholder="Mon/Wed/Fri 08:00"/></div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
+// Academics — Assignments (full CRUD)
+// =========================================================================
+type AssignmentRow = { id: string; title: string; class: string; due: string; submissions: number; status: string };
+
+function AssignmentsModule() {
+  const tick = useTick();
+  const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<AssignmentRow | null>(null);
+  const [creating, setCreating] = useState(false);
+  const all = mockDb.list<AssignmentRow>("assignments");
+  const classes = mockDb.list<ClassRow>("classes");
+  const rows = all.filter((a) => !q || `${a.title} ${a.class}`.toLowerCase().includes(q.toLowerCase()));
+  const remove = (a: AssignmentRow) => {
+    if (!confirm(`Delete assignment "${a.title}"?`)) return;
+    mockDb.remove("assignments", a.id); toast.success("Assignment deleted"); tick();
+  };
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search assignments…" className="pl-9 bg-card" />
+        </div>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New assignment</Button>
+      </div>
+      <TableShell
+        head={["Title", "Class", "Due", "Submissions", "Status", ""]}
+        rows={rows.map((a) => [
+          <span className="font-medium">{a.title}</span>,
+          a.class,
+          a.due,
+          a.submissions,
+          statusBadge(a.status),
+          <div className="flex items-center gap-2 justify-end">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(a)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+            <Button size="sm" variant="ghost" onClick={()=>remove(a)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+          </div>,
+        ])}
+      />
+      {(editing || creating) && (
+        <AssignmentEditor
+          row={editing}
+          classes={classes}
+          onClose={()=>{ setEditing(null); setCreating(false); tick(); }}
+        />
+      )}
+    </>
+  );
+}
+
+function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null; classes: ClassRow[]; onClose: () => void }) {
+  const [form, setForm] = useState<Partial<AssignmentRow>>(row ?? { title: "", class: classes[0]?.name ?? "", due: "", submissions: 0, status: "Open" });
+  const save = () => {
+    if (!form.title || !form.class || !form.due) { toast.error("Title, class and due date are required"); return; }
+    if (row) { mockDb.update<AssignmentRow>("assignments", row.id, form); toast.success("Assignment updated"); }
+    else { mockDb.create<AssignmentRow>("assignments", { ...(form as AssignmentRow), submissions: Number(form.submissions) || 0 }); toast.success("Assignment created"); }
+    onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader><DialogTitle>{row ? "Edit assignment" : "New assignment"}</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div><Label>Title</Label><Input value={form.title ?? ""} onChange={(e)=>setForm({...form, title:e.target.value})}/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <Label>Class</Label>
+              <Select value={form.class ?? ""} onValueChange={(v)=>setForm({...form, class:v})}>
+                <SelectTrigger><SelectValue placeholder="Select a class"/></SelectTrigger>
+                <SelectContent>
+                  {classes.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Due date</Label><Input type="date" value={form.due ?? ""} onChange={(e)=>setForm({...form, due:e.target.value})}/></div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Submissions</Label><Input type="number" value={form.submissions ?? 0} onChange={(e)=>setForm({...form, submissions:Number(e.target.value)})}/></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={form.status ?? "Open"} onValueChange={(v)=>setForm({...form, status:v})}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="Grading">Grading</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
