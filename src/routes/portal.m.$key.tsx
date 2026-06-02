@@ -93,38 +93,52 @@ const MODULES: Record<string, ModuleDef> = {
   },
   grades: {
     title: "Grades", subtitle: "Scores by student and subject", icon: Award,
-    render: () => {
-      const data = mockDb.list<any>("grades");
-      const avg = Math.round(data.reduce((s, g) => s + g.score, 0) / Math.max(1, data.length));
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={Award} label="Entries" value={data.length}/>
-            <StatCard icon={BarChart3} label="Class Average" value={`${avg}%`} accent="accent"/>
-            <StatCard icon={CheckCircle2} label="Above 90%" value={data.filter(d=>d.score>=90).length} accent="secondary"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Student", "Subject", "Score", "Grade", "Term"]}
-            rows={data.map(g => [g.student, g.subject, `${g.score}%`, <span className="font-display font-bold text-primary">{g.grade}</span>, g.term])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <GradesStats/>
+        <SimpleCrud
+          collection="grades"
+          itemLabel="grade entry"
+          fields={[
+            { name: "student", label: "Student", type: "text", required: true },
+            { name: "subject", label: "Subject", type: "text", required: true },
+            { name: "score", label: "Score (0-100)", type: "number", required: true },
+            { name: "grade", label: "Letter grade", type: "text", required: true, placeholder: "A, B+, …" },
+            { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3"], required: true },
+          ]}
+          columns={[
+            { key: "student", label: "Student" },
+            { key: "subject", label: "Subject" },
+            { key: "score", label: "Score", render: (v) => `${v}%` },
+            { key: "grade", label: "Grade", render: (v) => <span className="font-display font-bold text-primary">{v}</span> },
+            { key: "term", label: "Term" },
+          ]}
+        />
+      </>
+    ),
   },
   attendance: {
     title: "Attendance", subtitle: "Daily roll-call across classes", icon: Calendar,
-    render: () => {
-      const data = mockDb.list<any>("attendance");
-      return (
-        <>
-          <Toolbar/>
-          <TableShell
-            head={["Date", "Class", "Present", "Absent", "Late"]}
-            rows={data.map(a => [a.date, a.class, a.present, a.absent, a.late])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="attendance"
+        itemLabel="attendance record"
+        fields={[
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "present", label: "Present", type: "number", required: true },
+          { name: "absent", label: "Absent", type: "number", required: true },
+          { name: "late", label: "Late", type: "number" },
+        ]}
+        columns={[
+          { key: "date", label: "Date" },
+          { key: "class", label: "Class" },
+          { key: "present", label: "Present" },
+          { key: "absent", label: "Absent" },
+          { key: "late", label: "Late" },
+        ]}
+      />
+    ),
   },
   timetable: {
     title: "Timetable", subtitle: "Weekly schedule", icon: Calendar,
@@ -153,78 +167,53 @@ const MODULES: Record<string, ModuleDef> = {
   },
   announcements: {
     title: "Announcements", subtitle: "School-wide notices", icon: Megaphone,
-    render: () => {
-      const data = mockDb.list<any>("announcements");
-      return (
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.map((a: any, i) => (
-            <Reveal key={a.id} delay={i*0.04}>
-              <Card className="p-5">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{a.audience}</Badge>
-                  <span className="text-xs text-muted-foreground">{a.date}</span>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold">{a.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{a.body}</p>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="announcements"
+        itemLabel="announcement"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "audience", label: "Audience", type: "select", options: ["All","Students","Parents","Staff","Alumni"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "body", label: "Body", type: "textarea", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "audience", label: "Audience", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "date", label: "Date" },
+        ]}
+      />
+    ),
   },
   messages: {
     title: "Messages", subtitle: "Direct messages and broadcasts", icon: MessageSquare,
-    render: () => {
-      const data = mockDb.list<any>("messages");
-      const unread = data.filter(m=>m.unread).length;
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={Inbox} label="Inbox" value={data.length}/>
-            <StatCard icon={Sparkles} label="Unread" value={unread} accent="accent"/>
-            <StatCard icon={CheckCircle2} label="Replied" value={data.length - unread} accent="secondary"/>
-          </StaggerGroup>
-          <Card className="divide-y divide-border">
-            {data.map((m: any) => (
-              <div key={m.id} className="p-4 hover:bg-muted/30 cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {m.unread && <span className="h-2 w-2 rounded-full bg-primary"/>}
-                    <p className="font-semibold">{m.from}</p>
-                    <span className="text-xs text-muted-foreground">→ {m.to}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{m.date}</span>
-                </div>
-                <p className="mt-1 text-sm font-medium">{m.subject}</p>
-                <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
-              </div>
-            ))}
-          </Card>
-        </>
-      );
-    },
+    render: () => <MessagesModule/>,
   },
   fees: {
     title: "Fees & Donations", subtitle: "Track tuition and contributions", icon: DollarSign,
-    render: () => {
-      const data = mockDb.list<any>("fees");
-      const outstanding = data.filter(f=>f.status==="Outstanding").reduce((s,f)=>s+f.amount,0);
-      const paid = data.filter(f=>f.status==="Paid").reduce((s,f)=>s+f.amount,0);
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`}/>
-            <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary"/>
-            <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Student", "Item", "Amount", "Due", "Status", ""]}
-            rows={data.map(f => [f.student, f.item, `$${f.amount}`, f.due, statusBadge(f.status), <Button size="sm" variant="outline" onClick={()=>toast.success("Receipt downloaded")}><Download className="h-3 w-3 mr-1"/>Receipt</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <FeesStats/>
+        <SimpleCrud
+          collection="fees"
+          itemLabel="fee"
+          fields={[
+            { name: "student", label: "Student", type: "text", required: true },
+            { name: "item", label: "Item", type: "text", required: true, placeholder: "Term tuition, Lab fee…" },
+            { name: "amount", label: "Amount (USD)", type: "number", required: true },
+            { name: "due", label: "Due date", type: "date", required: true },
+            { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
+          ]}
+          columns={[
+            { key: "student", label: "Student" },
+            { key: "item", label: "Item" },
+            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "due", label: "Due" },
+            { key: "status", label: "Status", render: (v) => statusBadge(v) },
+          ]}
+        />
+      </>
+    ),
   },
   children: {
     title: "My Children", subtitle: "Linked student records", icon: Heart,
