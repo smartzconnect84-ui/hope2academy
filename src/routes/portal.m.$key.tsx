@@ -244,79 +244,66 @@ const MODULES: Record<string, ModuleDef> = {
   },
   events: {
     title: "Events & Reunions", subtitle: "Upcoming alumni events", icon: Calendar,
-    render: () => {
-      const data = mockDb.list<any>("events");
-      return (
-        <div className="grid md:grid-cols-3 gap-4">
-          {data.map((e: any, i) => (
-            <Reveal key={e.id} delay={i*0.05}>
-              <Card className="p-5">
-                <Calendar className="h-6 w-6 text-primary"/>
-                <h3 className="mt-3 font-display text-lg font-semibold">{e.title}</h3>
-                <p className="text-sm text-muted-foreground">{e.location}</p>
-                <p className="mt-3 text-sm font-semibold text-primary">{e.date}</p>
-                <Button size="sm" className="mt-4 w-full">RSVP</Button>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="events"
+        itemLabel="event"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "location", label: "Location", type: "text", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "date", label: "Date" },
+          { key: "location", label: "Location" },
+        ]}
+      />
+    ),
   },
   jobs: {
     title: "Job Board", subtitle: "Opportunities shared with our network", icon: Briefcase,
-    render: () => {
-      const data = mockDb.list<any>("jobs");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Post a job</Button>}/>
-          <div className="grid md:grid-cols-2 gap-4">
-            {data.map((j: any, i) => (
-              <Reveal key={j.id} delay={i*0.04}>
-                <Card className="p-5 flex flex-col">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-display text-lg font-semibold">{j.title}</h3>
-                      <p className="text-sm text-muted-foreground">{j.company} · {j.location}</p>
-                    </div>
-                    <Badge variant="secondary">{j.posted}</Badge>
-                  </div>
-                  <Button variant="outline" className="mt-4 self-start gap-2">Apply <ArrowUpRight className="h-3.5 w-3.5"/></Button>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="jobs"
+        itemLabel="job"
+        createLabel="Post a job"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "company", label: "Company", type: "text", required: true },
+          { name: "location", label: "Location", type: "text", required: true },
+          { name: "posted", label: "Posted", type: "date", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "company", label: "Company" },
+          { key: "location", label: "Location" },
+          { key: "posted", label: "Posted" },
+        ]}
+      />
+    ),
   },
   directory: {
     title: "Alumni Directory", subtitle: "Reconnect with classmates", icon: Users,
-    render: () => {
-      const data = mockDb.list<any>("directory");
-      return (
-        <>
-          <Toolbar/>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.map((p: any, i) => (
-              <Reveal key={p.id} delay={i*0.04}>
-                <Card className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-accent to-primary text-primary-foreground grid place-items-center font-bold">{p.name[0]}</div>
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">Class of {p.year}</p>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm">{p.role}</p>
-                  <p className="text-xs text-muted-foreground">{p.city}</p>
-                </Card>
-              </Reveal>
-            ))}
-          </div>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="directory"
+        itemLabel="alumni"
+        createLabel="Add alumni"
+        fields={[
+          { name: "name", label: "Name", type: "text", required: true },
+          { name: "year", label: "Graduation year", type: "number", required: true },
+          { name: "role", label: "Current role", type: "text" },
+          { name: "city", label: "City", type: "text" },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "year", label: "Class of" },
+          { key: "role", label: "Role" },
+          { key: "city", label: "City" },
+        ]}
+      />
+    ),
   },
   mentorship: {
     title: "Mentorship", subtitle: "Guide a current student", icon: Heart,
