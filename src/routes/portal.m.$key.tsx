@@ -318,60 +318,68 @@ const MODULES: Record<string, ModuleDef> = {
   },
   donations: {
     title: "Donations", subtitle: "Recent contributions to the school", icon: DollarSign,
-    render: () => {
-      const data = mockDb.list<any>("donations");
-      const total = data.reduce((s,d)=>s+d.amount,0);
-      return (
-        <>
-          <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-            <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`}/>
-            <StatCard icon={Users} label="Donors" value={data.length} accent="accent"/>
-            <StatCard icon={Heart} label="Recurring" value={3} accent="secondary"/>
-          </StaggerGroup>
-          <TableShell
-            head={["Donor", "Fund", "Amount", "Date"]}
-            rows={data.map(d => [d.donor, d.fund, `$${d.amount}`, d.date])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <>
+        <DonationsStats/>
+        <SimpleCrud
+          collection="donations"
+          itemLabel="donation"
+          createLabel="Record donation"
+          fields={[
+            { name: "donor", label: "Donor", type: "text", required: true },
+            { name: "fund", label: "Fund", type: "select", options: ["Scholarship","Capital","Library","General"], required: true },
+            { name: "amount", label: "Amount (USD)", type: "number", required: true },
+            { name: "date", label: "Date", type: "date", required: true },
+          ]}
+          columns={[
+            { key: "donor", label: "Donor" },
+            { key: "fund", label: "Fund" },
+            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "date", label: "Date" },
+          ]}
+        />
+      </>
+    ),
   },
   library: {
     title: "Library", subtitle: "Catalog and availability", icon: Library,
-    render: () => {
-      const data = mockDb.list<any>("library");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Plus className="h-4 w-4"/> Add title</Button>}/>
-          <TableShell
-            head={["Title", "Author", "Copies available", ""]}
-            rows={data.map(b => [b.title, b.author, b.available, <Button size="sm" variant="outline" onClick={()=>toast.success("Reserved")}>Reserve</Button>])}
-          />
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="library"
+        itemLabel="book"
+        createLabel="Add title"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "author", label: "Author", type: "text", required: true },
+          { name: "available", label: "Copies available", type: "number", required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "author", label: "Author" },
+          { key: "available", label: "Available" },
+        ]}
+      />
+    ),
   },
   resources: {
     title: "Teaching Resources", subtitle: "Shared documents for staff", icon: Library,
-    render: () => {
-      const data = mockDb.list<any>("resources");
-      return (
-        <>
-          <Toolbar action={<Button className="gap-2"><Upload className="h-4 w-4"/> Upload</Button>}/>
-          <Card className="divide-y divide-border">
-            {data.map((r: any) => (
-              <div key={r.id} className="p-4 flex items-center justify-between hover:bg-muted/30">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-primary"/>
-                  <div><p className="font-medium">{r.title}</p><p className="text-xs text-muted-foreground">{r.type} · {r.size}</p></div>
-                </div>
-                <Button variant="ghost" size="sm" className="gap-2"><Download className="h-4 w-4"/>Download</Button>
-              </div>
-            ))}
-          </Card>
-        </>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="resources"
+        itemLabel="resource"
+        createLabel="Add resource"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "type", label: "Type", type: "select", options: ["PDF","DOCX","XLSX","Link"], required: true },
+          { name: "size", label: "Size", type: "text", placeholder: "1.2 MB" },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type" },
+          { key: "size", label: "Size" },
+        ]}
+      />
+    ),
   },
   // ----- CMS / Super-admin
   pages: {
