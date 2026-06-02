@@ -450,25 +450,23 @@ const MODULES: Record<string, ModuleDef> = {
   },
   departments: {
     title: "Departments", subtitle: "Organisational structure", icon: FolderTree,
-    render: () => {
-      const data = mockDb.list<any>("departments");
-      return (
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.map((d: any, i) => (
-            <Reveal key={d.id} delay={i*0.05}>
-              <Card className="p-5">
-                <div className="flex items-center gap-3">
-                  <FolderTree className="h-5 w-5 text-primary"/>
-                  <h3 className="font-display text-lg font-semibold">{d.name}</h3>
-                </div>
-                <p className="mt-3 text-sm">Lead: <span className="font-semibold">{d.lead}</span></p>
-                <p className="text-sm text-muted-foreground">{d.staff} staff members</p>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => (
+      <SimpleCrud
+        collection="departments"
+        itemLabel="department"
+        createLabel="Add department"
+        fields={[
+          { name: "name", label: "Department name", type: "text", required: true },
+          { name: "lead", label: "Department lead", type: "text", required: true },
+          { name: "staff", label: "Staff count", type: "number", required: true },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "lead", label: "Lead" },
+          { key: "staff", label: "Staff" },
+        ]}
+      />
+    ),
   },
   audit: {
     title: "Audit Logs", subtitle: "Recent administrator activity", icon: ClipboardList,
