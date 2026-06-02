@@ -28,28 +28,37 @@ const m = (key: string) => `/portal/m/${key}`;
 
 const navByRole: Record<AppRole, NavGroup[]> = {
   superadmin: [
-    { group: "Overview", items: [
+    { group: "Command Center", items: [
       { to: "/portal/superadmin", label: "Dashboard", icon: Shield },
-      { to: "/portal/admin", label: "User Management", icon: Users },
       { to: m("analytics"), label: "Analytics", icon: BarChart3 },
+      { to: m("audit"), label: "Audit Logs", icon: ClipboardList },
     ]},
-    { group: "Content", items: [
+    { group: "People & Access", items: [
+      { to: "/portal/admin", label: "User Management", icon: Users },
+      { to: m("departments"), label: "Departments", icon: FolderTree },
+    ]},
+    { group: "Website (CMS)", items: [
       { to: m("pages"), label: "Pages (CMS)", icon: FileText },
       { to: m("posts"), label: "Posts & Stories", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
       { to: m("navigation"), label: "Navigation", icon: ListTree },
-      { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
-    { group: "Operations", items: [
-      { to: m("departments"), label: "Departments", icon: FolderTree },
+    { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
-      { to: m("audit"), label: "Audit Logs", icon: ClipboardList },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+    ]},
+    { group: "System", items: [
+      { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
   ],
   admin: [
-    { group: "Overview", items: [
+    { group: "Command Center", items: [
       { to: "/portal/admin", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("analytics"), label: "Analytics", icon: BarChart3 },
+    ]},
+    { group: "People", items: [
       { to: "/portal/admin", label: "User Management", icon: Users },
+      { to: m("departments"), label: "Departments", icon: FolderTree },
     ]},
     { group: "Academics", items: [
       { to: m("classes"), label: "Classes", icon: GraduationCap },
@@ -57,39 +66,47 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("attendance"), label: "Attendance", icon: ClipboardList },
       { to: m("grades"), label: "Grades", icon: Award },
     ]},
+    { group: "Finance", items: [
+      { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
+    ]},
     { group: "Content", items: [
       { to: m("posts"), label: "Stories & News", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
     ]},
-    { group: "Community", items: [
+    { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
   teacher: [
-    { group: "Teaching", items: [
+    { group: "Today", items: [
       { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("timetable"), label: "Timetable", icon: Calendar },
+      { to: m("attendance"), label: "Attendance", icon: ClipboardList },
+    ]},
+    { group: "Teaching", items: [
       { to: m("classes"), label: "My Classes", icon: BookOpen },
       { to: m("assignments"), label: "Assignments", icon: ClipboardList },
       { to: m("grades"), label: "Grade Book", icon: Award },
-      { to: m("attendance"), label: "Attendance", icon: Calendar },
-      { to: m("timetable"), label: "Timetable", icon: Calendar },
-    ]},
-    { group: "Community", items: [
-      { to: m("messages"), label: "Messages", icon: MessageSquare },
       { to: m("resources"), label: "Resources", icon: Library },
+    ]},
+    { group: "Communications", items: [
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
   student: [
-    { group: "Learning", items: [
+    { group: "Today", items: [
       { to: "/portal/student", label: "Dashboard", icon: LayoutDashboard },
-      { to: m("classes"), label: "My Courses", icon: BookOpen },
-      { to: m("assignments"), label: "Assignments", icon: ClipboardList },
-      { to: m("grades"), label: "Grades & Reports", icon: Award },
       { to: m("timetable"), label: "Timetable", icon: Calendar },
+      { to: m("assignments"), label: "Assignments", icon: ClipboardList },
+    ]},
+    { group: "Learning", items: [
+      { to: m("classes"), label: "My Courses", icon: BookOpen },
+      { to: m("grades"), label: "Grades & Reports", icon: Award },
       { to: m("library"), label: "Library", icon: Library },
     ]},
-    { group: "Life", items: [
+    { group: "School Life", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
@@ -98,11 +115,15 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "My Family", items: [
       { to: "/portal/parent", label: "Dashboard", icon: LayoutDashboard },
       { to: m("children"), label: "Children", icon: Heart },
+    ]},
+    { group: "Academic Progress", items: [
       { to: m("grades"), label: "Grades & Progress", icon: Award },
       { to: m("attendance"), label: "Attendance", icon: Calendar },
+    ]},
+    { group: "Finance", items: [
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
     ]},
-    { group: "Community", items: [
+    { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
@@ -111,6 +132,8 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Network", items: [
       { to: "/portal/alumni", label: "Dashboard", icon: LayoutDashboard },
       { to: m("directory"), label: "Alumni Directory", icon: Users },
+    ]},
+    { group: "Opportunities", items: [
       { to: m("events"), label: "Events & Reunions", icon: Calendar },
       { to: m("jobs"), label: "Job Board", icon: Briefcase },
       { to: m("mentorship"), label: "Mentorship", icon: Heart },
@@ -163,9 +186,9 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
                       const active = pathname === it.to;
                       return (
                         <SidebarMenuItem key={`${g.group}-${idx}`}>
-                          <SidebarMenuButton asChild isActive={active} tooltip={it.label} className="h-10 text-[14px]">
+                          <SidebarMenuButton asChild isActive={active} tooltip={it.label} className="h-11 text-[15px] font-medium">
                             <Link to={it.to}>
-                              <Icon className="h-[18px] w-[18px]" />
+                              <Icon className="h-5 w-5" />
                               <span>{it.label}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -181,9 +204,9 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === "/portal/profile"} tooltip="My Profile" className="h-10 text-[14px]">
+                    <SidebarMenuButton asChild isActive={pathname === "/portal/profile"} tooltip="My Profile" className="h-11 text-[15px] font-medium">
                       <Link to="/portal/profile">
-                        <UserCog className="h-[18px] w-[18px]" />
+                        <UserCog className="h-5 w-5" />
                         <span>My Profile</span>
                       </Link>
                     </SidebarMenuButton>
@@ -198,10 +221,10 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Sign out"
-                  className="h-10 text-[14px]"
+                  className="h-11 text-[15px] font-medium"
                   onClick={async () => { await signOut(); navigate("/"); }}
                 >
-                  <LogOut className="h-[18px] w-[18px]" />
+                  <LogOut className="h-5 w-5" />
                   <span>Sign out</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
