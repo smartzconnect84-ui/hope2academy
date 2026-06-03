@@ -183,7 +183,20 @@ function writeData(d: DataShape) {
 function ensureSeedData() {
   if (!isBrowser()) return;
   const d = readData();
-  if (d.__seeded) return;
+  if (d.__seeded) {
+    // One-shot migration: replace legacy departments with the four HOPE2 divisions.
+    if (!d.__migrated_v2) {
+      d.departments = [
+        { id: "dp1", name: "HOPE2 MISSION",  lead: "Esther Pewee",    staff: 18 },
+        { id: "dp2", name: "HOPE2 ACADEMY",  lead: "Grace Kollie",    staff: 42 },
+        { id: "dp3", name: "HOPE2 CHURCH",   lead: "Joseph Wreh",     staff: 12 },
+        { id: "dp4", name: "HOPE2 MEDIA",    lead: "Patience Kollie", staff: 7  },
+      ];
+      d.__migrated_v2 = [true];
+      writeData(d);
+    }
+    return;
+  }
 
   d.classes = [
     { id: "c1", name: "Grade 9 — Mathematics", teacher: "Grace Tubman", room: "A-12", students: 28, schedule: "Mon/Wed/Fri 08:00" },
@@ -279,10 +292,10 @@ function ensureSeedData() {
     { id: "md6", name: "water-project.jpg", type: "image/jpeg", size: "1.0 MB", folder: "Projects" },
   ];
   d.departments = [
-    { id: "dp1", name: "Education", lead: "Joseph Mensah", staff: 22 },
-    { id: "dp2", name: "Health", lead: "Dr. Korto Pelham", staff: 14 },
-    { id: "dp3", name: "Water & Sanitation", lead: "Eng. Sundiata Bah", staff: 9 },
-    { id: "dp4", name: "Community Development", lead: "Hawa Sherif", staff: 11 },
+    { id: "dp1", name: "HOPE2 MISSION",  lead: "Esther Pewee",  staff: 18 },
+    { id: "dp2", name: "HOPE2 ACADEMY",  lead: "Grace Kollie",  staff: 42 },
+    { id: "dp3", name: "HOPE2 CHURCH",   lead: "Joseph Wreh",   staff: 12 },
+    { id: "dp4", name: "HOPE2 MEDIA",    lead: "Patience Kollie", staff: 7  },
   ];
   d.audit = [
     { id: "au1", actor: "superadmin@hope2.demo", action: "Updated role for Kollie Boima → student", at: "2026-05-22 09:14" },

@@ -1,9 +1,12 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Heart, Menu, X, LogIn, User, ChevronDown } from "lucide-react";
+import { Menu, X, LogIn, User, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, ROLE_LABEL } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, type NavItem } from "@/lib/cms-store";
+import { Logo, BrandWordmark } from "@/components/Logo";
+import { useBrand } from "@/lib/brand";
+import { LiveChat } from "@/components/LiveChat";
 
 const FOOTER_LINKS = [
   { to: "/about", label: "About" },
@@ -19,6 +22,7 @@ export function SiteLayout() {
   const [hover, setHover] = useState<string | null>(null);
   const { pathname } = useLocation();
   const { user, primaryRole } = useAuth();
+  const brand = useBrand();
   useCmsVersion(); // re-render when CMS nav changes
   const NAV: NavItem[] = cmsStore.listNav();
   // Hide public marketing chrome (nav + footer) once user is in the backend portal.
@@ -33,15 +37,11 @@ export function SiteLayout() {
         className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border"
       >
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="group flex items-center gap-2 font-bold text-lg tracking-tight">
-            <motion.span
-              whileHover={{ rotate: 12, scale: 1.08 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="inline-flex h-9 w-9 rounded-full bg-primary text-primary-foreground items-center justify-center"
-            >
-              <Heart className="h-4 w-4 fill-secondary text-secondary" />
+          <Link to="/" className="group flex items-center gap-3 font-bold text-lg tracking-tight">
+            <motion.span whileHover={{ rotate: 6, scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
+              <Logo size={44} />
             </motion.span>
-            <span>HOPE<span className="text-secondary">2</span> ACADEMY</span>
+            <BrandWordmark />
           </Link>
           {hidePublicChrome ? (
             <div className="hidden lg:flex items-center gap-3">
@@ -118,7 +118,7 @@ export function SiteLayout() {
               to="/get-involved"
               className="inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-4 py-2 text-sm font-semibold hover:brightness-95 transition shadow-[var(--shadow-soft)]"
             >
-              <Heart className="h-4 w-4 fill-current" /> Donate
+              Donate
             </Link>
 
             {user ? (
@@ -181,13 +181,12 @@ export function SiteLayout() {
       <footer className="mt-24 bg-primary text-primary-foreground">
         <div className="container mx-auto px-6 py-16 grid md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 font-bold text-xl">
-              <Heart className="h-5 w-5 fill-accent text-accent" />
-              HOPE<span className="text-accent">2</span> ACADEMY
+            <div className="flex items-center gap-3 font-bold text-xl">
+              <Logo size={52} className="ring-white/30" />
+              <BrandWordmark />
             </div>
-            <p className="mt-4 text-primary-foreground/80 max-w-md">
-              A movement of compassion across Liberia — walking with communities as they rebuild stronger than before.
-            </p>
+            <p className="mt-4 text-primary-foreground/80 max-w-md">{brand.footerBlurb}</p>
+            <p className="mt-2 text-xs text-primary-foreground/70 italic">"{brand.motto}"</p>
           </div>
           <div>
             <h4 className="font-semibold mb-3 text-accent">Explore</h4>
@@ -200,18 +199,19 @@ export function SiteLayout() {
           <div>
             <h4 className="font-semibold mb-3 text-accent">Contact</h4>
             <p className="text-sm text-primary-foreground/80">
-              Barber's Joe Town, Marshall Road<br />Lower Margibi County, Liberia<br />info@hope2academy.org
+              {brand.address}<br />{brand.city}, {brand.country}<br />{brand.email}
             </p>
             <p className="mt-3 text-xs text-primary-foreground/70">
-              Office hours<br />Mon–Fri · 7:00 AM – 4:00 PM
+              Office hours<br />{brand.officeHours}
             </p>
           </div>
         </div>
         <div className="border-t border-primary-foreground/20 py-6 text-center text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} HOPE2 ACADEMY. Built with hope.
+          © {new Date().getFullYear()} {brand.name}. Built with hope.
         </div>
       </footer>
       )}
+      <LiveChat />
     </div>
   );
 }

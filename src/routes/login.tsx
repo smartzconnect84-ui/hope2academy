@@ -1,18 +1,21 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, LogIn, Mail, Lock, Loader2, Copy, Sparkles } from "lucide-react";
+import { LogIn, Mail, Lock, Loader2, Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { mockAuth, DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Logo, BrandWordmark } from "@/components/Logo";
+import { useBrand } from "@/lib/brand";
 
 
 function LoginPage() {
   const { user, loading, refresh } = useAuth();
   const navigate = useNavigate();
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,9 +66,9 @@ function LoginPage() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="text-primary-foreground hidden lg:block"
         >
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-4 py-1.5 text-xs font-semibold tracking-widest uppercase">
-            <Heart className="h-3.5 w-3.5 fill-accent text-accent" />
-            HOPE2 ACADEMY Portal
+          <div className="inline-flex items-center gap-3 rounded-full bg-white/15 backdrop-blur px-3 py-1.5 text-xs font-semibold tracking-widest uppercase">
+            <Logo size={28} />
+            <BrandWordmark /> Portal
           </div>
           <h1 className="font-display text-5xl xl:text-6xl font-semibold leading-[1.05] mt-6">
             Welcome back to the<br />movement of compassion.
@@ -104,12 +107,10 @@ function LoginPage() {
         >
           <div className="rounded-3xl bg-card shadow-[var(--shadow-warm)] border border-border p-8">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center">
-                <LogIn className="h-5 w-5" />
-              </div>
+              <Logo size={52} />
               <div>
                 <h2 className="font-display text-2xl font-semibold">Sign in</h2>
-                <p className="text-xs text-muted-foreground">Access your HOPE2 ACADEMY portal</p>
+                <p className="text-xs text-muted-foreground">Access your {brand.name} portal</p>
               </div>
             </div>
 

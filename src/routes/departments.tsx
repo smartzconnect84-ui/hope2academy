@@ -1,22 +1,93 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import edu from "@/assets/hope/dept-education-aYewL80F.jpg";
-import health from "@/assets/hope/dept-health-xwwilth4.jpg";
-import community from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
 import outreach from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
-
+import edu from "@/assets/hope/dept-education-aYewL80F.jpg";
+import community from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
+import health from "@/assets/hope/dept-health-xwwilth4.jpg";
 
 const pillars = [
-  { img: edu, id: "education", roman: "I", pillar: "Pillar I — Learning that lasts a lifetime", title: "Education", tag: "Every child, a future.", impactN: "1,840", impactL: "Students sponsored", director: "Grace Kollie, Director of Education", est: "Established 2014", area: "Active in Montserrado, Bong, Nimba & Lofa", body: ["Liberian children deserve a desk, a book, and a teacher who believes in them. We invest in the long arc of a child's mind — from first grade to first job.", "Our Education pillar partners with 38 public and community schools across four counties, providing tuition support, learning materials, and teacher development for children whose families cannot afford the cost of staying in school.", "Every scholarship is paired with a mentor and a six-month progress check. We measure success not by enrolment alone, but by attendance, literacy growth, and graduation — and we publish the numbers every quarter."], bullets: ["Tuition & uniform support for 1,840 students", "Annual scholarships for top performers entering secondary school", "Library kits & solar-powered reading rooms in 22 schools", "Teacher-training workshops in early literacy & STEM", "Girl-child retention program in rural districts"] },
-  { img: health, id: "health", roman: "II", pillar: "Pillar II — Care that travels the last mile", title: "Health & Wellness", tag: "Healing, where roads end.", impactN: "62", impactL: "Mobile clinics held", director: "Dr. Emmanuel Tarpeh, Head of Health & Wellness", est: "Established 2013", area: "Mobile clinics in 11 rural districts", body: ["Healthcare is a right, not a privilege. We carry medicine and skilled hands into villages where the nearest clinic is a day's walk away.", "Our Health & Wellness pillar runs monthly mobile medical outreach clinics, supports three rural fixed-site clinics with medicines and equipment, and trains community health workers to provide care between our visits.", "We focus on the health needs Liberia carries most heavily: maternal & child health, malaria, malnutrition, and hypertension. Every patient seen, every life saved, is recorded in our open quarterly impact report."], bullets: ["62 mobile medical outreach clinics held to date", "Maternal & child health screenings — 9,400+ visits", "Free malaria, hypertension & diabetes testing", "Vaccination & immunization drives in partnership with MoH", "Equipment & medicine support for 3 partner clinics", "Training program for 47 community health workers"] },
-  { img: community, id: "community", roman: "III", pillar: "Pillar III — Foundations for everything else", title: "Community Development", tag: "The dignity of a home.", impactN: "142", impactL: "Wells & homes built", director: "Joseph Wreh, Community Development Lead", est: "Established 2015", area: "Projects across 27 villages", body: ["Clean water, safe shelter, dignified infrastructure — the foundation upon which every other good thing is built. We construct alongside the community, never for it.", "Our Community Development pillar believes that no school can teach a thirsty child, and no clinic can heal a homeless family. We build the foundations: water, sanitation, shelter, and power.", "Every project is co-designed with the village it serves. Local masons are hired, local materials are sourced, and a community maintenance committee is trained before we hand over the keys — so what we build, lasts."], bullets: ["67 freshwater wells drilled in remote villages", "Sanitation infrastructure & latrines for 41 communities", "34 homes rebuilt for displaced & elderly families", "Solar electrification of clinics, schools & community halls", "Maintenance committees trained at every project site"] },
-  { img: outreach, id: "outreach", roman: "IV", pillar: "Pillar IV — Friendship made tangible", title: "Outreach & Missions", tag: "Hands across borders.", impactN: "320+", impactL: "Volunteers hosted", director: "Esther Pewee, Outreach & Missions Coordinator", est: "Established 2016", area: "Partners across 9 countries", body: ["We mobilize volunteers, churches, and partners to walk physically beside the communities we serve — bringing skills, presence, and lasting friendship.", "Our Outreach & Missions pillar receives international and Liberian volunteers — nurses, teachers, builders, students of life — who serve alongside our team for one to twelve weeks at a time.", "Every visiting team is trained in our principles of dignity-first service. We do not perform charity; we share work. The result is friendship that outlasts the trip and partnerships that fund our deepest projects."], bullets: ["320+ international volunteers hosted since 2016", "Short-term mission trips, 1–12 weeks", "Skill-based fellowships for medical & education professionals", "Cross-cultural community engagement events", "Faith-based & university partnership programs"] },
+  {
+    img: outreach, id: "mission", roman: "I", pillar: "Division I — Compassion in motion",
+    title: "HOPE2 MISSION", tag: "Hands and feet across Liberia.",
+    impactN: "27", impactL: "Villages served",
+    director: "Esther Pewee, Mission Coordinator",
+    est: "Established 2013", area: "Operating in 4 counties",
+    body: [
+      "HOPE2 MISSION is the humanitarian heart of our movement — mobile clinics, clean water, food security and disaster response carried directly to the communities that need them most.",
+      "We work alongside local leaders to identify needs, design solutions, and measure results. Every project is co-built with the village it serves; nothing is imposed.",
+      "From maternal-health outreach in Margibi to clean-water boreholes in Bong, the Mission division is where compassion becomes infrastructure.",
+    ],
+    bullets: [
+      "Mobile medical outreach in remote districts",
+      "Clean-water boreholes & sanitation projects",
+      "Food, clothing and emergency relief distribution",
+      "Skills training for women and youth",
+      "Partnerships with the Liberian Ministry of Health",
+    ],
+  },
+  {
+    img: edu, id: "academy", roman: "II", pillar: "Division II — Learning that lasts a lifetime",
+    title: "HOPE2 ACADEMY", tag: "Every child, a future.",
+    impactN: "1,840", impactL: "Students enrolled",
+    director: "Grace Kollie, Director of HOPE2 ACADEMY",
+    est: "Established 2013", area: "Main campus — Marshall Road, Margibi",
+    body: [
+      "HOPE2 ACADEMY — affectionately known as The Lizard Kingdom — is the K-12 Christian school that anchors the movement. Our motto: \"Learning To Serve For God's Purpose.\"",
+      "We offer rigorous academics paired with character formation, sports, music and service learning. Most students are sponsored by friends of HOPE2 across Liberia and abroad.",
+      "Every scholarship comes with a mentor and a six-month progress check. We measure success by attendance, literacy growth, and graduation — and publish the numbers every term.",
+    ],
+    bullets: [
+      "Tuition & uniform support for 1,840 students",
+      "Solar-powered library and computer lab",
+      "STEM, civics and Bible curriculum",
+      "Annual scholarships for top secondary-school entrants",
+      "Teacher development in early literacy & STEM",
+    ],
+  },
+  {
+    img: community, id: "church", roman: "III", pillar: "Division III — Worship, discipleship, community",
+    title: "HOPE2 CHURCH", tag: "A house of prayer for all people.",
+    impactN: "9", impactL: "Local congregations",
+    director: "Pastor Joseph Wreh, Lead Pastor",
+    est: "Established 2014", area: "Congregations across Margibi & Montserrado",
+    body: [
+      "HOPE2 CHURCH is the spiritual home of the movement — local congregations that gather for worship, discipleship, prayer and pastoral care.",
+      "We serve children's church, youth fellowships, women's and men's ministries, and outreach to the elderly and incarcerated.",
+      "Every Sunday is open to anyone — student, parent, visitor, neighbour. Come as you are.",
+    ],
+    bullets: [
+      "Weekly Sunday worship at the Marshall Road sanctuary",
+      "Youth & children's discipleship classes",
+      "Pastoral counselling and home visitation",
+      "Community prayer & healing services",
+      "Marriage, baptism and dedication ceremonies",
+    ],
+  },
+  {
+    img: health, id: "media", roman: "IV", pillar: "Division IV — Telling Liberia's story",
+    title: "HOPE2 MEDIA", tag: "Stories that move hearts and hands.",
+    impactN: "120+", impactL: "Stories published",
+    director: "Patience Kollie, Media & Communications Lead",
+    est: "Established 2018", area: "Radio, social, print & video",
+    body: [
+      "HOPE2 MEDIA carries the voice of the movement — radio devotionals, short documentaries, social-media stories, and a quarterly print magazine.",
+      "We train young Liberian writers, photographers and producers to tell their own stories — beautifully, honestly, and with hope.",
+      "If you want to partner, sponsor, or contribute content, reach out via the Contact page.",
+    ],
+    bullets: [
+      "Weekly radio program on community FM",
+      "Documentary shorts on YouTube and Instagram",
+      "Quarterly print magazine \"Hope For Liberia\"",
+      "Training program for young Liberian journalists",
+      "Live-streamed worship and special events",
+    ],
+  },
 ];
 
 function Departments() {
   return (
     <div>
-      <PageHeader eyebrow="Our Four Pillars" title="Four pillars. One unwavering mission." lead='"We do not bring solutions to Liberia. We build them, together, beside her people." — The HOPE2 ACADEMY Charter' />
+      <PageHeader eyebrow="Our Four Divisions" title="Four divisions. One unwavering mission." lead='"We do not bring solutions to Liberia. We build them, together, beside her people." — The HOPE2 Charter' />
       {pillars.map((p, i) => (
         <section key={p.id} id={p.id} className={`py-20 ${i % 2 === 1 ? "bg-muted" : ""}`}>
           <div className={`container mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center ${i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}`}>
@@ -48,11 +119,11 @@ function Departments() {
       ))}
       <section className="container mx-auto px-6 py-20 text-center">
         <h2 className="text-4xl font-bold">United in mission</h2>
-        <p className="mt-3 text-muted-foreground max-w-xl mx-auto">The four pillars are not separate programs. They are one structure, holding up one Liberia.</p>
+        <p className="mt-3 text-muted-foreground max-w-xl mx-auto">The four divisions are not separate organisations. They are one body, serving one Liberia.</p>
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {pillars.map((p) => (
             <a key={p.id} href={`#${p.id}`} className="rounded-2xl border border-border bg-card p-6 text-left hover:border-primary transition">
-              <div className="text-secondary text-sm font-semibold">Pillar {p.roman}</div>
+              <div className="text-secondary text-sm font-semibold">Division {p.roman}</div>
               <div className="font-bold mt-1">{p.title}</div>
             </a>
           ))}
