@@ -20,6 +20,7 @@ import {
   CommandGroup, CommandItem,
 } from "@/components/ui/command";
 import { mockDb } from "@/lib/mock-backend";
+import { Logo, BrandWordmark } from "@/components/Logo";
 
 type NavItem = { to: string; label: string; icon: any };
 type NavGroup = { group: string; items: NavItem[] };
@@ -163,17 +164,13 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
       <div className="flex min-h-[calc(100vh-5rem)] w-full bg-muted/30">
         <Sidebar collapsible="icon" className="top-20 !h-[calc(100svh-5rem)] text-[15px]">
           <SidebarHeader>
-            <div className="flex items-center gap-3 px-2 py-3">
-              <div className="h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center text-primary-foreground font-bold text-lg">
-                {(profile?.full_name ?? profile?.email ?? "U").slice(0, 1).toUpperCase()}
-              </div>
+            <Link to="/portal" className="flex items-center gap-3 px-2 py-3">
+              <Logo size={44} />
               <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-                <p className="font-semibold truncate text-base">{profile?.full_name ?? "User"}</p>
-                <span className="inline-block mt-1 text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                  {primaryRole ? ROLE_LABEL[primaryRole] : "—"}
-                </span>
+                <p className="font-display font-bold text-[15px] leading-tight truncate"><BrandWordmark /></p>
+                <p className="text-[11px] text-muted-foreground truncate">{profile?.full_name ?? "User"} · {primaryRole ? ROLE_LABEL[primaryRole] : "—"}</p>
               </div>
-            </div>
+            </Link>
           </SidebarHeader>
           <SidebarContent>
             {groups.map((g) => (
