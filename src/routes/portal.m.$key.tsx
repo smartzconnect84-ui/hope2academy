@@ -826,6 +826,168 @@ function ModuleRoute() {
 export default ModuleRoute;
 
 // =========================================================================
+// Site Settings — deep editor for brand, contact, logo, colors and system text
+// Editable by Super Admin and Admin. Persists via brandStore (localStorage).
+// =========================================================================
+function SiteSettingsModule() {
+  const brand = useBrand();
+  const [form, setForm] = useState<BrandSettings>(brand);
+  const [tab, setTab] = useState<"brand" | "contact" | "appearance" | "system">("brand");
+  const dirty = JSON.stringify(form) !== JSON.stringify(brand);
+
+  const set = <K extends keyof BrandSettings>(k: K, v: BrandSettings[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const onLogo = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { toast.error("Logo must be under 4 MB"); return; }
+    const url = await readBrandFile(file);
+    set("logoUrl", url);
+    toast.success("Logo updated — click Save to publish");
+  };
+  const onFavicon = async (file: File | null) => {
+    if (!file) return;
+    const url = await readBrandFile(file);
+    set("faviconUrl", url);
+    toast.success("Favicon updated — click Save to publish");
+  };
+
+  const save = () => {
+    brandStore.set(form);
+    toast.success("Site settings published");
+  };
+  const reset = () => {
+    if (!confirm("Reset all branding to defaults? This cannot be undone.")) return;
+    const d = brandStore.reset();
+    setForm(d);
+    toast.success("Restored defaults");
+  };
+
+  const TabBtn = ({ id, label }: { id: typeof tab; label: string }) => (
+    <button
+      onClick={() => setTab(id)}
+      className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+        tab === id ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"
+      }`}
+    >{label}</button>
+  );
+
+  return (
+    <div className="space-y-5 max-w-4xl">
+      <Card className="p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1">
+          <h3 className="font-display text-lg font-semibold">Brand & system settings</h3>
+          <p className="text-sm text-muted-foreground">Changes apply instantly everywhere — navbar, footer, sidebar, login, chatbot.</p>
+        </div>
+        <Button variant="ghost" className="gap-2" onClick={reset}><RotateCcw className="h-4 w-4"/>Reset to defaults</Button>
+        <Button disabled={!dirty} onClick={save}>Save changes</Button>
+      </Card>
+
+      <div className="flex flex-wrap gap-2">
+        <TabBtn id="brand" label="Brand & Identity" />
+        <TabBtn id="contact" label="Contact & Address" />
+        <TabBtn id="appearance" label="Appearance & Logo" />
+        <TabBtn id="system" label="System Text" />
+      </div>
+
+      {tab === "brand" && (
+        <Card className="p-6 space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label>Full name</Label><Input value={form.name} onChange={(e)=>set("name", e.target.value)} placeholder="HOPE2 ACADEMY"/></div>
+            <div><Label>Short name</Label><Input value={form.shortName} onChange={(e)=>set("shortName", e.target.value)}/></div>
+          </div>
+          <div><Label>Tagline</Label><Input value={form.tagline} onChange={(e)=>set("tagline", e.target.value)}/></div>
+          <div><Label>Motto</Label><Input value={form.motto} onChange={(e)=>set("motto", e.target.value)}/></div>
+          <div><Label>Year established</Label><Input value={form.established} onChange={(e)=>set("established", e.target.value)} className="max-w-[180px]"/></div>
+        </Card>
+      )}
+
+      {tab === "contact" && (
+        <Card className="p-6 space-y-4">
+          <div><Label>Street address</Label><Input value={form.address} onChange={(e)=>set("address", e.target.value)}/></div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label>City / county</Label><Input value={form.city} onChange={(e)=>set("city", e.target.value)}/></div>
+            <div><Label>Country</Label><Input value={form.country} onChange={(e)=>set("country", e.target.value)}/></div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div><Label>Contact email</Label><Input type="email" value={form.email} onChange={(e)=>set("email", e.target.value)}/></div>
+            <div><Label>Phone</Label><Input value={form.phone} onChange={(e)=>set("phone", e.target.value)}/></div>
+          </div>
+          <div><Label>Office hours</Label><Input value={form.officeHours} onChange={(e)=>set("officeHours", e.target.value)} placeholder="Mon–Fri · 7:00 AM – 4:00 PM"/></div>
+        </Card>
+      )}
+
+      {tab === "appearance" && (
+        <Card className="p-6 space-y-6">
+          <div>
+            <Label>Primary logo</Label>
+            <div className="mt-2 flex items-center gap-5">
+              <img src={form.logoUrl} alt="Logo preview" className="h-24 w-24 rounded-full object-cover ring-2 ring-border bg-white" />
+              <div className="space-y-2">
+                <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onLogo(e.target.files?.[0] ?? null)}/>
+                <label htmlFor="logo-upload"><Button asChild className="gap-2"><span><Upload className="h-4 w-4"/>Upload new logo</span></Button></label>
+                <p className="text-xs text-muted-foreground">PNG, JPG or SVG up to 4 MB. Used in navbar, footer, sidebar, login & chatbot.</p>
+                <Input value={form.logoUrl} onChange={(e)=>set("logoUrl", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+              </div>
+            </div>
+          </div>
+          <div>
+            <Label>Favicon</Label>
+            <div className="mt-2 flex items-center gap-5">
+              <img src={form.faviconUrl} alt="Favicon preview" className="h-12 w-12 rounded object-cover ring-1 ring-border bg-white" />
+              <div className="space-y-2">
+                <input id="fav-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onFavicon(e.target.files?.[0] ?? null)}/>
+                <label htmlFor="fav-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload favicon</span></Button></label>
+              </div>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Primary colour</Label>
+              <div className="flex items-center gap-3 mt-1">
+                <input type="color" value={form.primaryHex} onChange={(e)=>set("primaryHex", e.target.value)} className="h-10 w-14 rounded border border-border"/>
+                <Input value={form.primaryHex} onChange={(e)=>set("primaryHex", e.target.value)}/>
+              </div>
+            </div>
+            <div>
+              <Label>Accent colour</Label>
+              <div className="flex items-center gap-3 mt-1">
+                <input type="color" value={form.accentHex} onChange={(e)=>set("accentHex", e.target.value)} className="h-10 w-14 rounded border border-border"/>
+                <Input value={form.accentHex} onChange={(e)=>set("accentHex", e.target.value)}/>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {tab === "system" && (
+        <Card className="p-6 space-y-4">
+          <div>
+            <Label>Footer blurb</Label>
+            <Textarea rows={3} value={form.footerBlurb} onChange={(e)=>set("footerBlurb", e.target.value)}/>
+          </div>
+          <div>
+            <Label>Chatbot greeting</Label>
+            <Textarea rows={3} value={form.chatGreeting} onChange={(e)=>set("chatGreeting", e.target.value)}/>
+            <p className="text-xs text-muted-foreground mt-1">First message visitors see when they open the live chat.</p>
+          </div>
+          <div className="pt-4 border-t border-border">
+            <h4 className="font-semibold mb-2">Public pages (CMS)</h4>
+            <p className="text-sm text-muted-foreground mb-3">Edit page text, SEO and navigation in the dedicated CMS modules.</p>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/portal/m/pages" className="inline-flex"><Button variant="outline" className="gap-2"><FileText className="h-4 w-4"/>Pages</Button></Link>
+              <Link to="/portal/m/posts" className="inline-flex"><Button variant="outline" className="gap-2"><Newspaper className="h-4 w-4"/>Posts</Button></Link>
+              <Link to="/portal/m/media" className="inline-flex"><Button variant="outline" className="gap-2"><ImageIcon className="h-4 w-4"/>Media</Button></Link>
+              <Link to="/portal/m/navigation" className="inline-flex"><Button variant="outline" className="gap-2"><ListTree className="h-4 w-4"/>Navigation</Button></Link>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// =========================================================================
 // Generic CRUD helper — drives most list modules
 // =========================================================================
 type FieldDef = {
