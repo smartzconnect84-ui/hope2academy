@@ -18,7 +18,7 @@ import {
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
-import { brandStore, useBrand, DEFAULT_BRAND, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
+import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
