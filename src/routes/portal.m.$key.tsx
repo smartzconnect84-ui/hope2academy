@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
+import { brandStore, useBrand, DEFAULT_BRAND, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -422,31 +423,9 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => <NavigationModule/>,
   },
   settings: {
-    title: "Site Settings", subtitle: "Branding, contact and configuration", icon: Settings,
-    allow: ["superadmin"],
-    render: () => {
-      const data = mockDb.list<any>("settings");
-      const [edits, setEdits] = useState<Record<string, string>>({});
-      return (
-        <Card className="p-6 max-w-2xl">
-          <div className="space-y-4">
-            {data.map((s: any) => (
-              <div key={s.id}>
-                <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground">{s.key}</label>
-                <Input className="mt-1.5" defaultValue={s.value} onChange={(e)=>setEdits({...edits, [s.id]: e.target.value})}/>
-              </div>
-            ))}
-            <div>
-              <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Welcome message</label>
-              <Textarea className="mt-1.5" rows={3} defaultValue="A movement of compassion across Liberia."/>
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end">
-            <Button onClick={()=>toast.success("Settings saved")}>Save settings</Button>
-          </div>
-        </Card>
-      );
-    },
+    title: "Site Settings", subtitle: "Branding, contact, logo & system text — Super Admin / Admin only", icon: Settings,
+    allow: ["superadmin", "admin"],
+    render: () => <SiteSettingsModule />,
   },
   departments: {
     title: "Departments", subtitle: "Organisational structure", icon: FolderTree,
