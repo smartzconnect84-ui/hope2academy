@@ -1,11 +1,19 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import school from "@/assets/hope/project-school-C5dtR3hs.jpg";
-import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
-import water from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
-import healthImg from "@/assets/hope/dept-health-xwwilth4.jpg";
-import eduImg from "@/assets/hope/dept-education-aYewL80F.jpg";
-import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
+import schoolA from "@/assets/uploads/IMG-20260521-WA0034.jpg.asset.json";
+import villageA from "@/assets/uploads/IMG-20260521-WA0031.jpg.asset.json";
+import waterA from "@/assets/uploads/IMG-20260521-WA0018.jpg.asset.json";
+import healthA from "@/assets/uploads/IMG-20260521-WA0022.jpg.asset.json";
+import eduA from "@/assets/uploads/IMG-20260521-WA0027.jpg.asset.json";
+import outreachA from "@/assets/uploads/IMG-20260521-WA0039.jpg.asset.json";
+import beforeA from "@/assets/uploads/IMG-20260521-WA0039.jpg.asset.json";
+import afterA from "@/assets/uploads/IMG-20260521-WA0034.jpg.asset.json";
+const school = schoolA.url;
+const village = villageA.url;
+const water = waterA.url;
+const healthImg = healthA.url;
+const eduImg = eduA.url;
+const outreachImg = outreachA.url;
 
 
 const projects = [
@@ -29,11 +37,11 @@ function Projects() {
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-soft)]">
-            <img src={village} alt="Before" className="w-full aspect-[4/3] object-cover" />
+            <img src={beforeA.url} alt="Before" className="w-full aspect-[4/3] object-cover" />
             <span className="absolute top-4 left-4 bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase">Before</span>
           </div>
           <div className="relative rounded-3xl overflow-hidden shadow-[var(--shadow-soft)]">
-            <img src={school} alt="After" className="w-full aspect-[4/3] object-cover" />
+            <img src={afterA.url} alt="After" className="w-full aspect-[4/3] object-cover" />
             <span className="absolute top-4 left-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-xs font-bold uppercase">After</span>
           </div>
         </div>

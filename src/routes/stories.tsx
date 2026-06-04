@@ -1,11 +1,23 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import classroom from "@/assets/hope/story-classroom-D9IJEfzp.jpg";
-import well from "@/assets/hope/story-well-6CEMCBHm.jpg";
-import clinic from "@/assets/hope/story-clinic-DsVCT660.jpg";
-import outreachImg from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
-import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
-import school from "@/assets/hope/project-school-C5dtR3hs.jpg";
+import classroomA from "@/assets/uploads/IMG-20260521-WA0012.jpg.asset.json";
+import wellA from "@/assets/uploads/IMG-20260521-WA0031.jpg.asset.json";
+import clinicA from "@/assets/uploads/IMG-20260521-WA0022.jpg.asset.json";
+import outreachA from "@/assets/uploads/IMG-20260521-WA0003.jpg.asset.json";
+import villageA from "@/assets/uploads/IMG-20260521-WA0018.jpg.asset.json";
+import schoolA from "@/assets/uploads/IMG-20260521-WA0017.jpg.asset.json";
+import gradA from "@/assets/uploads/IMG-20260521-WA0027.jpg.asset.json";
+import medalA from "@/assets/uploads/IMG-20260521-WA0040.jpg.asset.json";
+import kidsA from "@/assets/uploads/IMG-20260521-WA0039.jpg.asset.json";
+import primaryA from "@/assets/uploads/IMG-20260521-WA0034.jpg.asset.json";
+const classroom = primaryA.url;
+const well = wellA.url;
+const clinic = clinicA.url;
+const outreachImg = outreachA.url;
+const village = villageA.url;
+const school = schoolA.url;
+// extra featured imagery
+void [classroomA, gradA, medalA, kidsA];
 
 
 const stories = [

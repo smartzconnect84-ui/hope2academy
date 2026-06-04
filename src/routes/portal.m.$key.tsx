@@ -23,6 +23,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// All finances are tracked in USD; we display the LRD equivalent alongside.
+// Editable rate persisted in localStorage so Admins can update it.
+const LRD_KEY = "h2l.fx.lrd_per_usd";
+function getLrdRate(): number {
+  if (typeof localStorage === "undefined") return 200;
+  const v = Number(localStorage.getItem(LRD_KEY));
+  return v > 0 ? v : 200;
+}
+function fmtUSD(v: number | string) {
+  const n = Number(v || 0);
+  return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+function fmtMoney(v: number | string) {
+  const n = Number(v || 0);
+  const lrd = Math.round(n * getLrdRate());
+  return `${fmtUSD(n)} · LRD ${lrd.toLocaleString()}`;
+}
+
 type ModuleDef = {
   title: string;
   subtitle: string;
@@ -208,7 +226,7 @@ const MODULES: Record<string, ModuleDef> = {
           columns={[
             { key: "student", label: "Student" },
             { key: "item", label: "Item" },
-            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
             { key: "due", label: "Due" },
             { key: "status", label: "Status", render: (v) => statusBadge(v) },
           ]}
@@ -335,7 +353,7 @@ const MODULES: Record<string, ModuleDef> = {
           columns={[
             { key: "donor", label: "Donor" },
             { key: "fund", label: "Fund" },
-            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
             { key: "date", label: "Date" },
           ]}
         />
@@ -1159,9 +1177,9 @@ function FeesStats() {
   const paid = data.filter((f) => f.status === "Paid").reduce((s, f) => s + Number(f.amount || 0), 0);
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-      <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`} />
-      <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary" />
-      <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent" />
+      <StatCard icon={DollarSign} label="Outstanding" value={fmtMoney(outstanding)} />
+      <StatCard icon={CheckCircle2} label="Paid this term" value={fmtMoney(paid)} accent="secondary" />
+      <StatCard icon={Heart} label="Donations YTD" value={fmtMoney(1325)} accent="accent" />
     </StaggerGroup>
   );
 }
@@ -1171,7 +1189,7 @@ function DonationsStats() {
   const total = data.reduce((s, d) => s + Number(d.amount || 0), 0);
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-      <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`} />
+      <StatCard icon={DollarSign} label="Total raised" value={fmtMoney(total)} />
       <StatCard icon={Users} label="Donors" value={data.length} accent="accent" />
       <StatCard icon={Heart} label="Recurring" value={3} accent="secondary" />
     </StaggerGroup>

@@ -41,7 +41,7 @@ export const DEFAULT_BRAND: BrandSettings = {
   city: "Lower Margibi County",
   country: "Liberia",
   email: "info@hope2academy.org",
-  phone: "+231 77 010 1000",
+  phone: "+231 775 975 544",
   officeHours: "Mon–Fri · 7:00 AM – 4:00 PM",
   primaryHex: "#7a1d1d",
   accentHex: "#f4c542",
