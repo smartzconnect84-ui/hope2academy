@@ -195,6 +195,25 @@ function ensureSeedData() {
       d.__migrated_v2 = [true];
       writeData(d);
     }
+    // v3 migration: expand classes from ABC through Grade 12.
+    if (!d.__migrated_v3) {
+      const classLevels = [
+        "ABC", "Nursery", "KG-1", "KG-2",
+        "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
+        "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
+      ];
+      const teachers = ["Grace Tubman", "Amos Flomo", "Ruth Gonpu", "Joseph Karpeh", "Esther Wonkeh", "Patience Kollie"];
+      d.classes = classLevels.map((lvl, i) => ({
+        id: `c${i + 1}`,
+        name: lvl,
+        teacher: teachers[i % teachers.length],
+        room: `R-${100 + i}`,
+        students: 18 + ((i * 3) % 18),
+        schedule: i % 2 === 0 ? "Mon/Wed/Fri 08:00" : "Tue/Thu 10:30",
+      }));
+      d.__migrated_v3 = [true];
+      writeData(d);
+    }
     return;
   }
 
