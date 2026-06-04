@@ -353,7 +353,7 @@ const MODULES: Record<string, ModuleDef> = {
           columns={[
             { key: "donor", label: "Donor" },
             { key: "fund", label: "Fund" },
-            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
             { key: "date", label: "Date" },
           ]}
         />
