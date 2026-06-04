@@ -1177,9 +1177,9 @@ function FeesStats() {
   const paid = data.filter((f) => f.status === "Paid").reduce((s, f) => s + Number(f.amount || 0), 0);
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-      <StatCard icon={DollarSign} label="Outstanding" value={`$${outstanding}`} />
-      <StatCard icon={CheckCircle2} label="Paid this term" value={`$${paid}`} accent="secondary" />
-      <StatCard icon={Heart} label="Donations YTD" value="$1,325" accent="accent" />
+      <StatCard icon={DollarSign} label="Outstanding" value={fmtMoney(outstanding)} />
+      <StatCard icon={CheckCircle2} label="Paid this term" value={fmtMoney(paid)} accent="secondary" />
+      <StatCard icon={Heart} label="Donations YTD" value={fmtMoney(1325)} accent="accent" />
     </StaggerGroup>
   );
 }
@@ -1189,7 +1189,7 @@ function DonationsStats() {
   const total = data.reduce((s, d) => s + Number(d.amount || 0), 0);
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
-      <StatCard icon={DollarSign} label="Total raised" value={`$${total.toLocaleString()}`} />
+      <StatCard icon={DollarSign} label="Total raised" value={fmtMoney(total)} />
       <StatCard icon={Users} label="Donors" value={data.length} accent="accent" />
       <StatCard icon={Heart} label="Recurring" value={3} accent="secondary" />
     </StaggerGroup>
