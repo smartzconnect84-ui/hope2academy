@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { Heart, Droplet, BookOpen, Stethoscope, Home, ArrowRight, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { Reveal, StaggerGroup } from "@/components/Motion";
-import banner from "@/assets/hope/banner-1-CIHbaCOS.jpg";
 import village from "@/assets/hope/project-village-BG6QOkRo.jpg";
+import HeroSlider from "@/components/HeroSlider";
 
 
 const stats = [
@@ -24,47 +24,7 @@ function Index() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative min-h-[88vh] flex items-center overflow-hidden">
-        <motion.img
-          initial={{ scale: 1.15, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.6, ease: [0.22,1,0.36,1] }}
-          src={banner}
-          alt="Liberian schoolchildren walking to school in golden morning light"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
-        <div className="relative container mx-auto px-6 py-24">
-          <motion.span
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}
-            className="inline-flex items-center gap-2 rounded-full bg-accent/20 backdrop-blur border border-accent/40 text-accent px-4 py-1.5 text-xs font-semibold tracking-wide uppercase"
-          >
-            <Heart className="h-3 w-3 fill-accent" /> A Liberian Humanitarian Mission
-          </motion.span>
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8, ease: [0.22,1,0.36,1] }}
-            className="mt-6 text-6xl md:text-8xl font-bold text-background leading-[0.95]"
-          >
-            Hope<span className="text-secondary">2</span><br />
-            <span className="text-accent">Liberia</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.6 }}
-            className="mt-6 text-xl text-background/90 max-w-xl"
-          >A movement of compassion across Liberia.</motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.6 }}
-            className="mt-10 flex flex-wrap gap-4"
-          >
-            <Link to="/get-involved" className="group inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-7 py-4 font-semibold transition shadow-[var(--shadow-warm)] hover:scale-[1.03] hover:shadow-2xl active:scale-95">
-              <Heart className="h-4 w-4 fill-current transition-transform group-hover:scale-125" /> Get Involved
-            </Link>
-            <Link to="/about" className="group inline-flex items-center gap-2 rounded-full border-2 border-accent text-accent px-7 py-4 font-semibold hover:bg-accent hover:text-accent-foreground transition">
-              Learn More <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
+      <HeroSlider />
 
       {/* STATS */}
       <section className="container mx-auto px-6 -mt-12 relative z-10">
