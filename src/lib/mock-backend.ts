@@ -85,7 +85,7 @@ function seedIfEmpty() {
     password: c.password,
     name: c.name,
     role: c.role,
-    phone: `+231 77 010 ${1000 + i}`,
+    phone: `+231 775 975 544`,
     address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia",
     officeHours: "Mon–Fri · 7:00 AM – 4:00 PM",
     createdAt: now,
