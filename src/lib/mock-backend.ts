@@ -198,12 +198,21 @@ function ensureSeedData() {
     return;
   }
 
-  d.classes = [
-    { id: "c1", name: "Grade 9 — Mathematics", teacher: "Grace Tubman", room: "A-12", students: 28, schedule: "Mon/Wed/Fri 08:00" },
-    { id: "c2", name: "Grade 11 — Literature", teacher: "Amos Flomo", room: "B-04", students: 22, schedule: "Tue/Thu 10:30" },
-    { id: "c3", name: "Grade 7 — Civic Education", teacher: "Grace Tubman", room: "A-03", students: 31, schedule: "Mon/Wed 12:30" },
-    { id: "c4", name: "Grade 10 — Biology", teacher: "Ruth Gonpu", room: "Lab-1", students: 26, schedule: "Tue/Thu/Fri 09:00" },
+  // Full class roster from ABC (pre-nursery) through 12th grade.
+  const classLevels = [
+    "ABC", "Nursery", "KG-1", "KG-2",
+    "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
+    "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
   ];
+  const teachers = ["Grace Tubman", "Amos Flomo", "Ruth Gonpu", "Joseph Karpeh", "Esther Wonkeh", "Patience Kollie"];
+  d.classes = classLevels.map((lvl, i) => ({
+    id: `c${i + 1}`,
+    name: lvl,
+    teacher: teachers[i % teachers.length],
+    room: `R-${100 + i}`,
+    students: 18 + ((i * 3) % 18),
+    schedule: i % 2 === 0 ? "Mon/Wed/Fri 08:00" : "Tue/Thu 10:30",
+  }));
   d.assignments = [
     { id: "a1", title: "Quadratic Equations — Set 4", class: "Grade 9 — Mathematics", due: "2026-05-27", status: "Open", submissions: 12 },
     { id: "a2", title: "Essay: The Things They Carried", class: "Grade 11 — Literature", due: "2026-05-29", status: "Open", submissions: 8 },
