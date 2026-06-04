@@ -219,14 +219,13 @@ const MODULES: Record<string, ModuleDef> = {
           fields={[
             { name: "student", label: "Student", type: "text", required: true },
             { name: "item", label: "Item", type: "text", required: true, placeholder: "Term tuition, Lab fee…" },
-            { name: "amount", label: "Amount (USD)", type: "number", required: true },
             { name: "due", label: "Due date", type: "date", required: true },
             { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
           ]}
           columns={[
             { key: "student", label: "Student" },
             { key: "item", label: "Item" },
-            { key: "amount", label: "Amount", render: (v) => `$${v}` },
+            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
             { key: "due", label: "Due" },
             { key: "status", label: "Status", render: (v) => statusBadge(v) },
           ]}
