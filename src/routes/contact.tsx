@@ -1,17 +1,23 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { MapPin, Mail, Phone, Clock, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { MapPin, Mail, Phone, Clock, Facebook, Instagram, Twitter, Youtube, MessageCircle } from "lucide-react";
+import { useBrand } from "@/lib/brand";
 
 
 function Contact() {
+  const brand = useBrand();
+  const wa = brand.phone.replace(/[^0-9]/g, "");
   return (
     <div>
       <PageHeader eyebrow="Get in Touch" title="Let's talk about hope" lead="Whether you have a question, a partnership idea, or just want to say hello — we're listening." />
       <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-14">
         <div className="space-y-8">
-          <Info icon={MapPin} title="Visit Us" lines={["HOPE2 ACADEMY HQ", "Barber's Joe Town, Marshall Road", "Lower Margibi County, Liberia"]} />
-          <Info icon={Mail} title="Email" lines={["info@hope2academy.org", "partnerships@hope2academy.org"]} />
-          <Info icon={Phone} title="Phone" lines={["+231 770 000 000", "Mon–Fri · 7:00 AM – 4:00 PM"]} />
+          <Info icon={MapPin} title="Visit Us" lines={["HOPE2 ACADEMY HQ", brand.address, `${brand.city}, ${brand.country}`]} />
+          <Info icon={Mail} title="Email" lines={[brand.email, "partnerships@hope2academy.org"]} />
+          <Info icon={Phone} title="Phone" lines={[brand.phone, brand.officeHours]} />
+          <Info icon={MessageCircle} title="WhatsApp" lines={[brand.phone]}>
+            <a href={`https://wa.me/${wa}`} target="_blank" rel="noreferrer" className="text-primary font-semibold hover:underline">Chat on WhatsApp →</a>
+          </Info>
           <Info icon={Clock} title="Office Hours" lines={["Monday – Friday", "7:00 AM – 4:00 PM"]} />
           <div>
             <h3 className="font-bold text-lg">Follow Our Journey</h3>
@@ -49,13 +55,14 @@ function Contact() {
   );
 }
 
-function Info({ icon: Icon, title, lines }: { icon: any; title: string; lines: string[] }) {
+function Info({ icon: Icon, title, lines, children }: { icon: any; title: string; lines: string[]; children?: React.ReactNode }) {
   return (
     <div className="flex gap-4">
       <span className="h-12 w-12 shrink-0 rounded-2xl bg-primary/10 text-primary flex items-center justify-center"><Icon className="h-5 w-5" /></span>
       <div>
         <h3 className="font-bold text-lg">{title}</h3>
         {lines.map((l) => <p key={l} className="text-muted-foreground">{l}</p>)}
+        {children}
       </div>
     </div>
   );
