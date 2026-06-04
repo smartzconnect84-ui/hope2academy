@@ -23,6 +23,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// All finances are tracked in USD; we display the LRD equivalent alongside.
+// Editable rate persisted in localStorage so Admins can update it.
+const LRD_KEY = "h2l.fx.lrd_per_usd";
+function getLrdRate(): number {
+  if (typeof localStorage === "undefined") return 200;
+  const v = Number(localStorage.getItem(LRD_KEY));
+  return v > 0 ? v : 200;
+}
+function fmtUSD(v: number | string) {
+  const n = Number(v || 0);
+  return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+}
+function fmtMoney(v: number | string) {
+  const n = Number(v || 0);
+  const lrd = Math.round(n * getLrdRate());
+  return `${fmtUSD(n)} · LRD ${lrd.toLocaleString()}`;
+}
+
 type ModuleDef = {
   title: string;
   subtitle: string;
