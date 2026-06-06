@@ -214,6 +214,12 @@ function ensureSeedData() {
       d.__migrated_v3 = [true];
       writeData(d);
     }
+    // v4 migration: seed new school management modules.
+    if (!d.__migrated_v4) {
+      seedNewModules(d);
+      d.__migrated_v4 = [true];
+      writeData(d);
+    }
     return;
   }
 
@@ -347,7 +353,69 @@ function ensureSeedData() {
     { id: "s4", key: "Timezone", value: "Africa/Monrovia" },
   ];
   d.__seeded = [true];
+  seedNewModules(d);
+  d.__migrated_v4 = [true];
   writeData(d);
+}
+
+function seedNewModules(d: DataShape) {
+  d.admissions = d.admissions ?? [
+    { id: "ad1", applicant: "Hawa Konneh",   grade: "Grade 1",  guardian: "Musa Konneh",  phone: "+231 770 111 222", submitted: "2026-05-12", status: "Interview" },
+    { id: "ad2", applicant: "Daniel Tarr",   grade: "KG-2",     guardian: "Elizabeth Tarr",phone: "+231 770 333 444", submitted: "2026-05-15", status: "Pending" },
+    { id: "ad3", applicant: "Naomi Flomo",   grade: "Grade 7",  guardian: "Amos Flomo",   phone: "+231 770 555 666", submitted: "2026-05-18", status: "Accepted" },
+    { id: "ad4", applicant: "Joseph Karpeh", grade: "Grade 10", guardian: "Prince Karpeh",phone: "+231 770 777 888", submitted: "2026-05-20", status: "Waitlist" },
+  ];
+  d.exams = d.exams ?? [
+    { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Term 2", date: "2026-06-04", room: "R-108", status: "Scheduled" },
+    { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Term 2", date: "2026-06-05", room: "R-110", status: "Scheduled" },
+    { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Term", date: "2026-05-28", room: "Lab-1", status: "Completed" },
+    { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Term 2", date: "2026-06-02", room: "R-105", status: "Scheduled" },
+  ];
+  d.behavior = d.behavior ?? [
+    { id: "bh1", student: "Mariama Doe",  class: "Grade 9",  type: "Commendation", description: "Top score in Math quiz", date: "2026-05-19", reporter: "Grace Tubman" },
+    { id: "bh2", student: "Kollie Boima", class: "Grade 11", type: "Warning",      description: "Late submission of essay", date: "2026-05-18", reporter: "Amos Flomo" },
+    { id: "bh3", student: "Fatu Kanneh",  class: "Grade 7",  type: "Commendation", description: "Helped classmate", date: "2026-05-17", reporter: "Ruth Gonpu" },
+  ];
+  d.lessonplans = d.lessonplans ?? [
+    { id: "lp1", title: "Quadratic Equations", subject: "Mathematics", class: "Grade 9",  week: "Week 8", objectives: "Solve quadratics by factoring and the quadratic formula.", status: "Approved" },
+    { id: "lp2", title: "Romeo & Juliet Act 2", subject: "Literature",  class: "Grade 11", week: "Week 8", objectives: "Analyse character motivations in Act 2.", status: "Submitted" },
+    { id: "lp3", title: "Cell Division",         subject: "Biology",     class: "Grade 10", week: "Week 8", objectives: "Compare mitosis and meiosis.", status: "Draft" },
+  ];
+  d.transport = d.transport ?? [
+    { id: "tr1", route: "Marshall Road Loop",   driver: "James Roberts", vehicle: "LR-2210", departure: "06:30", riders: 32, feeUsd: 20 },
+    { id: "tr2", route: "Barber's Joe → Campus",driver: "Peter Cooper",  vehicle: "LR-3318", departure: "06:45", riders: 28, feeUsd: 18 },
+    { id: "tr3", route: "Margibi East Line",    driver: "Alfred Saah",   vehicle: "LR-1102", departure: "06:15", riders: 24, feeUsd: 22 },
+  ];
+  d.clinic = d.clinic ?? [
+    { id: "cl1", student: "Mariama Doe", visitDate: "2026-05-19", reason: "Mild headache", action: "Paracetamol, rest 30 min", nurse: "Nurse Helen", status: "Treated" },
+    { id: "cl2", student: "Ezekiel Doe", visitDate: "2026-05-17", reason: "Scraped knee",  action: "Cleaned & bandaged", nurse: "Nurse Helen", status: "Treated" },
+    { id: "cl3", student: "Fatu Kanneh", visitDate: "2026-05-16", reason: "Fever",          action: "Referred to clinic", nurse: "Nurse Helen", status: "Referred" },
+  ];
+  d.calendar = d.calendar ?? [
+    { id: "ca1", title: "Term 2 Mid-term Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" },
+    { id: "ca2", title: "Independence Day",      type: "Holiday", startDate: "2026-07-26", endDate: "2026-07-26", audience: "All" },
+    { id: "ca3", title: "PTA Meeting",           type: "PTA",     startDate: "2026-06-13", endDate: "2026-06-13", audience: "Parents" },
+    { id: "ca4", title: "Inter-house Sports Day",type: "Sports",  startDate: "2026-06-20", endDate: "2026-06-20", audience: "All" },
+  ];
+  d.inventory = d.inventory ?? [
+    { id: "in1", item: "Student desks",      category: "Furniture",   quantity: 240, location: "Marshall Campus", condition: "Good" },
+    { id: "in2", item: "Laptop (Dell)",      category: "Electronics", quantity: 18,  location: "Computer Lab",    condition: "Good" },
+    { id: "in3", item: "Microscope",         category: "Lab",         quantity: 12,  location: "Science Lab",     condition: "Fair" },
+    { id: "in4", item: "Football kit",       category: "Sports",      quantity: 4,   location: "Sports Store",    condition: "New" },
+    { id: "in5", item: "Curriculum books G9",category: "Books",       quantity: 60,  location: "Library",         condition: "Good" },
+  ];
+  d.staff = d.staff ?? [
+    { id: "st1", name: "Grace Tubman",   role: "Lead Teacher",  department: "HOPE2 ACADEMY", phone: "+231 775 975 544", salaryUsd: 320, status: "Active" },
+    { id: "st2", name: "Joseph Wreh",    role: "Pastor",        department: "HOPE2 CHURCH",  phone: "+231 770 222 333", salaryUsd: 280, status: "Active" },
+    { id: "st3", name: "Esther Pewee",   role: "Field Director",department: "HOPE2 MISSION", phone: "+231 770 444 555", salaryUsd: 360, status: "Active" },
+    { id: "st4", name: "Patience Kollie",role: "Media Lead",    department: "HOPE2 MEDIA",   phone: "+231 770 666 777", salaryUsd: 240, status: "Active" },
+    { id: "st5", name: "Amos Flomo",     role: "Teacher",       department: "HOPE2 ACADEMY", phone: "+231 770 888 999", salaryUsd: 250, status: "On Leave" },
+  ];
+  d.scholarships = d.scholarships ?? [
+    { id: "sc1", student: "Mariama Doe",  sponsor: "Patience Kollie", amountUsd: 320, term: "Term 2", status: "Active" },
+    { id: "sc2", student: "Kollie Boima", sponsor: "Anonymous",        amountUsd: 480, term: "Annual", status: "Paid" },
+    { id: "sc3", student: "Fatu Kanneh",  sponsor: "Moses Weah",       amountUsd: 200, term: "Term 2", status: "Outstanding" },
+  ];
 }
 
 export const mockDb = {
