@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
+import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -508,6 +509,276 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
 };
+
+// Append additional modules (hero editor + new school modules)
+Object.assign(MODULES, {
+  hero: {
+    title: "Hero Slider", subtitle: "Manage homepage carousel images, captions and CTAs",
+    icon: ImageIcon, allow: ["superadmin", "admin"],
+    render: () => <HeroSliderModule/>,
+  },
+  admissions: {
+    title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
+    allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="admissions"
+        itemLabel="application"
+        createLabel="New application"
+        fields={[
+          { name: "applicant", label: "Applicant name", type: "text", required: true },
+          { name: "grade", label: "Applying for grade", type: "select", required: true,
+            options: ["ABC","Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
+          { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "submitted", label: "Submitted", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true,
+            options: ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"] },
+        ]}
+        columns={[
+          { key: "applicant", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "grade", label: "Grade" },
+          { key: "guardian", label: "Guardian" },
+          { key: "submitted", label: "Submitted" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  exams: {
+    title: "Exams & Report Cards", subtitle: "Schedule term exams and publish report cards",
+    icon: Award,
+    render: () => (
+      <SimpleCrud
+        collection="exams"
+        itemLabel="exam"
+        createLabel="Schedule exam"
+        fields={[
+          { name: "subject", label: "Subject", type: "text", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Mid-Term","Final"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "room", label: "Room", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Scheduled","In Progress","Completed","Published"], required: true },
+        ]}
+        columns={[
+          { key: "subject", label: "Subject", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "class", label: "Class" },
+          { key: "term", label: "Term" },
+          { key: "date", label: "Date" },
+          { key: "room", label: "Room" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  behavior: {
+    title: "Behavior & Discipline", subtitle: "Log incidents and commendations", icon: CheckCircle2,
+    allow: ["superadmin", "admin", "teacher"],
+    render: () => (
+      <SimpleCrud
+        collection="behavior"
+        itemLabel="entry"
+        createLabel="Log entry"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "class", label: "Class", type: "text" },
+          { name: "type", label: "Type", type: "select", options: ["Commendation","Warning","Detention","Suspension","Note"], required: true },
+          { name: "description", label: "Description", type: "textarea", required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "reporter", label: "Reported by", type: "text", required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "date", label: "Date" },
+          { key: "reporter", label: "Reporter" },
+        ]}
+      />
+    ),
+  },
+  lessonplans: {
+    title: "Lesson Plans", subtitle: "Teacher planning and curriculum tracking",
+    icon: BookOpen, allow: ["superadmin", "admin", "teacher"],
+    render: () => (
+      <SimpleCrud
+        collection="lessonplans"
+        itemLabel="lesson plan"
+        createLabel="New lesson plan"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "subject", label: "Subject", type: "text", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "week", label: "Week", type: "text", placeholder: "Week 4" },
+          { name: "objectives", label: "Objectives", type: "textarea", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Submitted","Approved"], required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "subject", label: "Subject" },
+          { key: "class", label: "Class" },
+          { key: "week", label: "Week" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  transport: {
+    title: "Transport & Bus Routes", subtitle: "School bus routes and rider rosters",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="transport"
+        itemLabel="route"
+        createLabel="Add route"
+        fields={[
+          { name: "route", label: "Route", type: "text", required: true, placeholder: "Marshall Road Loop" },
+          { name: "driver", label: "Driver", type: "text", required: true },
+          { name: "vehicle", label: "Vehicle / Plate", type: "text" },
+          { name: "departure", label: "Departure", type: "text", placeholder: "06:30" },
+          { name: "riders", label: "Riders", type: "number", required: true },
+          { name: "feeUsd", label: "Monthly fee (USD)", type: "number" },
+        ]}
+        columns={[
+          { key: "route", label: "Route", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "driver", label: "Driver" },
+          { key: "vehicle", label: "Vehicle" },
+          { key: "departure", label: "Departs" },
+          { key: "riders", label: "Riders" },
+          { key: "feeUsd", label: "Fee/mo (USD · LRD)", render: (v) => fmtMoney(v) },
+        ]}
+      />
+    ),
+  },
+  clinic: {
+    title: "Clinic & Health Records", subtitle: "Health log and immunisations",
+    icon: Heart, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="clinic"
+        itemLabel="health record"
+        createLabel="Add record"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "visitDate", label: "Visit date", type: "date", required: true },
+          { name: "reason", label: "Reason", type: "text", required: true },
+          { name: "action", label: "Action taken", type: "textarea" },
+          { name: "nurse", label: "Attended by", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Treated","Referred","Monitoring"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "visitDate", label: "Date" },
+          { key: "reason", label: "Reason" },
+          { key: "nurse", label: "Nurse" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  calendar: {
+    title: "School Calendar", subtitle: "Holidays, exam weeks and school events",
+    icon: Calendar,
+    render: () => (
+      <SimpleCrud
+        collection="calendar"
+        itemLabel="calendar entry"
+        createLabel="Add entry"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "type", label: "Type", type: "select", options: ["Holiday","Exam","Event","PTA","Sports","Devotion"], required: true },
+          { name: "startDate", label: "Start", type: "date", required: true },
+          { name: "endDate", label: "End", type: "date" },
+          { name: "audience", label: "Audience", type: "select", options: ["All","Students","Parents","Staff","Alumni"] },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "startDate", label: "Start" },
+          { key: "endDate", label: "End" },
+          { key: "audience", label: "Audience" },
+        ]}
+      />
+    ),
+  },
+  inventory: {
+    title: "Assets & Inventory", subtitle: "School equipment, supplies and stock",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="inventory"
+        itemLabel="item"
+        createLabel="Add item"
+        fields={[
+          { name: "item", label: "Item", type: "text", required: true },
+          { name: "category", label: "Category", type: "select", options: ["Furniture","Electronics","Books","Stationery","Sports","Lab","Vehicle"], required: true },
+          { name: "quantity", label: "Quantity", type: "number", required: true },
+          { name: "location", label: "Location", type: "text" },
+          { name: "condition", label: "Condition", type: "select", options: ["New","Good","Fair","Damaged"], required: true },
+        ]}
+        columns={[
+          { key: "item", label: "Item", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "category", label: "Category" },
+          { key: "quantity", label: "Qty" },
+          { key: "location", label: "Location" },
+          { key: "condition", label: "Condition", render: (v) => <Badge variant="secondary">{v}</Badge> },
+        ]}
+      />
+    ),
+  },
+  staff: {
+    title: "Staff & HR", subtitle: "Employees, contracts and payroll snapshots",
+    icon: Users, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="staff"
+        itemLabel="staff member"
+        createLabel="Add staff"
+        fields={[
+          { name: "name", label: "Full name", type: "text", required: true },
+          { name: "role", label: "Role", type: "text", required: true, placeholder: "Teacher, Bursar…" },
+          { name: "department", label: "Department", type: "select",
+            options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "salaryUsd", label: "Monthly salary (USD)", type: "number" },
+          { name: "status", label: "Status", type: "select", options: ["Active","On Leave","Terminated"], required: true },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "role", label: "Role" },
+          { key: "department", label: "Department" },
+          { key: "salaryUsd", label: "Salary (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  scholarships: {
+    title: "Scholarships & Sponsorships", subtitle: "Sponsored students and award tracking",
+    icon: Award, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="scholarships"
+        itemLabel="scholarship"
+        createLabel="Add scholarship"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "sponsor", label: "Sponsor", type: "text", required: true },
+          { name: "amountUsd", label: "Award amount (USD)", type: "number", required: true },
+          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Annual"], required: true },
+          { name: "status", label: "Status", type: "select", options: ["Active","Paid","Outstanding","Ended"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "sponsor", label: "Sponsor" },
+          { key: "amountUsd", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "term", label: "Term" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+} satisfies Record<string, ModuleDef>);
 
 // =========================================================================
 // CMS — Pages module
@@ -1150,6 +1421,154 @@ function SimpleEditor({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={save}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
+// Hero Slider — admin module to edit homepage slides without redeploying
+// =========================================================================
+function HeroSliderModule() {
+  const slides = useHeroSlides();
+  const [editing, setEditing] = useState<HeroSlide | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const remove = (s: HeroSlide) => {
+    if (!confirm(`Delete slide "${s.title} ${s.titleAccent}"?`)) return;
+    heroStore.remove(s.id); toast.success("Slide removed");
+  };
+  const toggle = (s: HeroSlide) => {
+    heroStore.upsert({ ...s, enabled: !s.enabled });
+  };
+  const reset = () => {
+    if (!confirm("Reset hero slides to defaults? Custom slides will be lost.")) return;
+    heroStore.reset(); toast.success("Slides reset to defaults");
+  };
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="flex-1">
+          <p className="text-sm text-muted-foreground">
+            {slides.length} slide{slides.length === 1 ? "" : "s"} · {slides.filter(s=>s.enabled).length} active on the homepage carousel.
+          </p>
+        </div>
+        <Button variant="ghost" className="gap-2" onClick={reset}><RotateCcw className="h-4 w-4"/>Reset</Button>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/>New slide</Button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {slides.map((s, i) => (
+          <Reveal key={s.id} delay={i*0.04}>
+            <Card className="overflow-hidden">
+              <div className="aspect-[16/9] bg-muted relative">
+                {s.img && <img src={s.img} alt={s.alt} className="absolute inset-0 h-full w-full object-cover"/>}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent"/>
+                <div className="absolute bottom-3 left-3 right-3 text-background">
+                  <p className="text-[10px] uppercase tracking-wider opacity-90">{s.kicker}</p>
+                  <p className="font-display font-bold text-lg leading-tight">{s.title} <span className="text-accent">{s.titleAccent}</span></p>
+                </div>
+                {!s.enabled && (
+                  <span className="absolute top-3 left-3 rounded-full bg-foreground/70 text-background px-2 py-0.5 text-[10px] font-semibold">Hidden</span>
+                )}
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-sm text-muted-foreground line-clamp-2">{s.body}</p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary">{s.primaryLabel} → {s.primaryTo}</Badge>
+                  <Badge variant="outline">{s.secondaryLabel} → {s.secondaryTo}</Badge>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" onClick={()=>heroStore.move(s.id, -1)} disabled={i===0} aria-label="Move up"><ChevronUp className="h-4 w-4"/></Button>
+                  <Button size="sm" variant="outline" onClick={()=>heroStore.move(s.id, 1)} disabled={i===slides.length-1} aria-label="Move down"><ChevronDownIcon className="h-4 w-4"/></Button>
+                  <Button size="sm" variant="outline" onClick={()=>toggle(s)}>{s.enabled ? "Hide" : "Show"}</Button>
+                  <Button size="sm" variant="outline" className="gap-1.5 ml-auto" onClick={()=>setEditing(s)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+                  <Button size="sm" variant="ghost" onClick={()=>remove(s)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+        ))}
+      </div>
+
+      {(editing || creating) && (
+        <HeroSlideEditor
+          slide={editing}
+          onClose={() => { setEditing(null); setCreating(false); }}
+        />
+      )}
+    </>
+  );
+}
+
+function HeroSlideEditor({ slide, onClose }: { slide: HeroSlide | null; onClose: () => void }) {
+  const [form, setForm] = useState<HeroSlide>(() => slide ?? {
+    id: heroStore.newId(), img: "", alt: "",
+    kicker: "", title: "", titleAccent: "", body: "",
+    primaryLabel: "Learn more", primaryTo: "/about",
+    secondaryLabel: "Contact us", secondaryTo: "/contact",
+    enabled: true,
+  });
+  const set = <K extends keyof HeroSlide>(k: K, v: HeroSlide[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  const onImage = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
+    const url = await readBrandFile(file);
+    set("img", url);
+    toast.success("Image attached — click Save to publish");
+  };
+
+  const save = () => {
+    if (!form.title.trim() || !form.img.trim()) {
+      toast.error("Image and title are required"); return;
+    }
+    heroStore.upsert(form);
+    toast.success(`Slide ${slide ? "updated" : "added"} — live on the homepage`);
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{slide ? "Edit slide" : "New slide"}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Image</Label>
+            <div className="mt-2 flex items-start gap-4">
+              <div className="h-24 w-40 rounded-lg overflow-hidden bg-muted shrink-0">
+                {form.img ? <img src={form.img} alt="preview" className="h-full w-full object-cover"/> : <div className="h-full w-full grid place-items-center text-xs text-muted-foreground">No image</div>}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input id="hero-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onImage(e.target.files?.[0] ?? null)}/>
+                <label htmlFor="hero-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload image</span></Button></label>
+                <Input value={form.img} onChange={(e)=>set("img", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+              </div>
+            </div>
+          </div>
+          <div><Label>Alt text</Label><Input value={form.alt} onChange={(e)=>set("alt", e.target.value)} placeholder="Describe the image for accessibility"/></div>
+          <div><Label>Kicker (small uppercase label)</Label><Input value={form.kicker} onChange={(e)=>set("kicker", e.target.value)} placeholder="HOPE2 MISSION · Capacity Building"/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Title</Label><Input value={form.title} onChange={(e)=>set("title", e.target.value)} placeholder="Raising leaders"/></div>
+            <div><Label>Title accent (highlighted)</Label><Input value={form.titleAccent} onChange={(e)=>set("titleAccent", e.target.value)} placeholder="rooted in purpose"/></div>
+          </div>
+          <div><Label>Body copy</Label><Textarea rows={3} value={form.body} onChange={(e)=>set("body", e.target.value)}/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Primary button text</Label><Input value={form.primaryLabel} onChange={(e)=>set("primaryLabel", e.target.value)}/></div>
+            <div><Label>Primary button link</Label><Input value={form.primaryTo} onChange={(e)=>set("primaryTo", e.target.value)} placeholder="/get-involved"/></div>
+            <div><Label>Secondary button text</Label><Input value={form.secondaryLabel} onChange={(e)=>set("secondaryLabel", e.target.value)}/></div>
+            <div><Label>Secondary button link</Label><Input value={form.secondaryTo} onChange={(e)=>set("secondaryTo", e.target.value)} placeholder="/about"/></div>
+          </div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={form.enabled} onChange={(e)=>set("enabled", e.target.checked)} className="h-4 w-4"/>
+            Show this slide on the public homepage
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save slide</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

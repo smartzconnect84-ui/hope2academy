@@ -37,8 +37,25 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "People & Access", items: [
       { to: "/portal/admin", label: "User Management", icon: Users },
       { to: m("departments"), label: "Departments", icon: FolderTree },
+      { to: m("staff"), label: "Staff & HR", icon: Users },
+    ]},
+    { group: "Admissions & Academics", items: [
+      { to: m("admissions"), label: "Admissions", icon: ClipboardList },
+      { to: m("classes"), label: "Classes", icon: GraduationCap },
+      { to: m("exams"), label: "Exams & Reports", icon: Award },
+      { to: m("behavior"), label: "Behavior & Discipline", icon: Award },
+      { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+    { group: "Operations", items: [
+      { to: m("transport"), label: "Transport", icon: FolderTree },
+      { to: m("clinic"), label: "Clinic & Health", icon: Award },
+      { to: m("inventory"), label: "Assets & Inventory", icon: FolderTree },
+      { to: m("scholarships"), label: "Scholarships", icon: Award },
+      { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
     ]},
     { group: "Website (CMS)", items: [
+      { to: m("hero"), label: "Hero Slider", icon: ImageIcon },
       { to: m("pages"), label: "Pages (CMS)", icon: FileText },
       { to: m("posts"), label: "Posts & Stories", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
@@ -60,17 +77,30 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "People", items: [
       { to: "/portal/admin", label: "User Management", icon: Users },
       { to: m("departments"), label: "Departments", icon: FolderTree },
+      { to: m("staff"), label: "Staff & HR", icon: Users },
     ]},
-    { group: "Academics", items: [
+    { group: "Admissions & Academics", items: [
+      { to: m("admissions"), label: "Admissions", icon: ClipboardList },
       { to: m("classes"), label: "Classes", icon: GraduationCap },
       { to: m("timetable"), label: "Timetable", icon: Calendar },
       { to: m("attendance"), label: "Attendance", icon: ClipboardList },
       { to: m("grades"), label: "Grades", icon: Award },
+      { to: m("exams"), label: "Exams & Reports", icon: Award },
+      { to: m("behavior"), label: "Behavior", icon: Award },
+      { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+    { group: "Operations", items: [
+      { to: m("transport"), label: "Transport", icon: FolderTree },
+      { to: m("clinic"), label: "Clinic & Health", icon: Award },
+      { to: m("inventory"), label: "Inventory", icon: FolderTree },
+      { to: m("scholarships"), label: "Scholarships", icon: Award },
     ]},
     { group: "Finance", items: [
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
     ]},
     { group: "Content", items: [
+      { to: m("hero"), label: "Hero Slider", icon: ImageIcon },
       { to: m("posts"), label: "Stories & News", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
     ]},
@@ -87,11 +117,15 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },
       { to: m("timetable"), label: "Timetable", icon: Calendar },
       { to: m("attendance"), label: "Attendance", icon: ClipboardList },
+      { to: m("calendar"), label: "Calendar", icon: Calendar },
     ]},
     { group: "Teaching", items: [
       { to: m("classes"), label: "My Classes", icon: BookOpen },
       { to: m("assignments"), label: "Assignments", icon: ClipboardList },
+      { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("exams"), label: "Exams", icon: Award },
       { to: m("grades"), label: "Grade Book", icon: Award },
+      { to: m("behavior"), label: "Behavior Log", icon: Award },
       { to: m("resources"), label: "Resources", icon: Library },
     ]},
     { group: "Communications", items: [
@@ -104,10 +138,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/student", label: "Dashboard", icon: LayoutDashboard },
       { to: m("timetable"), label: "Timetable", icon: Calendar },
       { to: m("assignments"), label: "Assignments", icon: ClipboardList },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Learning", items: [
       { to: m("classes"), label: "My Courses", icon: BookOpen },
       { to: m("grades"), label: "Grades & Reports", icon: Award },
+      { to: m("exams"), label: "Exams", icon: Award },
       { to: m("library"), label: "Library", icon: Library },
     ]},
     { group: "School Life", items: [
@@ -122,10 +158,15 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Academic Progress", items: [
       { to: m("grades"), label: "Grades & Progress", icon: Award },
+      { to: m("exams"), label: "Exams", icon: Award },
       { to: m("attendance"), label: "Attendance", icon: Calendar },
+      { to: m("behavior"), label: "Behavior", icon: Award },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Finance", items: [
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
+      { to: m("scholarships"), label: "Scholarships", icon: Award },
+      { to: m("transport"), label: "Transport", icon: FolderTree },
     ]},
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
@@ -144,6 +185,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Give Back", items: [
       { to: m("donations"), label: "Donations", icon: DollarSign },
+      { to: m("scholarships"), label: "Scholarships", icon: Award },
       { to: m("posts"), label: "Stories", icon: Newspaper },
     ]},
   ],
