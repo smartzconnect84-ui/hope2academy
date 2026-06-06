@@ -1428,6 +1428,154 @@ function SimpleEditor({
 }
 
 // =========================================================================
+// Hero Slider — admin module to edit homepage slides without redeploying
+// =========================================================================
+function HeroSliderModule() {
+  const slides = useHeroSlides();
+  const [editing, setEditing] = useState<HeroSlide | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const remove = (s: HeroSlide) => {
+    if (!confirm(`Delete slide "${s.title} ${s.titleAccent}"?`)) return;
+    heroStore.remove(s.id); toast.success("Slide removed");
+  };
+  const toggle = (s: HeroSlide) => {
+    heroStore.upsert({ ...s, enabled: !s.enabled });
+  };
+  const reset = () => {
+    if (!confirm("Reset hero slides to defaults? Custom slides will be lost.")) return;
+    heroStore.reset(); toast.success("Slides reset to defaults");
+  };
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="flex-1">
+          <p className="text-sm text-muted-foreground">
+            {slides.length} slide{slides.length === 1 ? "" : "s"} · {slides.filter(s=>s.enabled).length} active on the homepage carousel.
+          </p>
+        </div>
+        <Button variant="ghost" className="gap-2" onClick={reset}><RotateCcw className="h-4 w-4"/>Reset</Button>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/>New slide</Button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {slides.map((s, i) => (
+          <Reveal key={s.id} delay={i*0.04}>
+            <Card className="overflow-hidden">
+              <div className="aspect-[16/9] bg-muted relative">
+                {s.img && <img src={s.img} alt={s.alt} className="absolute inset-0 h-full w-full object-cover"/>}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent"/>
+                <div className="absolute bottom-3 left-3 right-3 text-background">
+                  <p className="text-[10px] uppercase tracking-wider opacity-90">{s.kicker}</p>
+                  <p className="font-display font-bold text-lg leading-tight">{s.title} <span className="text-accent">{s.titleAccent}</span></p>
+                </div>
+                {!s.enabled && (
+                  <span className="absolute top-3 left-3 rounded-full bg-foreground/70 text-background px-2 py-0.5 text-[10px] font-semibold">Hidden</span>
+                )}
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-sm text-muted-foreground line-clamp-2">{s.body}</p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="secondary">{s.primaryLabel} → {s.primaryTo}</Badge>
+                  <Badge variant="outline">{s.secondaryLabel} → {s.secondaryTo}</Badge>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button size="sm" variant="outline" onClick={()=>heroStore.move(s.id, -1)} disabled={i===0} aria-label="Move up"><ChevronUp className="h-4 w-4"/></Button>
+                  <Button size="sm" variant="outline" onClick={()=>heroStore.move(s.id, 1)} disabled={i===slides.length-1} aria-label="Move down"><ChevronDownIcon className="h-4 w-4"/></Button>
+                  <Button size="sm" variant="outline" onClick={()=>toggle(s)}>{s.enabled ? "Hide" : "Show"}</Button>
+                  <Button size="sm" variant="outline" className="gap-1.5 ml-auto" onClick={()=>setEditing(s)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+                  <Button size="sm" variant="ghost" onClick={()=>remove(s)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                </div>
+              </div>
+            </Card>
+          </Reveal>
+        ))}
+      </div>
+
+      {(editing || creating) && (
+        <HeroSlideEditor
+          slide={editing}
+          onClose={() => { setEditing(null); setCreating(false); }}
+        />
+      )}
+    </>
+  );
+}
+
+function HeroSlideEditor({ slide, onClose }: { slide: HeroSlide | null; onClose: () => void }) {
+  const [form, setForm] = useState<HeroSlide>(() => slide ?? {
+    id: heroStore.newId(), img: "", alt: "",
+    kicker: "", title: "", titleAccent: "", body: "",
+    primaryLabel: "Learn more", primaryTo: "/about",
+    secondaryLabel: "Contact us", secondaryTo: "/contact",
+    enabled: true,
+  });
+  const set = <K extends keyof HeroSlide>(k: K, v: HeroSlide[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  const onImage = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
+    const url = await readBrandFile(file);
+    set("img", url);
+    toast.success("Image attached — click Save to publish");
+  };
+
+  const save = () => {
+    if (!form.title.trim() || !form.img.trim()) {
+      toast.error("Image and title are required"); return;
+    }
+    heroStore.upsert(form);
+    toast.success(`Slide ${slide ? "updated" : "added"} — live on the homepage`);
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{slide ? "Edit slide" : "New slide"}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Image</Label>
+            <div className="mt-2 flex items-start gap-4">
+              <div className="h-24 w-40 rounded-lg overflow-hidden bg-muted shrink-0">
+                {form.img ? <img src={form.img} alt="preview" className="h-full w-full object-cover"/> : <div className="h-full w-full grid place-items-center text-xs text-muted-foreground">No image</div>}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input id="hero-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onImage(e.target.files?.[0] ?? null)}/>
+                <label htmlFor="hero-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload image</span></Button></label>
+                <Input value={form.img} onChange={(e)=>set("img", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+              </div>
+            </div>
+          </div>
+          <div><Label>Alt text</Label><Input value={form.alt} onChange={(e)=>set("alt", e.target.value)} placeholder="Describe the image for accessibility"/></div>
+          <div><Label>Kicker (small uppercase label)</Label><Input value={form.kicker} onChange={(e)=>set("kicker", e.target.value)} placeholder="HOPE2 MISSION · Capacity Building"/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Title</Label><Input value={form.title} onChange={(e)=>set("title", e.target.value)} placeholder="Raising leaders"/></div>
+            <div><Label>Title accent (highlighted)</Label><Input value={form.titleAccent} onChange={(e)=>set("titleAccent", e.target.value)} placeholder="rooted in purpose"/></div>
+          </div>
+          <div><Label>Body copy</Label><Textarea rows={3} value={form.body} onChange={(e)=>set("body", e.target.value)}/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Primary button text</Label><Input value={form.primaryLabel} onChange={(e)=>set("primaryLabel", e.target.value)}/></div>
+            <div><Label>Primary button link</Label><Input value={form.primaryTo} onChange={(e)=>set("primaryTo", e.target.value)} placeholder="/get-involved"/></div>
+            <div><Label>Secondary button text</Label><Input value={form.secondaryLabel} onChange={(e)=>set("secondaryLabel", e.target.value)}/></div>
+            <div><Label>Secondary button link</Label><Input value={form.secondaryTo} onChange={(e)=>set("secondaryTo", e.target.value)} placeholder="/about"/></div>
+          </div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={form.enabled} onChange={(e)=>set("enabled", e.target.checked)} className="h-4 w-4"/>
+            Show this slide on the public homepage
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save slide</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
 // Stat strips for modules that need quick KPIs above the CRUD table
 // =========================================================================
 function GradesStats() {
