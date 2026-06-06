@@ -510,6 +510,276 @@ const MODULES: Record<string, ModuleDef> = {
   },
 };
 
+// Append additional modules (hero editor + new school modules)
+Object.assign(MODULES, {
+  hero: {
+    title: "Hero Slider", subtitle: "Manage homepage carousel images, captions and CTAs",
+    icon: ImageIcon, allow: ["superadmin", "admin"],
+    render: () => <HeroSliderModule/>,
+  },
+  admissions: {
+    title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
+    allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="admissions"
+        itemLabel="application"
+        createLabel="New application"
+        fields={[
+          { name: "applicant", label: "Applicant name", type: "text", required: true },
+          { name: "grade", label: "Applying for grade", type: "select", required: true,
+            options: ["ABC","Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
+          { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "submitted", label: "Submitted", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true,
+            options: ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"] },
+        ]}
+        columns={[
+          { key: "applicant", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "grade", label: "Grade" },
+          { key: "guardian", label: "Guardian" },
+          { key: "submitted", label: "Submitted" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  exams: {
+    title: "Exams & Report Cards", subtitle: "Schedule term exams and publish report cards",
+    icon: Award,
+    render: () => (
+      <SimpleCrud
+        collection="exams"
+        itemLabel="exam"
+        createLabel="Schedule exam"
+        fields={[
+          { name: "subject", label: "Subject", type: "text", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Mid-Term","Final"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "room", label: "Room", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Scheduled","In Progress","Completed","Published"], required: true },
+        ]}
+        columns={[
+          { key: "subject", label: "Subject", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "class", label: "Class" },
+          { key: "term", label: "Term" },
+          { key: "date", label: "Date" },
+          { key: "room", label: "Room" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  behavior: {
+    title: "Behavior & Discipline", subtitle: "Log incidents and commendations", icon: CheckCircle2,
+    allow: ["superadmin", "admin", "teacher"],
+    render: () => (
+      <SimpleCrud
+        collection="behavior"
+        itemLabel="entry"
+        createLabel="Log entry"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "class", label: "Class", type: "text" },
+          { name: "type", label: "Type", type: "select", options: ["Commendation","Warning","Detention","Suspension","Note"], required: true },
+          { name: "description", label: "Description", type: "textarea", required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "reporter", label: "Reported by", type: "text", required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "date", label: "Date" },
+          { key: "reporter", label: "Reporter" },
+        ]}
+      />
+    ),
+  },
+  lessonplans: {
+    title: "Lesson Plans", subtitle: "Teacher planning and curriculum tracking",
+    icon: BookOpen, allow: ["superadmin", "admin", "teacher"],
+    render: () => (
+      <SimpleCrud
+        collection="lessonplans"
+        itemLabel="lesson plan"
+        createLabel="New lesson plan"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "subject", label: "Subject", type: "text", required: true },
+          { name: "class", label: "Class", type: "text", required: true },
+          { name: "week", label: "Week", type: "text", placeholder: "Week 4" },
+          { name: "objectives", label: "Objectives", type: "textarea", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Submitted","Approved"], required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "subject", label: "Subject" },
+          { key: "class", label: "Class" },
+          { key: "week", label: "Week" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  transport: {
+    title: "Transport & Bus Routes", subtitle: "School bus routes and rider rosters",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="transport"
+        itemLabel="route"
+        createLabel="Add route"
+        fields={[
+          { name: "route", label: "Route", type: "text", required: true, placeholder: "Marshall Road Loop" },
+          { name: "driver", label: "Driver", type: "text", required: true },
+          { name: "vehicle", label: "Vehicle / Plate", type: "text" },
+          { name: "departure", label: "Departure", type: "text", placeholder: "06:30" },
+          { name: "riders", label: "Riders", type: "number", required: true },
+          { name: "feeUsd", label: "Monthly fee (USD)", type: "number" },
+        ]}
+        columns={[
+          { key: "route", label: "Route", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "driver", label: "Driver" },
+          { key: "vehicle", label: "Vehicle" },
+          { key: "departure", label: "Departs" },
+          { key: "riders", label: "Riders" },
+          { key: "feeUsd", label: "Fee/mo (USD · LRD)", render: (v) => fmtMoney(v) },
+        ]}
+      />
+    ),
+  },
+  clinic: {
+    title: "Clinic & Health Records", subtitle: "Health log and immunisations",
+    icon: Heart, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="clinic"
+        itemLabel="health record"
+        createLabel="Add record"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "visitDate", label: "Visit date", type: "date", required: true },
+          { name: "reason", label: "Reason", type: "text", required: true },
+          { name: "action", label: "Action taken", type: "textarea" },
+          { name: "nurse", label: "Attended by", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Treated","Referred","Monitoring"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "visitDate", label: "Date" },
+          { key: "reason", label: "Reason" },
+          { key: "nurse", label: "Nurse" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  calendar: {
+    title: "School Calendar", subtitle: "Holidays, exam weeks and school events",
+    icon: Calendar,
+    render: () => (
+      <SimpleCrud
+        collection="calendar"
+        itemLabel="calendar entry"
+        createLabel="Add entry"
+        fields={[
+          { name: "title", label: "Title", type: "text", required: true },
+          { name: "type", label: "Type", type: "select", options: ["Holiday","Exam","Event","PTA","Sports","Devotion"], required: true },
+          { name: "startDate", label: "Start", type: "date", required: true },
+          { name: "endDate", label: "End", type: "date" },
+          { name: "audience", label: "Audience", type: "select", options: ["All","Students","Parents","Staff","Alumni"] },
+        ]}
+        columns={[
+          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "startDate", label: "Start" },
+          { key: "endDate", label: "End" },
+          { key: "audience", label: "Audience" },
+        ]}
+      />
+    ),
+  },
+  inventory: {
+    title: "Assets & Inventory", subtitle: "School equipment, supplies and stock",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="inventory"
+        itemLabel="item"
+        createLabel="Add item"
+        fields={[
+          { name: "item", label: "Item", type: "text", required: true },
+          { name: "category", label: "Category", type: "select", options: ["Furniture","Electronics","Books","Stationery","Sports","Lab","Vehicle"], required: true },
+          { name: "quantity", label: "Quantity", type: "number", required: true },
+          { name: "location", label: "Location", type: "text" },
+          { name: "condition", label: "Condition", type: "select", options: ["New","Good","Fair","Damaged"], required: true },
+        ]}
+        columns={[
+          { key: "item", label: "Item", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "category", label: "Category" },
+          { key: "quantity", label: "Qty" },
+          { key: "location", label: "Location" },
+          { key: "condition", label: "Condition", render: (v) => <Badge variant="secondary">{v}</Badge> },
+        ]}
+      />
+    ),
+  },
+  staff: {
+    title: "Staff & HR", subtitle: "Employees, contracts and payroll snapshots",
+    icon: Users, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="staff"
+        itemLabel="staff member"
+        createLabel="Add staff"
+        fields={[
+          { name: "name", label: "Full name", type: "text", required: true },
+          { name: "role", label: "Role", type: "text", required: true, placeholder: "Teacher, Bursar…" },
+          { name: "department", label: "Department", type: "select",
+            options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "salaryUsd", label: "Monthly salary (USD)", type: "number" },
+          { name: "status", label: "Status", type: "select", options: ["Active","On Leave","Terminated"], required: true },
+        ]}
+        columns={[
+          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "role", label: "Role" },
+          { key: "department", label: "Department" },
+          { key: "salaryUsd", label: "Salary (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  scholarships: {
+    title: "Scholarships & Sponsorships", subtitle: "Sponsored students and award tracking",
+    icon: Award, allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="scholarships"
+        itemLabel="scholarship"
+        createLabel="Add scholarship"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "sponsor", label: "Sponsor", type: "text", required: true },
+          { name: "amountUsd", label: "Award amount (USD)", type: "number", required: true },
+          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Annual"], required: true },
+          { name: "status", label: "Status", type: "select", options: ["Active","Paid","Outstanding","Ended"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "sponsor", label: "Sponsor" },
+          { key: "amountUsd", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "term", label: "Term" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+} satisfies Record<string, ModuleDef>);
+
 // =========================================================================
 // CMS — Pages module
 // =========================================================================
