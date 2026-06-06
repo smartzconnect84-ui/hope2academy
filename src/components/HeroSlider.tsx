@@ -2,81 +2,25 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import s1 from "@/assets/hero/IMG-20260521-WA0022-2.jpg.asset.json";
-import s2 from "@/assets/hero/IMG-20260521-WA0000.jpg.asset.json";
-import s3 from "@/assets/hero/IMG-20260521-WA0003-2.jpg.asset.json";
-import s4 from "@/assets/hero/IMG-20260521-WA0006.jpg.asset.json";
-import s5 from "@/assets/hero/IMG-20260521-WA0012-2.jpg.asset.json";
-
-type Slide = {
-  img: string;
-  alt: string;
-  kicker: string;
-  title: React.ReactNode;
-  body: string;
-  primaryCta: { to: string; label: string };
-  secondaryCta: { to: string; label: string };
-};
-
-const SLIDES: Slide[] = [
-  {
-    img: s1.url,
-    alt: "HOPE2 ACADEMY student reading scripture in uniform",
-    kicker: "Faith · Character · Scholarship",
-    title: (<>Raising leaders <br/><span className="text-accent">rooted in purpose</span></>),
-    body: "At HOPE2 ACADEMY, every learner is formed in faith, discipline, and the joy of discovery — ABC through 12th grade.",
-    primaryCta: { to: "/get-involved", label: "Sponsor a Student" },
-    secondaryCta: { to: "/about", label: "Our Mission" },
-  },
-  {
-    img: s2.url,
-    alt: "Student studying the Bible during devotion",
-    kicker: "HOPE2 CHURCH · Daily Devotion",
-    title: (<>A foundation of <span className="text-accent">faith & wisdom</span></>),
-    body: "Mornings begin with Scripture and reflection — anchoring each child's learning in values that last a lifetime.",
-    primaryCta: { to: "/departments", label: "Explore Divisions" },
-    secondaryCta: { to: "/stories", label: "Read Stories" },
-  },
-  {
-    img: s3.url,
-    alt: "HOPE2 graduates of the teacher training program",
-    kicker: "HOPE2 MISSION · Capacity Building",
-    title: (<>Training the <span className="text-accent">teachers of Liberia</span></>),
-    body: "We equip educators with certified training so classrooms across the country grow stronger — together we rebuild a nation.",
-    primaryCta: { to: "/projects", label: "Our Programs" },
-    secondaryCta: { to: "/team", label: "Meet the Team" },
-  },
-  {
-    img: s4.url,
-    alt: "Hundreds of HOPE2 ACADEMY students taking exams",
-    kicker: "Academic Excellence",
-    title: (<>Where focus meets <span className="text-accent">opportunity</span></>),
-    body: "From kindergarten to twelfth grade, our scholars sit for rigorous assessments — preparing minds for university and beyond.",
-    primaryCta: { to: "/get-involved", label: "Partner With Us" },
-    secondaryCta: { to: "/about", label: "Academics" },
-  },
-  {
-    img: s5.url,
-    alt: "HOPE2 ACADEMY graduation ceremony in robes",
-    kicker: "Class of Hope · Graduation",
-    title: (<>Celebrating <span className="text-accent">every milestone</span></>),
-    body: "Each cap and gown is a promise kept — to families, to communities, and to the next generation of Liberian leaders.",
-    primaryCta: { to: "/get-involved", label: "Give to Scholarships" },
-    secondaryCta: { to: "/stories", label: "See Graduates" },
-  },
-];
+import { useHeroSlides } from "@/lib/hero-store";
 
 const INTERVAL = 6000;
 
 export default function HeroSlider() {
+  const all = useHeroSlides();
+  const SLIDES = all.filter((s) => s.enabled);
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || SLIDES.length <= 1) return;
     const t = setInterval(() => setI((p) => (p + 1) % SLIDES.length), INTERVAL);
     return () => clearInterval(t);
-  }, [paused]);
+  }, [paused, SLIDES.length]);
+
+  useEffect(() => { if (i >= SLIDES.length) setI(0); }, [SLIDES.length, i]);
+
+  if (SLIDES.length === 0) return null;
 
   const go = (n: number) => setI((n + SLIDES.length) % SLIDES.length);
   const slide = SLIDES[i];
@@ -120,22 +64,22 @@ export default function HeroSlider() {
               <Heart className="h-3 w-3 fill-accent" /> {slide.kicker}
             </span>
             <h1 className="mt-6 text-5xl md:text-7xl font-bold text-background leading-[1.0]">
-              {slide.title}
+              {slide.title} {slide.titleAccent && <><br className="hidden sm:block"/><span className="text-accent">{slide.titleAccent}</span></>}
             </h1>
             <p className="mt-6 text-lg md:text-xl text-background/90 max-w-xl">{slide.body}</p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
-                to={slide.primaryCta.to}
+                to={slide.primaryTo}
                 className="group inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-7 py-4 font-semibold transition shadow-[var(--shadow-warm)] hover:scale-[1.03] hover:shadow-2xl active:scale-95"
               >
                 <Heart className="h-4 w-4 fill-current transition-transform group-hover:scale-125" />
-                {slide.primaryCta.label}
+                {slide.primaryLabel}
               </Link>
               <Link
-                to={slide.secondaryCta.to}
+                to={slide.secondaryTo}
                 className="group inline-flex items-center gap-2 rounded-full border-2 border-accent text-accent px-7 py-4 font-semibold hover:bg-accent hover:text-accent-foreground transition"
               >
-                {slide.secondaryCta.label}
+                {slide.secondaryLabel}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
