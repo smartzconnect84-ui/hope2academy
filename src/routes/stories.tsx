@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
+import logoAsset from "@/assets/hope2-logo.png.asset.json";
 import classroomA from "@/assets/uploads/IMG-20260521-WA0012.jpg.asset.json";
 import wellA from "@/assets/uploads/IMG-20260521-WA0031.jpg.asset.json";
 import clinicA from "@/assets/uploads/IMG-20260521-WA0022.jpg.asset.json";
@@ -10,7 +11,8 @@ import gradA from "@/assets/uploads/IMG-20260521-WA0027.jpg.asset.json";
 import medalA from "@/assets/uploads/IMG-20260521-WA0040.jpg.asset.json";
 import kidsA from "@/assets/uploads/IMG-20260521-WA0039.jpg.asset.json";
 import primaryA from "@/assets/uploads/IMG-20260521-WA0034.jpg.asset.json";
-const classroom = primaryA.url;
+const featuredLogo = logoAsset.url;
+void primaryA;
 const well = wellA.url;
 const clinic = clinicA.url;
 const outreachImg = outreachA.url;
@@ -34,7 +36,9 @@ function Stories() {
       <PageHeader eyebrow="Field Updates & Stories" title="Voices from the ground" lead="Authentic reports from the communities, classrooms, and clinics where we serve." />
       <section className="container mx-auto px-6 py-20">
         <article className="grid lg:grid-cols-2 gap-0 items-center rounded-3xl overflow-hidden bg-card border border-border shadow-[var(--shadow-warm)]">
-          <img src={classroom} alt="84 new students enrolled" className="w-full h-full aspect-[4/3] lg:aspect-auto object-cover" />
+          <div className="w-full h-full aspect-[4/3] lg:aspect-auto bg-primary/5 flex items-center justify-center p-12">
+            <img src={featuredLogo} alt="HOPE2 ACADEMY institutional logo" className="max-h-72 w-auto object-contain drop-shadow-md" />
+          </div>
           <div className="p-8 lg:p-12">
             <div className="flex flex-wrap gap-2 items-center text-xs uppercase tracking-wider">
               <span className="bg-accent text-accent-foreground px-2 py-1 rounded font-bold">Featured</span>

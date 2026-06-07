@@ -20,6 +20,7 @@ import type { AppRole } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
+import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -516,6 +517,11 @@ Object.assign(MODULES, {
     title: "Hero Slider", subtitle: "Manage homepage carousel images, captions and CTAs",
     icon: ImageIcon, allow: ["superadmin", "admin"],
     render: () => <HeroSliderModule/>,
+  },
+  team: {
+    title: "Team Page", subtitle: "Edit the public Team page — heading, copy, quote and member cards",
+    icon: Users, allow: ["superadmin", "admin"],
+    render: () => <TeamPageModule/>,
   },
   admissions: {
     title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
@@ -1577,6 +1583,139 @@ function HeroSlideEditor({ slide, onClose }: { slide: HeroSlide | null; onClose:
 
 // =========================================================================
 // Stat strips for modules that need quick KPIs above the CRUD table
+// =========================================================================
+
+// =========================================================================
+// Team Page editor — edit public Team page content + member cards
+// =========================================================================
+function TeamPageModule() {
+  const content = useTeamContent();
+  const [editing, setEditing] = useState<TeamMember | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const removeMember = (m: TeamMember) => {
+    if (!confirm(`Delete member "${m.name}"?`)) return;
+    teamStore.removeMember(m.id); toast.success("Member removed");
+  };
+  const toggle = (m: TeamMember) => teamStore.upsertMember({ ...m, enabled: !m.enabled });
+  const reset = () => {
+    if (!confirm("Reset Team page to defaults? Edits will be lost.")) return;
+    teamStore.reset(); toast.success("Team page reset");
+  };
+
+  return (
+    <>
+      <Card className="p-5 mb-6 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-semibold">Page copy</p>
+          <Button variant="ghost" size="sm" className="gap-2" onClick={reset}><RotateCcw className="h-4 w-4"/>Reset all</Button>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><Label>Eyebrow</Label><Input value={content.eyebrow} onChange={(e)=>teamStore.setContent({ eyebrow: e.target.value })}/></div>
+          <div><Label>Section heading</Label><Input value={content.sectionHeading} onChange={(e)=>teamStore.setContent({ sectionHeading: e.target.value })}/></div>
+        </div>
+        <div><Label>Hero title</Label><Input value={content.title} onChange={(e)=>teamStore.setContent({ title: e.target.value })}/></div>
+        <div><Label>Hero lead</Label><Textarea rows={2} value={content.lead} onChange={(e)=>teamStore.setContent({ lead: e.target.value })}/></div>
+        <div><Label>Section lead</Label><Textarea rows={2} value={content.sectionLead} onChange={(e)=>teamStore.setContent({ sectionLead: e.target.value })}/></div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div><Label>Closing quote</Label><Textarea rows={2} value={content.quote} onChange={(e)=>teamStore.setContent({ quote: e.target.value })}/></div>
+          <div><Label>Quote attribution</Label><Input value={content.quoteAuthor} onChange={(e)=>teamStore.setContent({ quoteAuthor: e.target.value })}/></div>
+        </div>
+        <p className="text-xs text-muted-foreground">Changes save automatically and appear on the public /team page immediately.</p>
+      </Card>
+
+      <div className="flex items-center gap-3 mb-4">
+        <p className="text-sm text-muted-foreground flex-1">{content.members.length} member{content.members.length===1?"":"s"} · {content.members.filter(m=>m.enabled).length} shown publicly</p>
+        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/>Add member</Button>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {content.members.map((m, i) => (
+          <Card key={m.id} className="overflow-hidden">
+            <div className="aspect-[4/3] bg-muted relative">
+              {m.img && <img src={m.img} alt={m.name} className="absolute inset-0 h-full w-full object-cover"/>}
+              {!m.enabled && <span className="absolute top-2 left-2 rounded-full bg-foreground/70 text-background px-2 py-0.5 text-[10px] font-semibold">Hidden</span>}
+            </div>
+            <div className="p-4 space-y-2">
+              <p className="font-semibold leading-tight">{m.name}</p>
+              <p className="text-xs text-secondary font-medium">{m.role}</p>
+              {m.bio && <p className="text-xs text-muted-foreground line-clamp-2">{m.bio}</p>}
+              <div className="flex items-center gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={()=>teamStore.moveMember(m.id, -1)} disabled={i===0}><ChevronUp className="h-4 w-4"/></Button>
+                <Button size="sm" variant="outline" onClick={()=>teamStore.moveMember(m.id, 1)} disabled={i===content.members.length-1}><ChevronDownIcon className="h-4 w-4"/></Button>
+                <Button size="sm" variant="outline" onClick={()=>toggle(m)}>{m.enabled?"Hide":"Show"}</Button>
+                <Button size="sm" variant="outline" className="gap-1.5 ml-auto" onClick={()=>setEditing(m)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+                <Button size="sm" variant="ghost" onClick={()=>removeMember(m)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {(editing || creating) && (
+        <TeamMemberEditor member={editing} onClose={()=>{ setEditing(null); setCreating(false); }}/>
+      )}
+    </>
+  );
+}
+
+function TeamMemberEditor({ member, onClose }: { member: TeamMember | null; onClose: () => void }) {
+  const [form, setForm] = useState<TeamMember>(() => member ?? {
+    id: teamStore.newId(), img: "", name: "", role: "", bio: "", email: "", linkedin: "", enabled: true,
+  });
+  const set = <K extends keyof TeamMember>(k: K, v: TeamMember[K]) => setForm(f => ({ ...f, [k]: v }));
+  const onImage = async (file: File | null) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
+    const url = await readBrandFile(file);
+    set("img", url); toast.success("Photo attached — click Save");
+  };
+  const save = () => {
+    if (!form.name.trim() || !form.role.trim()) { toast.error("Name and role are required"); return; }
+    teamStore.upsertMember(form);
+    toast.success(`Member ${member ? "updated" : "added"}`); onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o)=>!o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{member ? "Edit member" : "Add member"}</DialogTitle></DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Photo</Label>
+            <div className="mt-2 flex items-start gap-4">
+              <div className="h-24 w-24 rounded-lg overflow-hidden bg-muted shrink-0">
+                {form.img ? <img src={form.img} alt="preview" className="h-full w-full object-cover"/> : <div className="h-full w-full grid place-items-center text-xs text-muted-foreground">No photo</div>}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input id="tm-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onImage(e.target.files?.[0] ?? null)}/>
+                <label htmlFor="tm-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload photo</span></Button></label>
+                <Input value={form.img} onChange={(e)=>set("img", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+              </div>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Name</Label><Input value={form.name} onChange={(e)=>set("name", e.target.value)}/></div>
+            <div><Label>Role / Title</Label><Input value={form.role} onChange={(e)=>set("role", e.target.value)}/></div>
+          </div>
+          <div><Label>Short bio</Label><Textarea rows={3} value={form.bio ?? ""} onChange={(e)=>set("bio", e.target.value)}/></div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div><Label>Email</Label><Input value={form.email ?? ""} onChange={(e)=>set("email", e.target.value)} placeholder="name@hope2academy.org"/></div>
+            <div><Label>LinkedIn URL</Label><Input value={form.linkedin ?? ""} onChange={(e)=>set("linkedin", e.target.value)} placeholder="https://linkedin.com/in/…"/></div>
+          </div>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={form.enabled} onChange={(e)=>set("enabled", e.target.checked)} className="h-4 w-4"/>
+            Show this member on the public Team page
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={save}>Save member</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =========================================================================
 // =========================================================================
 function GradesStats() {
   const data = mockDb.list<any>("grades");

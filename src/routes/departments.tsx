@@ -1,24 +1,28 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import outreach from "@/assets/hope/dept-outreach-BqPAShO5.jpg";
-import edu from "@/assets/hope/dept-education-aYewL80F.jpg";
-import community from "@/assets/hope/dept-community-DR-ZUlx6.jpg";
-import health from "@/assets/hope/dept-health-xwwilth4.jpg";
+import missionAsset from "@/assets/departments/dept-mission.jpg.asset.json";
+import academyAsset from "@/assets/departments/dept-academy.jpg.asset.json";
+import churchAsset from "@/assets/departments/dept-church.jpg.asset.json";
+import mediaAsset from "@/assets/departments/dept-media.jpg.asset.json";
+const missionImg = missionAsset.url;
+const academyImg = academyAsset.url;
+const churchImg = churchAsset.url;
+const mediaImg = mediaAsset.url;
 
 const pillars = [
   {
-    img: outreach, id: "mission", roman: "I", pillar: "Division I — Compassion in motion",
+    img: missionImg, id: "mission", roman: "I", pillar: "Division I — Compassion in motion",
     title: "HOPE2 MISSION", tag: "Hands and feet across Liberia.",
-    impactN: "27", impactL: "Villages served",
+    impactN: "34", impactL: "Villages served in 2026",
     director: "Esther Pewee, Mission Coordinator",
-    est: "Established 2013", area: "Operating in 4 counties",
+    est: "Established 2013 · 2026 Programs", area: "Operating across Margibi & 5 Liberian counties",
     body: [
-      "HOPE2 MISSION is the humanitarian heart of our movement — mobile clinics, clean water, food security and disaster response carried directly to the communities that need them most.",
+      "HOPE2 MISSION is the humanitarian heart of our movement — mobile clinics, clean water, food security and disaster response carried directly to the communities of Margibi County and across Liberia.",
       "We work alongside local leaders to identify needs, design solutions, and measure results. Every project is co-built with the village it serves; nothing is imposed.",
-      "From maternal-health outreach in Margibi to clean-water boreholes in Bong, the Mission division is where compassion becomes infrastructure.",
+      "In 2026, our mission teams operate from Marshall Road, Margibi — running maternal-health outreach across Lower Margibi and clean-water boreholes in Bong, Bomi and Grand Bassa.",
     ],
     bullets: [
-      "Mobile medical outreach in remote districts",
+      "2026 mobile medical outreach across Margibi & Bong",
       "Clean-water boreholes & sanitation projects",
       "Food, clothing and emergency relief distribution",
       "Skills training for women and youth",
@@ -26,33 +30,33 @@ const pillars = [
     ],
   },
   {
-    img: edu, id: "academy", roman: "II", pillar: "Division II — Learning that lasts a lifetime",
+    img: academyImg, id: "academy", roman: "II", pillar: "Division II — Learning that lasts a lifetime",
     title: "HOPE2 ACADEMY", tag: "Every child, a future.",
-    impactN: "1,840", impactL: "Students enrolled",
+    impactN: "1,960", impactL: "Students enrolled · 2026",
     director: "Grace Kollie, Director of HOPE2 ACADEMY",
-    est: "Established 2013", area: "Main campus — Marshall Road, Margibi",
+    est: "Established 2013 · 2026 Academic Year", area: "Marshall Road, Lower Margibi County, Liberia",
     body: [
       "HOPE2 ACADEMY — affectionately known as The Lizard Kingdom — is the K-12 Christian school that anchors the movement. Our motto: \"Learning To Serve For God's Purpose.\"",
-      "We offer rigorous academics paired with character formation, sports, music and service learning. Most students are sponsored by friends of HOPE2 across Liberia and abroad.",
+      "Our 2026 program runs from ABC through 12th Grade — rigorous academics paired with character formation, sports, music and service learning. Most students are sponsored by friends of HOPE2 across Liberia and abroad.",
       "Every scholarship comes with a mentor and a six-month progress check. We measure success by attendance, literacy growth, and graduation — and publish the numbers every term.",
     ],
     bullets: [
-      "Tuition & uniform support for 1,840 students",
+      "Tuition & uniform support for 1,960 students in 2026",
       "Solar-powered library and computer lab",
-      "STEM, civics and Bible curriculum",
+      "ABC-to-12th-Grade STEM, civics and Bible curriculum",
       "Annual scholarships for top secondary-school entrants",
       "Teacher development in early literacy & STEM",
     ],
   },
   {
-    img: community, id: "church", roman: "III", pillar: "Division III — Worship, discipleship, community",
+    img: churchImg, id: "church", roman: "III", pillar: "Division III — Worship, discipleship, community",
     title: "HOPE2 CHURCH", tag: "A house of prayer for all people.",
-    impactN: "9", impactL: "Local congregations",
+    impactN: "12", impactL: "Congregations · 2026",
     director: "Pastor Joseph Wreh, Lead Pastor",
-    est: "Established 2014", area: "Congregations across Margibi & Montserrado",
+    est: "Established 2014 · 2026 Ministry", area: "Marshall Road sanctuary · Margibi & Montserrado, Liberia",
     body: [
       "HOPE2 CHURCH is the spiritual home of the movement — local congregations that gather for worship, discipleship, prayer and pastoral care.",
-      "We serve children's church, youth fellowships, women's and men's ministries, and outreach to the elderly and incarcerated.",
+      "In 2026 we serve children's church, youth fellowships, women's and men's ministries, and outreach to the elderly and incarcerated across Margibi County.",
       "Every Sunday is open to anyone — student, parent, visitor, neighbour. Come as you are.",
     ],
     bullets: [
@@ -64,18 +68,18 @@ const pillars = [
     ],
   },
   {
-    img: health, id: "media", roman: "IV", pillar: "Division IV — Telling Liberia's story",
+    img: mediaImg, id: "media", roman: "IV", pillar: "Division IV — Telling Liberia's story",
     title: "HOPE2 MEDIA", tag: "Stories that move hearts and hands.",
-    impactN: "120+", impactL: "Stories published",
+    impactN: "260+", impactL: "Stories published by 2026",
     director: "Patience Kollie, Media & Communications Lead",
-    est: "Established 2018", area: "Radio, social, print & video",
+    est: "Established 2018 · 2026 Productions", area: "Studio in Margibi · Radio, social, print & video across Liberia",
     body: [
-      "HOPE2 MEDIA carries the voice of the movement — radio devotionals, short documentaries, social-media stories, and a quarterly print magazine.",
+      "HOPE2 MEDIA carries the voice of the movement — radio devotionals, short documentaries, social-media stories, and a quarterly print magazine produced from our Margibi studio.",
       "We train young Liberian writers, photographers and producers to tell their own stories — beautifully, honestly, and with hope.",
       "If you want to partner, sponsor, or contribute content, reach out via the Contact page.",
     ],
     bullets: [
-      "Weekly radio program on community FM",
+      "Weekly 2026 radio program on Margibi community FM",
       "Documentary shorts on YouTube and Instagram",
       "Quarterly print magazine \"Hope For Liberia\"",
       "Training program for young Liberian journalists",
