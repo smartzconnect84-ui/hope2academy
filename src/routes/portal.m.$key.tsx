@@ -20,6 +20,7 @@ import type { AppRole } from "@/hooks/use-auth";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
+import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -516,6 +517,11 @@ Object.assign(MODULES, {
     title: "Hero Slider", subtitle: "Manage homepage carousel images, captions and CTAs",
     icon: ImageIcon, allow: ["superadmin", "admin"],
     render: () => <HeroSliderModule/>,
+  },
+  team: {
+    title: "Team Page", subtitle: "Edit the public Team page — heading, copy, quote and member cards",
+    icon: Users, allow: ["superadmin", "admin"],
+    render: () => <TeamPageModule/>,
   },
   admissions: {
     title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
