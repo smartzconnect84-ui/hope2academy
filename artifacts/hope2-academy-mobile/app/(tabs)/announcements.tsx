@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
-import { mockDb } from "@/lib/mock-backend-mobile";
+import { apiClient } from "@/lib/api-client";
 import { notifyNewAnnouncements } from "@/lib/notifications";
 import { useColors } from "@/hooks/useColors";
 
@@ -76,17 +77,22 @@ export default function AnnouncementsScreen() {
   const { user, loading } = useAuth();
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const announcements = mockDb.list<Announcement>("announcements");
+
+  const { data: announcements = [], isLoading } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => apiClient.getCollection<Announcement>("announcements"),
+    enabled: !!user,
+  });
 
   useEffect(() => {
     if (!loading && !user) router.replace("/login");
   }, [user, loading]);
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && announcements.length > 0) {
       notifyNewAnnouncements(announcements);
     }
-  }, [loading, user]);
+  }, [loading, user, announcements]);
 
   const webTopPad = Platform.OS === "web" ? 67 : 0;
   const webBotPad = Platform.OS === "web" ? 34 : 0;
@@ -95,6 +101,14 @@ export default function AnnouncementsScreen() {
     const latest = announcements[0];
     if (latest) notifyNewAnnouncements([{ ...latest, id: `test_${Date.now()}` }]);
   };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -117,6 +131,12 @@ export default function AnnouncementsScreen() {
             School-wide announcements
           </Text>
           <NotifyButton onPress={triggerTestNotification} colors={colors} />
+        </View>
+      )}
+      ListEmptyComponent={() => (
+        <View style={{ alignItems: "center", paddingTop: 48 }}>
+          <Ionicons name="notifications-off-outline" size={48} color={colors.mutedForeground} />
+          <Text style={{ color: colors.mutedForeground, marginTop: 12, fontSize: 14 }}>No announcements yet</Text>
         </View>
       )}
       showsVerticalScrollIndicator={false}

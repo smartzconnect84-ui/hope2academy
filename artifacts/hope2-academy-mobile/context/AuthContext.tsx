@@ -1,12 +1,29 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { mockAuth, ROLE_LABEL, type AppRole, type MockUser } from "@/lib/mock-backend-mobile";
+import { apiClient } from "@/lib/api-client";
+import { ROLE_LABEL, type AppRole } from "@/lib/mock-backend-mobile";
 
 export type { AppRole };
 export { ROLE_LABEL };
 
-export interface Profile extends Omit<MockUser, "password"> {
+export interface Profile {
+  id: string;
+  email: string;
+  name: string;
+  role: AppRole;
   full_name: string;
   avatar_url?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  bio?: string | null;
+  date_of_birth?: string | null;
+  emergency_contact?: string | null;
+  grade?: string | null;
+  class_name?: string | null;
+  department?: string | null;
+  subjects?: string[] | null;
+  graduation_year?: number | null;
+  linked_children?: string[] | null;
+  createdAt?: string;
 }
 
 interface AuthCtx {
@@ -20,9 +37,12 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-function toProfile(u: MockUser): Profile {
-  const { password, ...rest } = u;
-  return { ...rest, full_name: u.name, avatar_url: u.avatar ?? null };
+function toProfile(u: any): Profile {
+  return {
+    ...u,
+    full_name: u.name,
+    avatar_url: u.avatar ?? null,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hydrate = useCallback(async () => {
     try {
-      const me = await mockAuth.getCurrent();
+      const me = await apiClient.getMe();
       if (me) {
         setUser({ id: me.id, email: me.email, name: me.name });
         setProfile(toProfile(me));
@@ -40,6 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
       }
+    } catch {
+      setUser(null);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
@@ -48,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { hydrate(); }, [hydrate]);
 
   const signOut = async () => {
-    await mockAuth.signOut();
+    await apiClient.logout();
     setUser(null);
     setProfile(null);
   };

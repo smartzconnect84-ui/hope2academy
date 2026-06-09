@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { mockAuth, DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend-mobile";
+import { apiClient } from "@/lib/api-client";
+import { DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -35,7 +36,7 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     try {
-      await mockAuth.signIn(e, p);
+      await apiClient.login(e, p);
       await refresh();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/(tabs)");

@@ -1,7 +1,9 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Modal,
   Platform,
@@ -13,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
+import { apiClient } from "@/lib/api-client";
 import { mockDb, type AppRole } from "@/lib/mock-backend-mobile";
 import { useColors } from "@/hooks/useColors";
 
@@ -51,21 +54,32 @@ function StatusBadge({ status, colors }: { status: string; colors: Colors }) {
   );
 }
 
-function StudentModules({ colors }: { colors: Colors }) {
-  const grades = mockDb.list<any>("grades").filter(g => g.student === "Mariama Doe");
-  const exams = mockDb.list<any>("exams");
-  const myGrades = mockDb.list<any>("grades").filter(g => g.student === "Mariama Doe");
+function StudentModules({ colors, profile }: { colors: Colors; profile: any }) {
+  const { data: grades = [] } = useQuery({
+    queryKey: ["grades"],
+    queryFn: () => apiClient.getCollection<any>("grades"),
+  });
+  const { data: exams = [] } = useQuery({
+    queryKey: ["exams"],
+    queryFn: () => apiClient.getCollection<any>("exams"),
+  });
   const lib = mockDb.list<any>("library");
+
+  const myGrades = grades.filter((g: any) => g.student === profile?.name);
+
   return (
     <>
       <Section title="My Grades" colors={colors}>
-        {myGrades.map(g => (
-          <View key={g.id} style={[s.row, { borderTopColor: colors.border }]}>
-            <Text style={[s.rowMain, { color: colors.foreground, flex: 1 }]}>{g.subject}</Text>
-            <Text style={[s.rowMain, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{g.grade}</Text>
-            <Text style={[s.rowRight, { color: colors.mutedForeground, marginLeft: 8 }]}>{g.score}%</Text>
-          </View>
-        ))}
+        {myGrades.length === 0
+          ? <Text style={[s.rowSub, { color: colors.mutedForeground, paddingTop: 8 }]}>No grades recorded yet.</Text>
+          : myGrades.map(g => (
+            <View key={g.id} style={[s.row, { borderTopColor: colors.border }]}>
+              <Text style={[s.rowMain, { color: colors.foreground, flex: 1 }]}>{g.subject}</Text>
+              <Text style={[s.rowMain, { color: colors.primary, fontFamily: "Inter_700Bold" }]}>{g.grade}</Text>
+              <Text style={[s.rowRight, { color: colors.mutedForeground, marginLeft: 8 }]}>{g.score}%</Text>
+            </View>
+          ))
+        }
       </Section>
       <Section title="Upcoming Exams" colors={colors}>
         {exams.filter((e: any) => e.status === "Scheduled").map(e => (
@@ -94,9 +108,18 @@ function StudentModules({ colors }: { colors: Colors }) {
 }
 
 function TeacherModules({ colors }: { colors: Colors }) {
-  const assignments = mockDb.list<any>("assignments");
-  const lessonPlans = mockDb.list<any>("lessonplans");
-  const behavior = mockDb.list<any>("behavior");
+  const { data: assignments = [] } = useQuery({
+    queryKey: ["assignments"],
+    queryFn: () => apiClient.getCollection<any>("assignments"),
+  });
+  const { data: lessonPlans = [] } = useQuery({
+    queryKey: ["lessonplans"],
+    queryFn: () => apiClient.getCollection<any>("lessonplans"),
+  });
+  const { data: behavior = [] } = useQuery({
+    queryKey: ["behavior"],
+    queryFn: () => apiClient.getCollection<any>("behavior"),
+  });
   return (
     <>
       <Section title="Assignments" colors={colors}>
@@ -137,7 +160,10 @@ function TeacherModules({ colors }: { colors: Colors }) {
 }
 
 function ParentModules({ colors }: { colors: Colors }) {
-  const fees = mockDb.list<any>("fees");
+  const { data: fees = [] } = useQuery({
+    queryKey: ["fees"],
+    queryFn: () => apiClient.getCollection<any>("fees"),
+  });
   const calendar = mockDb.list<any>("calendar");
   const messages = mockDb.list<any>("messages");
   return (
@@ -187,9 +213,15 @@ function ParentModules({ colors }: { colors: Colors }) {
 }
 
 function AlumniModules({ colors }: { colors: Colors }) {
+  const { data: donations = [] } = useQuery({
+    queryKey: ["donations"],
+    queryFn: () => apiClient.getCollection<any>("donations"),
+  });
+  const { data: scholarships = [] } = useQuery({
+    queryKey: ["scholarships"],
+    queryFn: () => apiClient.getCollection<any>("scholarships"),
+  });
   const directory = mockDb.list<any>("directory");
-  const donations = mockDb.list<any>("donations");
-  const scholarships = mockDb.list<any>("scholarships");
   return (
     <>
       <Section title="Alumni Directory" colors={colors}>
@@ -221,9 +253,15 @@ function AlumniModules({ colors }: { colors: Colors }) {
 }
 
 function AdminModules({ colors }: { colors: Colors }) {
-  const admissions = mockDb.list<any>("admissions");
+  const { data: admissions = [] } = useQuery({
+    queryKey: ["admissions"],
+    queryFn: () => apiClient.getCollection<any>("admissions"),
+  });
+  const { data: classes = [] } = useQuery({
+    queryKey: ["classes"],
+    queryFn: () => apiClient.getCollection<any>("classes"),
+  });
   const staff = mockDb.list<any>("staff");
-  const classes = mockDb.list<any>("classes").slice(0, 8);
   return (
     <>
       <Section title="Admissions" colors={colors}>
@@ -249,7 +287,7 @@ function AdminModules({ colors }: { colors: Colors }) {
         ))}
       </Section>
       <Section title="Classes" colors={colors}>
-        {classes.map((c: any) => (
+        {classes.slice(0, 8).map((c: any) => (
           <Row key={c.id} left={c.name} sub={`${c.teacher} · ${c.room}`} right={`${c.students} students`} colors={colors} />
         ))}
       </Section>
@@ -258,8 +296,11 @@ function AdminModules({ colors }: { colors: Colors }) {
 }
 
 function SuperadminModules({ colors }: { colors: Colors }) {
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () => apiClient.getCollection<any>("departments"),
+  });
   const audit = mockDb.list<any>("audit");
-  const departments = mockDb.list<any>("departments");
   const transport = mockDb.list<any>("transport");
   return (
     <>
@@ -343,7 +384,7 @@ export default function ModulesScreen() {
         </Text>
       </View>
 
-      {role === "student" && <StudentModules colors={colors} />}
+      {role === "student" && <StudentModules colors={colors} profile={profile} />}
       {role === "teacher" && <TeacherModules colors={colors} />}
       {role === "parent" && <ParentModules colors={colors} />}
       {role === "alumni" && <AlumniModules colors={colors} />}

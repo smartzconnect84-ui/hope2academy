@@ -1,7 +1,9 @@
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import {
+  ActivityIndicator,
   Platform,
   ScrollView,
   StyleSheet,
@@ -10,7 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, ROLE_LABEL } from "@/context/AuthContext";
-import { mockDb } from "@/lib/mock-backend-mobile";
+import { apiClient } from "@/lib/api-client";
 import { useColors } from "@/hooks/useColors";
 
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: string }) {
@@ -56,30 +58,39 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
 
 function StudentDashboard() {
   const colors = useColors();
-  const { profile } = useAuth();
-  const grades = mockDb.list<any>("grades").filter((g: any) => g.student === "Mariama Doe");
   const s = sectionStyles(colors);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiClient.getStats(),
+  });
+
+  if (isLoading) return <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />;
+
+  const grades: any[] = stats?.grades ?? [];
+
   return (
     <>
       <View style={s.statsGrid}>
-        <StatCard icon={<Feather name="book-open" size={18} color={colors.primary} />} label="Active Courses" value={6} />
-        <StatCard icon={<Feather name="award" size={18} color={colors.accent} />} label="GPA" value="3.7" accent={colors.accent} />
-        <StatCard icon={<Feather name="calendar" size={18} color={colors.secondary} />} label="Upcoming Tests" value={2} accent={colors.secondary} />
-        <StatCard icon={<Ionicons name="checkmark-circle-outline" size={18} color={colors.success} />} label="Attendance" value="96%" accent={colors.success} />
+        <StatCard icon={<Feather name="book-open" size={18} color={colors.primary} />} label="Active Courses" value={stats?.activeCourses ?? 6} />
+        <StatCard icon={<Feather name="award" size={18} color={colors.accent} />} label="GPA" value={stats?.gpa ?? "—"} accent={colors.accent} />
+        <StatCard icon={<Feather name="calendar" size={18} color={colors.secondary} />} label="Upcoming Tests" value={stats?.upcomingTests ?? 0} accent={colors.secondary} />
+        <StatCard icon={<Ionicons name="checkmark-circle-outline" size={18} color={colors.success} />} label="Attendance" value={stats?.attendance ?? "—"} accent={colors.success} />
       </View>
       <View style={s.bannerCard}>
         <Text style={s.bannerTitle}>Keep going.</Text>
         <Text style={s.bannerBody}>Your next assignment is due Friday. Tutor session Wednesday at 3pm.</Text>
       </View>
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Recent Grades</Text>
-        {grades.map((g: any) => (
-          <View key={g.id} style={s.listRow}>
-            <Text style={s.listMain}>{g.subject}</Text>
-            <Text style={[s.listBadge, { color: colors.primary }]}>{g.grade}</Text>
-          </View>
-        ))}
-      </View>
+      {grades.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Recent Grades</Text>
+          {grades.slice(0, 5).map((g: any) => (
+            <View key={g.id ?? g.subject} style={s.listRow}>
+              <Text style={s.listMain}>{g.subject}</Text>
+              <Text style={[s.listBadge, { color: colors.primary }]}>{g.grade}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </>
   );
 }
@@ -87,25 +98,42 @@ function StudentDashboard() {
 function TeacherDashboard() {
   const colors = useColors();
   const { profile } = useAuth();
-  const schedule = mockDb.list<any>("timetable").find((d: any) => d.day === "Monday")?.slots ?? mockDb.list<any>("timetable")[0]?.slots ?? [];
   const s = sectionStyles(colors);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiClient.getStats(),
+  });
+  const { data: timetable = [] } = useQuery({
+    queryKey: ["timetable"],
+    queryFn: () => apiClient.getCollection<any>("timetable"),
+  });
+
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+  const schedule = timetable.find((d: any) => d.day === today)?.slots
+    ?? timetable[0]?.slots
+    ?? [];
+
+  if (isLoading) return <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />;
+
   return (
     <>
       <View style={s.statsGrid}>
-        <StatCard icon={<Feather name="users" size={18} color={colors.primary} />} label="My Students" value={42} />
-        <StatCard icon={<Feather name="book-open" size={18} color={colors.accent} />} label="Classes Today" value={5} accent={colors.accent} />
-        <StatCard icon={<Feather name="clipboard" size={18} color={colors.secondary} />} label="Pending Grades" value={18} accent={colors.secondary} />
-        <StatCard icon={<Feather name="calendar" size={18} color={colors.success} />} label="Next Meeting" value="Fri" accent={colors.success} />
+        <StatCard icon={<Feather name="users" size={18} color={colors.primary} />} label="My Students" value={stats?.myStudents ?? 42} />
+        <StatCard icon={<Feather name="book-open" size={18} color={colors.accent} />} label="Classes Today" value={stats?.classesToday ?? 5} accent={colors.accent} />
+        <StatCard icon={<Feather name="clipboard" size={18} color={colors.secondary} />} label="Pending Grades" value={stats?.pendingGrades ?? 0} accent={colors.secondary} />
+        <StatCard icon={<Feather name="calendar" size={18} color={colors.success} />} label="Lesson Plans" value={stats?.lessonPlans ?? 0} accent={colors.success} />
       </View>
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Today's Schedule</Text>
-        {schedule.map((x) => (
-          <View key={x.t} style={s.scheduleRow}>
-            <Text style={s.scheduleTime}>{x.t}</Text>
-            <Text style={s.scheduleClass}>{x.s}</Text>
-          </View>
-        ))}
-      </View>
+      {schedule.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Today's Schedule</Text>
+          {schedule.map((x: any) => (
+            <View key={x.t} style={s.scheduleRow}>
+              <Text style={s.scheduleTime}>{x.t}</Text>
+              <Text style={s.scheduleClass}>{x.s}</Text>
+            </View>
+          ))}
+        </View>
+      )}
       {profile?.subjects && profile.subjects.length > 0 && (
         <View style={s.section}>
           <Text style={s.sectionTitle}>My Subjects</Text>
@@ -124,64 +152,104 @@ function TeacherDashboard() {
 
 function ParentDashboard() {
   const colors = useColors();
-  const children = mockDb.list<any>("children");
   const s = sectionStyles(colors);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiClient.getStats(),
+  });
+
+  if (isLoading) return <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />;
+
+  const children: any[] = stats?.children ?? [];
+
   return (
     <View style={s.section}>
       <Text style={s.sectionTitle}>My Children</Text>
-      {children.map((child) => (
-        <View key={child.id} style={s.childCard}>
-          <View style={s.childAvatar}>
-            <Text style={s.childAvatarText}>{child.name[0]}</Text>
+      {children.map((child: any) => {
+        const childGrades: any[] = child.grades ?? [];
+        const avgScore = childGrades.length
+          ? Math.round(childGrades.reduce((s: number, g: any) => s + (g.score ?? 0), 0) / childGrades.length)
+          : 0;
+        const gpaLabel = avgScore >= 90 ? "A" : avgScore >= 80 ? "B+" : avgScore >= 70 ? "B" : childGrades.length ? "C+" : "—";
+        const childFees: any[] = child.fees ?? [];
+        const outstanding = childFees.filter((f: any) => f.status === "Outstanding");
+        return (
+          <View key={child.name} style={s.childCard}>
+            <View style={s.childAvatar}>
+              <Text style={s.childAvatarText}>{child.name[0]}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.childName}>{child.name}</Text>
+              <Text style={s.childGrade}>{outstanding.length > 0 ? `${outstanding.length} fee(s) outstanding` : "Fees up to date"}</Text>
+            </View>
+            <View style={s.childStats}>
+              <Text style={s.childStat}>{gpaLabel}</Text>
+              <Text style={s.childStatLabel}>GPA</Text>
+            </View>
+            <View style={[s.childStats, { marginLeft: 12 }]}>
+              <Text style={s.childStat}>{childGrades.length}</Text>
+              <Text style={s.childStatLabel}>Grades</Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={s.childName}>{child.name}</Text>
-            <Text style={s.childGrade}>{child.grade}</Text>
-          </View>
-          <View style={s.childStats}>
-            <Text style={s.childStat}>{child.attendance}</Text>
-            <Text style={s.childStatLabel}>Attend.</Text>
-          </View>
-          <View style={[s.childStats, { marginLeft: 12 }]}>
-            <Text style={s.childStat}>{child.gpa}</Text>
-            <Text style={s.childStatLabel}>GPA</Text>
-          </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
 
 function AlumniDashboard() {
   const colors = useColors();
-  const events = mockDb.list<any>("events");
-  const jobs = mockDb.list<any>("jobs");
   const s = sectionStyles(colors);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiClient.getStats(),
+  });
+  const { data: events = [] } = useQuery({
+    queryKey: ["events"],
+    queryFn: () => apiClient.getCollection<any>("events"),
+  });
+  const { data: jobs = [] } = useQuery({
+    queryKey: ["jobs"],
+    queryFn: () => apiClient.getCollection<any>("jobs"),
+  });
+
+  if (isLoading) return <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />;
+
   return (
     <>
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Upcoming Events</Text>
-        {events.map((e) => (
-          <View key={e.id} style={s.listRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.listMain}>{e.title}</Text>
-              <Text style={s.listSub}>{e.location}</Text>
-            </View>
-            <Text style={[s.listBadge, { color: colors.accent, fontSize: 11 }]}>{e.date}</Text>
-          </View>
-        ))}
+      <View style={s.statsGrid}>
+        <StatCard icon={<Feather name="briefcase" size={18} color={colors.primary} />} label="Job Listings" value={stats?.jobListings ?? jobs.length} />
+        <StatCard icon={<Feather name="calendar" size={18} color={colors.accent} />} label="Events" value={stats?.upcomingEvents ?? events.length} accent={colors.accent} />
+        <StatCard icon={<Feather name="award" size={18} color={colors.secondary} />} label="Scholarships" value={stats?.scholarships ?? 0} accent={colors.secondary} />
+        <StatCard icon={<Feather name="heart" size={18} color={colors.success} />} label="My Donations" value={stats?.donations ?? 0} accent={colors.success} />
       </View>
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Job Board</Text>
-        {jobs.map((j) => (
-          <View key={j.id} style={s.listRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={s.listMain}>{j.title}</Text>
-              <Text style={s.listSub}>{j.company} · {j.location}</Text>
+      {events.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Upcoming Events</Text>
+          {events.slice(0, 4).map((e: any) => (
+            <View key={e.id} style={s.listRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.listMain}>{e.title}</Text>
+                <Text style={s.listSub}>{e.location}</Text>
+              </View>
+              <Text style={[s.listBadge, { color: colors.accent, fontSize: 11 }]}>{e.date}</Text>
             </View>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      )}
+      {jobs.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Job Board</Text>
+          {jobs.slice(0, 4).map((j: any) => (
+            <View key={j.id} style={s.listRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.listMain}>{j.title}</Text>
+                <Text style={s.listSub}>{j.company} · {j.location}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
     </>
   );
 }
@@ -189,17 +257,33 @@ function AlumniDashboard() {
 function AdminDashboard() {
   const colors = useColors();
   const s = sectionStyles(colors);
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiClient.getStats(),
+  });
+
+  if (isLoading) return <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />;
+
+  const outstandingDisplay = stats?.outstandingFeesUsd != null
+    ? `$${Math.round(stats.outstandingFeesUsd)}`
+    : "—";
+
   return (
     <>
       <View style={s.statsGrid}>
-        <StatCard icon={<Feather name="users" size={18} color={colors.primary} />} label="Total Students" value={286} />
-        <StatCard icon={<Feather name="user-check" size={18} color={colors.accent} />} label="Staff" value={34} accent={colors.accent} />
-        <StatCard icon={<Feather name="user-plus" size={18} color={colors.secondary} />} label="Admissions" value={4} accent={colors.secondary} />
-        <StatCard icon={<Feather name="dollar-sign" size={18} color={colors.success} />} label="Fees Pending" value="$600" accent={colors.success} />
+        <StatCard icon={<Feather name="users" size={18} color={colors.primary} />} label="Total Students" value={stats?.students ?? 0} />
+        <StatCard icon={<Feather name="user-check" size={18} color={colors.accent} />} label="Staff" value={stats?.teachers ?? 0} accent={colors.accent} />
+        <StatCard icon={<Feather name="user-plus" size={18} color={colors.secondary} />} label="Admissions" value={stats?.pendingAdmissions ?? 0} accent={colors.secondary} />
+        <StatCard icon={<Feather name="dollar-sign" size={18} color={colors.success} />} label="Fees Due" value={outstandingDisplay} accent={colors.success} />
       </View>
       <View style={s.bannerCard}>
         <Text style={s.bannerTitle}>All systems operational.</Text>
-        <Text style={s.bannerBody}>4 new admission applications need review. Parent-teacher meeting Friday 4pm.</Text>
+        <Text style={s.bannerBody}>
+          {stats?.pendingAdmissions
+            ? `${stats.pendingAdmissions} admission application${stats.pendingAdmissions !== 1 ? "s" : ""} need review.`
+            : "No pending admissions."
+          }
+        </Text>
       </View>
     </>
   );
@@ -352,6 +436,7 @@ const sectionStyles = (colors: ReturnType<typeof useColors>) =>
       fontSize: 14,
       color: colors.foreground,
       fontFamily: "Inter_500Medium",
+      flex: 1,
     },
     listSub: {
       fontSize: 12,
