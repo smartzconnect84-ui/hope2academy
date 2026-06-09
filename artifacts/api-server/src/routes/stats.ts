@@ -3,34 +3,34 @@
  * Requires a valid JWT; response is scoped to the caller's role.
  */
 import { Router } from "express";
-import { mockStore, type User } from "../lib/mock-store.js";
+import { dbStore, type User } from "../lib/db-store.js";
 import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/stats", requireAuth, (req, res) => {
+router.get("/stats", requireAuth, async (req, res) => {
   const { sub, role } = req.jwtPayload!;
-  const user = mockStore.findUserById(sub);
+  const user = await dbStore.findUserById(sub);
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
-  const users       = mockStore.list<User>("users");
+  const users       = await dbStore.listUsers();
   const students    = users.filter((u) => u.role === "student");
   const teachers    = users.filter((u) => u.role === "teacher");
   const alumni      = users.filter((u) => u.role === "alumni");
 
-  const grades      = mockStore.list("grades");
-  const attendance  = mockStore.list<any>("attendance");
-  const assignments = mockStore.list<any>("assignments");
-  const fees        = mockStore.list<any>("fees");
-  const classes     = mockStore.list<any>("classes");
-  const behavior    = mockStore.list<any>("behavior");
-  const lessonplans = mockStore.list<any>("lessonplans");
-  const exams       = mockStore.list<any>("exams");
-  const admissions  = mockStore.list<any>("admissions");
-  const jobs        = mockStore.list<any>("jobs");
-  const events      = mockStore.list<any>("events");
-  const donations   = mockStore.list<any>("donations");
-  const scholarships= mockStore.list<any>("scholarships");
+  const grades      = await dbStore.list("grades");
+  const attendance  = await dbStore.list<any>("attendance");
+  const assignments = await dbStore.list<any>("assignments");
+  const fees        = await dbStore.list<any>("fees");
+  const classes     = await dbStore.list<any>("classes");
+  const behavior    = await dbStore.list<any>("behavior");
+  const lessonplans = await dbStore.list<any>("lessonplans");
+  const exams       = await dbStore.list<any>("exams");
+  const admissions  = await dbStore.list<any>("admissions");
+  const jobs        = await dbStore.list<any>("jobs");
+  const events      = await dbStore.list<any>("events");
+  const donations   = await dbStore.list<any>("donations");
+  const scholarships= await dbStore.list<any>("scholarships");
 
   switch (role) {
     case "superadmin":
@@ -57,9 +57,10 @@ router.get("/stats", requireAuth, (req, res) => {
       const myAttendance = attendance.filter((a: any) =>
         teacherSubjects.some((s) => a.class.includes(s)),
       );
-      const todaySlots = (() => {
+      const todaySlots = await (async () => {
         const day = new Date().toLocaleDateString("en-US", { weekday: "long" });
-        const tt = mockStore.list<any>("timetable").find((d: any) => d.day === day);
+        const timetable = await dbStore.list<any>("timetable");
+        const tt = timetable.find((d: any) => d.day === day);
         return tt?.slots?.length ?? 0;
       })();
       res.json({
@@ -93,11 +94,13 @@ router.get("/stats", requireAuth, (req, res) => {
     }
 
     case "parent": {
-      const children = (user.linked_children ?? []).map((cName: string) => {
-        const childGrades = grades.filter((g: any) => g.student === cName);
-        const childFees   = fees.filter((f: any) => f.student === cName);
-        return { name: cName, grades: childGrades, fees: childFees };
-      });
+      const children = await Promise.all(
+        (user.linked_children ?? []).map(async (cName: string) => {
+          const childGrades = grades.filter((g: any) => g.student === cName);
+          const childFees   = fees.filter((f: any) => f.student === cName);
+          return { name: cName, grades: childGrades, fees: childFees };
+        }),
+      );
       res.json({
         children,
         upcomingEvents: events.length,
