@@ -1,36 +1,45 @@
-# [Project name]
+# HOPE2 ACADEMY
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A Liberian school management system with a public-facing website and a multi-role portal for admins, teachers, students, parents, and alumni.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/hope2-academy run dev` — run the frontend (port auto-assigned by workflow)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000, not yet used)
 - `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: Vite + React + react-router-dom + Tailwind v4 + Framer Motion
+- Auth/Data: 100% localStorage-based mock backend (`src/lib/mock-backend.ts`) — no real backend needed
+- UI: shadcn/ui components, oklch color theme (Liberian flag colors — red, green, white/gold)
+- Fonts: Fraunces (display) + Inter (body) via Google Fonts
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/hope2-academy/` — the frontend web artifact
+- `artifacts/hope2-academy/src/App.tsx` — router with all routes
+- `artifacts/hope2-academy/src/styles.css` — Tailwind v4 theme (source of truth for colors/fonts)
+- `artifacts/hope2-academy/src/lib/mock-backend.ts` — localStorage auth + all data
+- `artifacts/hope2-academy/src/assets/hope/` — real JPEG images used as fallbacks
+- `artifacts/hope2-academy/src/assets/departments/` — `.asset.json` files (Lovable CDN stubs)
+- `artifacts/hope2-academy/src/assets/hero/` — `.asset.json` files (Lovable CDN stubs)
+- `artifacts/hope2-academy/src/assets/uploads/` — `.asset.json` files (Lovable CDN stubs)
+- `artifacts/hope2-academy/vite.config.ts` — `lovableAssetPlugin()` maps `.asset.json` → local images
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Lovable asset plugin**: `.asset.json` files are Lovable CDN references (`/__l5e/` URLs). The `lovableAssetPlugin()` in `vite.config.ts` intercepts these and maps them to the bundled JPEG images in `src/assets/hope/`. The Lovable CDN (`pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev`) is inaccessible from Replit.
+- **Mock backend**: All auth and data uses `localStorage`. No real API calls. Supabase client (`src/integrations/supabase/client.ts`) gracefully stubs out when env vars are missing.
+- **Roles**: superadmin, admin, teacher, student, parent, alumni — each has its own portal dashboard.
+- **BrowserRouter at root**: `main.tsx` uses `BrowserRouter` from react-router-dom; all routes defined in `App.tsx`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Public site: Home, About, Programs/Departments, Stories, Contact
+- Portal: Multi-role dashboard (login → role-based redirect → dashboards for each user type)
+- Live chat widget (Supabase-backed, disabled gracefully when env vars missing)
 
 ## User preferences
 
@@ -38,7 +47,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Do NOT run `pnpm dev` at workspace root — artifacts must run via their own workflow
+- `.asset.json` files are NOT real images — they're CDN stubs handled by the Vite plugin
+- Adding new images: put real files in `src/assets/hope/` and add a mapping entry in `vite.config.ts` `ASSET_FALLBACKS`
+- Supabase env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) are optional — omitting them disables live chat only
 
 ## Pointers
 
