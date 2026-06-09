@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567801",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1Title.tsx",
+    "title": "HOPE2 ACADEMY",
+    "description": "Title slide — school name, location, platform overview",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567802",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2Problem.tsx",
+    "title": "The Problem",
+    "description": "Three pain points: paper records, no parent visibility, alumni disconnected",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567803",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3Platform.tsx",
+    "title": "The Platform",
+    "description": "Six portals, full lifecycle features, web and mobile",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567804",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4Impact.tsx",
+    "title": "Impact at a Glance",
+    "description": "286 students, 34 staff, 100% admin off paper",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567805",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5WhoWeServe.tsx",
+    "title": "Who We Serve",
+    "description": "4 divisions, 6 role portals, 2 platforms — a whole community",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567806",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6Close.tsx",
+    "title": "Partner With Us",
+    "description": "Closing CTA — contact info, partnerships, scale across Liberia",
+    "speakerNotes": ""
+  }
+]
