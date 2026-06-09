@@ -1,0 +1,31 @@
+kind = "slides"
+previewPath = "/hope2-academy-pitch/"
+title = "HOPE2 ACADEMY Pitch Deck"
+version = "1.0.0"
+id = "artifacts/hope2-academy-pitch"
+router = "path"
+
+[[integratedSkills]]
+name = "slides"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/hope2-academy-pitch/" ]
+localPort = 19936
+
+[services.development]
+run = "pnpm --filter @workspace/hope2-academy-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hope2-academy-pitch", "run", "build" ]
+publicDir = "artifacts/hope2-academy-pitch/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19936"
+BASE_PATH = "/hope2-academy-pitch/"
