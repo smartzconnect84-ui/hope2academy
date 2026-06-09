@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { FlatList, Platform, StyleSheet, Text, View } from "react-native";
+import { FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { mockDb } from "@/lib/mock-backend-mobile";
+import { notifyNewAnnouncements } from "@/lib/notifications";
 import { useColors } from "@/hooks/useColors";
 
 type Announcement = { id: string; title: string; body: string; audience: string; date: string };
@@ -34,6 +35,22 @@ function AnnouncementCard({ item }: { item: Announcement }) {
   );
 }
 
+function NotifyButton({ onPress, colors }: { onPress: () => void; colors: ReturnType<typeof useColors> }) {
+  if (Platform.OS === "web") return null;
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.notifyBtn,
+        { backgroundColor: colors.primary, opacity: pressed ? 0.8 : 1 },
+      ]}
+    >
+      <Ionicons name="notifications-outline" size={14} color="#fff" />
+      <Text style={styles.notifyBtnText}>Test notification</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   card: { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 12 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
@@ -42,6 +59,17 @@ const styles = StyleSheet.create({
   date: { fontSize: 11, fontFamily: "Inter_400Regular" },
   title: { fontSize: 15, fontFamily: "Inter_700Bold", marginBottom: 6, lineHeight: 22 },
   body: { fontSize: 13, lineHeight: 20, fontFamily: "Inter_400Regular" },
+  notifyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginTop: 8,
+  },
+  notifyBtnText: { fontSize: 12, color: "#fff", fontFamily: "Inter_600SemiBold" },
 });
 
 export default function AnnouncementsScreen() {
@@ -54,8 +82,19 @@ export default function AnnouncementsScreen() {
     if (!loading && !user) router.replace("/login");
   }, [user, loading]);
 
+  useEffect(() => {
+    if (!loading && user) {
+      notifyNewAnnouncements(announcements);
+    }
+  }, [loading, user]);
+
   const webTopPad = Platform.OS === "web" ? 67 : 0;
   const webBotPad = Platform.OS === "web" ? 34 : 0;
+
+  const triggerTestNotification = () => {
+    const latest = announcements[0];
+    if (latest) notifyNewAnnouncements([{ ...latest, id: `test_${Date.now()}` }]);
+  };
 
   return (
     <FlatList
@@ -77,6 +116,7 @@ export default function AnnouncementsScreen() {
           <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 4 }}>
             School-wide announcements
           </Text>
+          <NotifyButton onPress={triggerTestNotification} colors={colors} />
         </View>
       )}
       showsVerticalScrollIndicator={false}
