@@ -1,0 +1,3 @@
+- [API server port](api-server-port.md) — dev server listens on port 8080 (not 5000), set by the workflow env PORT var
+- [Mock backend split](mock-backend-split.md) — client uses mockAuth/mockDb (localStorage), server uses in-memory mock-store.ts; users stored separately from other collections
+- [Pre-existing TS error](preexisting-ts-error.md) — resizable.tsx shadcn component has a non-breaking TS error; ignore it in CI checks
