@@ -1,9 +1,10 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, type ReactNode, type ReactElement } from "react";
+import { useState, useEffect, useCallback, type ReactNode, type ReactElement } from "react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
 import { mockDb } from "@/lib/mock-backend";
+import { apiClient, isNetworkError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,7 @@ import {
   DollarSign, Briefcase, Library, FileText, Image as ImageIcon, Newspaper,
   MessageSquare, Megaphone, BarChart3, FolderTree, Settings, Search,
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
-  Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw,
+  Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
@@ -163,28 +164,7 @@ const MODULES: Record<string, ModuleDef> = {
   },
   timetable: {
     title: "Timetable", subtitle: "Weekly schedule", icon: Calendar,
-    render: () => {
-      const data = mockDb.list<any>("timetable");
-      return (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {data.map((d: any, i) => (
-            <Reveal key={d.day} delay={i*0.05}>
-              <Card className="p-5">
-                <h3 className="font-display text-lg font-semibold">{d.day}</h3>
-                <ul className="mt-3 space-y-2">
-                  {d.slots.map((s: any) => (
-                    <li key={s.t+s.s} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2">
-                      <span className="font-display font-semibold text-primary tabular-nums w-14">{s.t}</span>
-                      <span className="text-sm">{s.s}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => <TimetableModule/>,
   },
   announcements: {
     title: "Announcements", subtitle: "School-wide notices", icon: Megaphone,
@@ -238,30 +218,7 @@ const MODULES: Record<string, ModuleDef> = {
   },
   children: {
     title: "My Children", subtitle: "Linked student records", icon: Heart,
-    render: () => {
-      const data = mockDb.list<any>("children");
-      return (
-        <div className="grid md:grid-cols-2 gap-4">
-          {data.map((c: any, i) => (
-            <Reveal key={c.id} delay={i*0.05}>
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground grid place-items-center font-bold text-xl">{c.name[0]}</div>
-                  <div>
-                    <p className="font-display text-lg font-semibold">{c.name}</p>
-                    <p className="text-sm text-muted-foreground">{c.grade}</p>
-                  </div>
-                </div>
-                <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-muted/40 p-3"><p className="text-xs text-muted-foreground">Attendance</p><p className="font-display font-bold text-primary text-lg">{c.attendance}</p></div>
-                  <div className="rounded-xl bg-muted/40 p-3"><p className="text-xs text-muted-foreground">GPA</p><p className="font-display font-bold text-primary text-lg">{c.gpa}</p></div>
-                </div>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      );
-    },
+    render: () => <ChildrenModule/>,
   },
   events: {
     title: "Events & Reunions", subtitle: "Upcoming alumni events", icon: Calendar,
@@ -470,15 +427,7 @@ const MODULES: Record<string, ModuleDef> = {
   audit: {
     title: "Audit Logs", subtitle: "Recent administrator activity", icon: ClipboardList,
     allow: ["superadmin"],
-    render: () => {
-      const data = mockDb.list<any>("audit");
-      return (
-        <TableShell
-          head={["When", "Actor", "Action"]}
-          rows={data.map(a => [a.at, a.actor, a.action])}
-        />
-      );
-    },
+    render: () => <AuditModule/>,
   },
   analytics: {
     title: "Analytics", subtitle: "Real-time platform health", icon: BarChart3,
@@ -1092,6 +1041,90 @@ function NavigationModule() {
   );
 }
 
+// =========================================================================
+// Extracted async modules: Timetable, Children, Audit
+// =========================================================================
+function TimetableModule() {
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("timetable").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("timetable"));
+    });
+  }, []);
+  return (
+    <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {data.map((d: any, i) => (
+        <Reveal key={d.day ?? i} delay={i * 0.05}>
+          <Card className="p-5">
+            <h3 className="font-display text-lg font-semibold">{d.day}</h3>
+            <ul className="mt-3 space-y-2">
+              {(d.slots ?? []).map((s: any) => (
+                <li key={s.t + s.s} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2">
+                  <span className="font-display font-semibold text-primary tabular-nums w-14">{s.t}</span>
+                  <span className="text-sm">{s.s}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </Reveal>
+      ))}
+    </div>
+  );
+}
+
+function ChildrenModule() {
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("children").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("children"));
+    });
+  }, []);
+  return (
+    <div className="grid md:grid-cols-2 gap-4">
+      {data.map((c: any, i) => (
+        <Reveal key={c.id ?? i} delay={i * 0.05}>
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground grid place-items-center font-bold text-xl">
+                {c.name?.[0] ?? "?"}
+              </div>
+              <div>
+                <p className="font-display text-lg font-semibold">{c.name}</p>
+                <p className="text-sm text-muted-foreground">{c.grade}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-xs text-muted-foreground">Attendance</p>
+                <p className="font-display font-bold text-primary text-lg">{c.attendance}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-xs text-muted-foreground">GPA</p>
+                <p className="font-display font-bold text-primary text-lg">{c.gpa}</p>
+              </div>
+            </div>
+          </Card>
+        </Reveal>
+      ))}
+    </div>
+  );
+}
+
+function AuditModule() {
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("audit").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("audit"));
+    });
+  }, []);
+  return (
+    <TableShell
+      head={["When", "Actor", "Action"]}
+      rows={data.map(a => [a.at, a.actor, a.action])}
+    />
+  );
+}
+
 function ModuleRoute() {
   const { key } = useParams<{ key: string }>();
   const def = key ? MODULES[key] : undefined;
@@ -1308,21 +1341,64 @@ function SimpleCrud({
   fields: FieldDef[];
   columns: ColumnDef[];
 }) {
-  const tick = useTick();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
-  const all = mockDb.list<any>(collection);
+  const [all, setAll] = useState<any[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await apiClient.list(collection);
+      setAll(data as any[]);
+    } catch (e) {
+      if (isNetworkError(e)) setAll(mockDb.list<any>(collection));
+    }
+  }, [collection]);
+
+  useEffect(() => { load(); }, [load]);
+
   const rows = all.filter((r) =>
-    !q ||
-    columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
+    !q || columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
   );
-  const remove = (row: any) => {
+
+  const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+
+  const remove = async (row: any) => {
     if (!confirm(`Delete this ${itemLabel}?`)) return;
-    mockDb.remove(collection, row.id);
-    toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} deleted`);
-    tick();
+    try {
+      await apiClient.remove(collection, row.id);
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not delete"); return; }
+      mockDb.remove(collection, row.id);
+    }
+    toast.success(`${cap(itemLabel)} deleted`);
+    load();
   };
+
+  const handleSave = async (values: Record<string, any>) => {
+    const normalized: any = {};
+    for (const f of fields) {
+      const v = values[f.name];
+      normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
+    }
+    try {
+      if (editing) {
+        await apiClient.update(collection, editing.id, normalized);
+      } else {
+        await apiClient.create(collection, normalized);
+      }
+      toast.success(`${cap(itemLabel)} ${editing ? "updated" : "created"}`);
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not save"); return; }
+      if (editing) mockDb.update(collection, editing.id, normalized);
+      else mockDb.create(collection, normalized);
+      toast.success(`${cap(itemLabel)} ${editing ? "updated" : "created"}`);
+    }
+    setEditing(null);
+    setCreating(false);
+    load();
+  };
+
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
@@ -1353,21 +1429,8 @@ function SimpleCrud({
           itemLabel={itemLabel}
           fields={fields}
           row={editing}
-          onClose={() => { setEditing(null); setCreating(false); tick(); }}
-          onSave={(values) => {
-            const normalized: any = {};
-            for (const f of fields) {
-              const v = values[f.name];
-              normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
-            }
-            if (editing) {
-              mockDb.update(collection, editing.id, normalized);
-              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} updated`);
-            } else {
-              mockDb.create(collection, normalized);
-              toast.success(`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} created`);
-            }
-          }}
+          onClose={() => { setEditing(null); setCreating(false); }}
+          onSave={handleSave}
         />
       )}
     </>
@@ -1381,20 +1444,22 @@ function SimpleEditor({
   fields: FieldDef[];
   row: any | null;
   onClose: () => void;
-  onSave: (values: Record<string, any>) => void;
+  onSave: (values: Record<string, any>) => Promise<void>;
 }) {
   const [form, setForm] = useState<Record<string, any>>(() => {
     const init: Record<string, any> = {};
     for (const f of fields) init[f.name] = row?.[f.name] ?? (f.type === "number" ? 0 : "");
     return init;
   });
-  const save = () => {
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
     for (const f of fields) {
       if (f.required && (form[f.name] === "" || form[f.name] === null || form[f.name] === undefined)) {
         toast.error(`${f.label} is required`); return;
       }
     }
-    onSave(form); onClose();
+    setSaving(true);
+    try { await onSave(form); } finally { setSaving(false); }
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -1425,8 +1490,10 @@ function SimpleEditor({
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={save}>Save</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving} className="gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin"/>}Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1718,7 +1785,12 @@ function TeamMemberEditor({ member, onClose }: { member: TeamMember | null; onCl
 // =========================================================================
 // =========================================================================
 function GradesStats() {
-  const data = mockDb.list<any>("grades");
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("grades").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("grades"));
+    });
+  }, []);
   const avg = Math.round(data.reduce((s, g) => s + Number(g.score || 0), 0) / Math.max(1, data.length));
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
@@ -1730,7 +1802,12 @@ function GradesStats() {
 }
 
 function FeesStats() {
-  const data = mockDb.list<any>("fees");
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("fees").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("fees"));
+    });
+  }, []);
   const outstanding = data.filter((f) => f.status === "Outstanding").reduce((s, f) => s + Number(f.amount || 0), 0);
   const paid = data.filter((f) => f.status === "Paid").reduce((s, f) => s + Number(f.amount || 0), 0);
   return (
@@ -1743,7 +1820,12 @@ function FeesStats() {
 }
 
 function DonationsStats() {
-  const data = mockDb.list<any>("donations");
+  const [data, setData] = useState<any[]>([]);
+  useEffect(() => {
+    apiClient.list("donations").then(d => setData(d as any[])).catch(e => {
+      if (isNetworkError(e)) setData(mockDb.list<any>("donations"));
+    });
+  }, []);
   const total = data.reduce((s, d) => s + Number(d.amount || 0), 0);
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
@@ -1758,11 +1840,39 @@ function DonationsStats() {
 // Messages — inbox with mark read + delete
 // =========================================================================
 function MessagesModule() {
-  const tick = useTick();
-  const data = mockDb.list<any>("messages");
+  const [data, setData] = useState<any[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      const list = await apiClient.list("messages");
+      setData(list as any[]);
+    } catch (e) {
+      if (isNetworkError(e)) setData(mockDb.list<any>("messages"));
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
   const unread = data.filter((m) => m.unread).length;
-  const markRead = (id: string) => { mockDb.update<any>("messages", id, { unread: false }); tick(); };
-  const remove = (id: string) => { mockDb.remove("messages", id); toast.success("Message deleted"); tick(); };
+
+  const markRead = async (id: string) => {
+    try {
+      await apiClient.update("messages", id, { unread: false });
+    } catch (e) {
+      if (isNetworkError(e)) mockDb.update<any>("messages", id, { unread: false });
+    }
+    load();
+  };
+  const remove = async (id: string) => {
+    try {
+      await apiClient.remove("messages", id);
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error("Could not delete"); return; }
+      mockDb.remove("messages", id);
+    }
+    toast.success("Message deleted");
+    load();
+  };
+
   return (
     <>
       <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
@@ -1801,22 +1911,36 @@ function MessagesModule() {
 // =========================================================================
 type ClassRow = { id: string; name: string; teacher: string; room: string; students: number; schedule: string };
 
-function useTick() {
-  const [, set] = useState(0);
-  return () => set((n) => n + 1);
-}
-
 function ClassesModule() {
-  const tick = useTick();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<ClassRow | null>(null);
   const [creating, setCreating] = useState(false);
-  const all = mockDb.list<ClassRow>("classes");
+  const [all, setAll] = useState<ClassRow[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      const list = await apiClient.list("classes");
+      setAll(list as ClassRow[]);
+    } catch (e) {
+      if (isNetworkError(e)) setAll(mockDb.list<ClassRow>("classes"));
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
   const rows = all.filter((c) => !q || `${c.name} ${c.teacher} ${c.room}`.toLowerCase().includes(q.toLowerCase()));
-  const remove = (c: ClassRow) => {
+
+  const remove = async (c: ClassRow) => {
     if (!confirm(`Delete class "${c.name}"?`)) return;
-    mockDb.remove("classes", c.id); toast.success("Class deleted"); tick();
+    try {
+      await apiClient.remove("classes", c.id);
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not delete"); return; }
+      mockDb.remove("classes", c.id);
+    }
+    toast.success("Class deleted");
+    load();
   };
+
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
@@ -1843,7 +1967,7 @@ function ClassesModule() {
       {(editing || creating) && (
         <ClassEditor
           row={editing}
-          onClose={()=>{ setEditing(null); setCreating(false); tick(); }}
+          onClose={()=>{ setEditing(null); setCreating(false); load(); }}
         />
       )}
     </>
@@ -1852,10 +1976,22 @@ function ClassesModule() {
 
 function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => void }) {
   const [form, setForm] = useState<Partial<ClassRow>>(row ?? { name: "", teacher: "", room: "", students: 0, schedule: "" });
-  const save = () => {
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
     if (!form.name || !form.teacher) { toast.error("Name and teacher are required"); return; }
-    if (row) { mockDb.update<ClassRow>("classes", row.id, form); toast.success("Class updated"); }
-    else { mockDb.create<ClassRow>("classes", { ...(form as ClassRow), students: Number(form.students) || 0 }); toast.success("Class created"); }
+    setSaving(true);
+    const data = { ...(form as ClassRow), students: Number(form.students) || 0 };
+    try {
+      if (row) await apiClient.update("classes", row.id, data);
+      else await apiClient.create("classes", data);
+      toast.success(row ? "Class updated" : "Class created");
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not save"); setSaving(false); return; }
+      if (row) mockDb.update<ClassRow>("classes", row.id, data);
+      else mockDb.create<ClassRow>("classes", data);
+      toast.success(row ? "Class updated" : "Class created");
+    }
+    setSaving(false);
     onClose();
   };
   return (
@@ -1874,8 +2010,10 @@ function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => vo
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={save}>Save</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving} className="gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin"/>}Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1888,17 +2026,43 @@ function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => vo
 type AssignmentRow = { id: string; title: string; class: string; due: string; submissions: number; status: string };
 
 function AssignmentsModule() {
-  const tick = useTick();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<AssignmentRow | null>(null);
   const [creating, setCreating] = useState(false);
-  const all = mockDb.list<AssignmentRow>("assignments");
-  const classes = mockDb.list<ClassRow>("classes");
+  const [all, setAll] = useState<AssignmentRow[]>([]);
+  const [classes, setClasses] = useState<ClassRow[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      const [asgns, cls] = await Promise.all([
+        apiClient.list("assignments"),
+        apiClient.list("classes"),
+      ]);
+      setAll(asgns as AssignmentRow[]);
+      setClasses(cls as ClassRow[]);
+    } catch (e) {
+      if (isNetworkError(e)) {
+        setAll(mockDb.list<AssignmentRow>("assignments"));
+        setClasses(mockDb.list<ClassRow>("classes"));
+      }
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
   const rows = all.filter((a) => !q || `${a.title} ${a.class}`.toLowerCase().includes(q.toLowerCase()));
-  const remove = (a: AssignmentRow) => {
+
+  const remove = async (a: AssignmentRow) => {
     if (!confirm(`Delete assignment "${a.title}"?`)) return;
-    mockDb.remove("assignments", a.id); toast.success("Assignment deleted"); tick();
+    try {
+      await apiClient.remove("assignments", a.id);
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not delete"); return; }
+      mockDb.remove("assignments", a.id);
+    }
+    toast.success("Assignment deleted");
+    load();
   };
+
   return (
     <>
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
@@ -1926,7 +2090,7 @@ function AssignmentsModule() {
         <AssignmentEditor
           row={editing}
           classes={classes}
-          onClose={()=>{ setEditing(null); setCreating(false); tick(); }}
+          onClose={()=>{ setEditing(null); setCreating(false); load(); }}
         />
       )}
     </>
@@ -1935,10 +2099,22 @@ function AssignmentsModule() {
 
 function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null; classes: ClassRow[]; onClose: () => void }) {
   const [form, setForm] = useState<Partial<AssignmentRow>>(row ?? { title: "", class: classes[0]?.name ?? "", due: "", submissions: 0, status: "Open" });
-  const save = () => {
+  const [saving, setSaving] = useState(false);
+  const save = async () => {
     if (!form.title || !form.class || !form.due) { toast.error("Title, class and due date are required"); return; }
-    if (row) { mockDb.update<AssignmentRow>("assignments", row.id, form); toast.success("Assignment updated"); }
-    else { mockDb.create<AssignmentRow>("assignments", { ...(form as AssignmentRow), submissions: Number(form.submissions) || 0 }); toast.success("Assignment created"); }
+    setSaving(true);
+    const data = { ...(form as AssignmentRow), submissions: Number(form.submissions) || 0 };
+    try {
+      if (row) await apiClient.update("assignments", row.id, data);
+      else await apiClient.create("assignments", data);
+      toast.success(row ? "Assignment updated" : "Assignment created");
+    } catch (e) {
+      if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not save"); setSaving(false); return; }
+      if (row) mockDb.update<AssignmentRow>("assignments", row.id, data);
+      else mockDb.create<AssignmentRow>("assignments", data);
+      toast.success(row ? "Assignment updated" : "Assignment created");
+    }
+    setSaving(false);
     onClose();
   };
   return (
@@ -1975,8 +2151,10 @@ function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={save}>Save</Button>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={save} disabled={saving} className="gap-2">
+            {saving && <Loader2 className="h-4 w-4 animate-spin"/>}Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

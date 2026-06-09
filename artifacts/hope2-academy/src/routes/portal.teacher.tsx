@@ -4,52 +4,77 @@ import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal, StaggerGroup } from "@/components/Motion";
 import { useAuth } from "@/hooks/use-auth";
+import { apiClient } from "@/lib/api-client";
 import { mockDb, mockAuth } from "@/lib/mock-backend";
 
 interface TimetableSlot { t: string; s: string; }
 interface TimetableDay  { day: string; slots: TimetableSlot[]; }
+
+interface TeacherStats {
+  myStudents?: number;
+  classesToday?: number;
+  pendingGrades?: number;
+  subjects?: string[];
+  department?: string;
+}
 
 function TeacherPage() {
   const { profile } = useAuth();
   const [studentCount, setStudentCount] = useState<number>(0);
   const [todaySlots, setTodaySlots] = useState<TimetableSlot[]>([]);
   const [pendingGrades, setPendingGrades] = useState<number>(0);
+  const [openAssignments, setOpenAssignments] = useState<Array<{ id: string; title: string; due: string; status: string }>>([]);
+  const [nextDay, setNextDay] = useState("Mon");
 
   useEffect(() => {
-    mockAuth.listUsers().then((users) => {
-      setStudentCount(users.filter((u) => u.role === "student").length);
-    });
+    (async () => {
+      try {
+        const stats = await apiClient.getStats() as TeacherStats;
+        setStudentCount(stats.myStudents ?? 0);
+        setPendingGrades(stats.pendingGrades ?? 0);
+      } catch {
+        mockAuth.listUsers().then((users) => {
+          setStudentCount(users.filter((u) => u.role === "student").length);
+        });
+        const assignments = mockDb.list<{ status: string }>("assignments");
+        setPendingGrades(assignments.filter((a) => a.status === "Grading").length);
+      }
 
-    const day = new Date().toLocaleDateString("en-US", { weekday: "long" });
-    const timetable = mockDb.list<TimetableDay>("timetable");
-    const entry = timetable.find((d) => d.day === day);
-    setTodaySlots(
-      entry?.slots ?? [
-        { t: "08:00", s: "Grade 9 — Mathematics" },
-        { t: "10:00", s: "Grade 7 — Civic Education" },
-        { t: "12:30", s: "Grade 9 — Literature" },
-        { t: "14:00", s: "Staff briefing" },
-      ],
-    );
+      try {
+        const timetable = await apiClient.list<TimetableDay>("timetable");
+        const day = new Date().toLocaleDateString("en-US", { weekday: "long" });
+        const entry = timetable.find((d) => d.day === day);
+        setTodaySlots(entry?.slots ?? defaultSlots);
 
-    const assignments = mockDb.list<{ status: string }>("assignments");
-    setPendingGrades(assignments.filter((a) => a.status === "Grading").length);
+        const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const today = new Date().getDay();
+        for (let i = 1; i <= 7; i++) {
+          const d = days[(today + i) % 7];
+          if (timetable.some((e) => e.day === d && e.slots.length > 0)) { setNextDay(d.slice(0, 3)); break; }
+        }
+      } catch {
+        const timetable = mockDb.list<TimetableDay>("timetable");
+        const day = new Date().toLocaleDateString("en-US", { weekday: "long" });
+        const entry = timetable.find((d) => d.day === day);
+        setTodaySlots(entry?.slots ?? defaultSlots);
+
+        const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const today = new Date().getDay();
+        for (let i = 1; i <= 7; i++) {
+          const d = days[(today + i) % 7];
+          if (timetable.some((e) => e.day === d && e.slots.length > 0)) { setNextDay(d.slice(0, 3)); break; }
+        }
+      }
+
+      try {
+        const assignments = await apiClient.list<{ id: string; title: string; due: string; status: string }>("assignments");
+        setOpenAssignments(assignments.filter((a) => a.status !== "Completed").slice(0, 4));
+      } catch {
+        const assignments = mockDb.list<{ id: string; title: string; due: string; status: string }>("assignments");
+        setOpenAssignments(assignments.filter((a) => a.status !== "Completed").slice(0, 4));
+      }
+    })();
   }, []);
-
-  const nextDay = (() => {
-    const timetable = mockDb.list<TimetableDay>("timetable");
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    const today = new Date().getDay();
-    for (let i = 1; i <= 7; i++) {
-      const d = days[(today + i) % 7];
-      if (timetable.some((e) => e.day === d && e.slots.length > 0)) return d.slice(0, 3);
-    }
-    return "Mon";
-  })();
-
-  const openAssignments = mockDb.list<{ id: string; title: string; due: string; status: string }>("assignments")
-    .filter((a) => a.status !== "Completed")
-    .slice(0, 4);
 
   return (
     <PortalShell
@@ -98,6 +123,13 @@ function TeacherPage() {
     </PortalShell>
   );
 }
+
+const defaultSlots: TimetableSlot[] = [
+  { t: "08:00", s: "Grade 9 — Mathematics" },
+  { t: "10:00", s: "Grade 7 — Civic Education" },
+  { t: "12:30", s: "Grade 9 — Literature" },
+  { t: "14:00", s: "Staff briefing" },
+];
 
 function RouteComponent() {
   return (

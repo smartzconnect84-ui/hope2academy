@@ -5,6 +5,7 @@ import { PortalShell } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal } from "@/components/Motion";
 import { useAuth } from "@/hooks/use-auth";
+import { apiClient, isNetworkError } from "@/lib/api-client";
 import { mockAuth } from "@/lib/mock-backend";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,19 +23,31 @@ function ProfilePage() {
   const save = async () => {
     if (!user) return;
     setSaving(true);
+    const patch = {
+      name: form.full_name,
+      phone: form.phone,
+      address: form.address,
+      bio: form.bio,
+      date_of_birth: form.date_of_birth || null,
+      emergency_contact: form.emergency_contact,
+    };
     try {
-      await mockAuth.updateProfile(user.$id, {
-        name: form.full_name,
-        phone: form.phone,
-        address: form.address,
-        bio: form.bio,
-        date_of_birth: form.date_of_birth || null,
-        emergency_contact: form.emergency_contact,
-      });
+      await apiClient.updateProfile(patch);
       toast.success("Profile saved");
-      refresh();
-    } catch (err: any) {
-      toast.error(err?.message ?? "Could not save");
+      await refresh();
+    } catch (e) {
+      if (!isNetworkError(e)) {
+        toast.error((e as Error)?.message ?? "Could not save");
+        setSaving(false);
+        return;
+      }
+      try {
+        await mockAuth.updateProfile(user.$id, patch);
+        toast.success("Profile saved");
+        await refresh();
+      } catch (e2: any) {
+        toast.error(e2?.message ?? "Could not save");
+      }
     } finally {
       setSaving(false);
     }

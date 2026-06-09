@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Shield, Users, GraduationCap, Database, TrendingUp } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { apiClient } from "@/lib/api-client";
 import { mockAuth } from "@/lib/mock-backend";
 import { StaggerGroup, Reveal } from "@/components/Motion";
 
@@ -10,8 +11,13 @@ function SuperAdminPage() {
   const [counts, setCounts] = useState({ users: 0, roles: 0 });
   useEffect(() => {
     (async () => {
-      const all = await mockAuth.listUsers();
-      setCounts({ users: all.length, roles: all.length });
+      try {
+        const all = await apiClient.listUsers();
+        setCounts({ users: all.length, roles: all.length });
+      } catch {
+        const all = await mockAuth.listUsers();
+        setCounts({ users: all.length, roles: all.length });
+      }
     })();
   }, []);
   return (

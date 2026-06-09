@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Loader2, Copy, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { mockAuth, DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend";
+import { DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { useBrand } from "@/lib/brand";
 
 
 function LoginPage() {
-  const { user, loading, refresh } = useAuth();
+  const { user, loading, refresh, signIn } = useAuth();
   const navigate = useNavigate();
   const brand = useBrand();
   const [email, setEmail] = useState("");
@@ -28,8 +28,7 @@ function LoginPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await mockAuth.signIn(email, password);
-      await refresh();
+      await signIn(email, password);
       toast.success("Welcome back");
       navigate("/portal");
     } catch (err: any) {
@@ -43,8 +42,7 @@ function LoginPage() {
   const quickSignIn = async (e: string, p: string) => {
     setEmail(e); setPassword(p); setSubmitting(true);
     try {
-      await mockAuth.signIn(e, p);
-      await refresh();
+      await signIn(e, p);
       toast.success("Signed in as demo user");
       navigate("/portal");
     } catch (err: any) {

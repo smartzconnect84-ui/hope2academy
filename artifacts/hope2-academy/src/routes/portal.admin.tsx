@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Users, GraduationCap, UserPlus, Activity, Loader2, Trash2, Plus } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
-import { mockAuth, type MockUser } from "@/lib/mock-backend";
+import { apiClient, isNetworkError, type ApiUser } from "@/lib/api-client";
+import { mockAuth } from "@/lib/mock-backend";
 import { useAuth, type AppRole, ROLE_LABEL } from "@/hooks/use-auth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
 import { toast } from "sonner";
@@ -13,10 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
+type UserRow = ApiUser & { id: string };
+
 function AdminPage() {
   const { roles } = useAuth();
   const isSuper = roles.includes("superadmin");
-  const [rows, setRows] = useState<MockUser[]>([]);
+  const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [newUser, setNewUser] = useState<{ email: string; name: string; role: AppRole }>({ email: "", name: "", role: "student" });
@@ -24,10 +27,19 @@ function AdminPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const list = await mockAuth.listUsers();
-      setRows(list);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not load users");
+      const list = await apiClient.listUsers();
+      setRows(list as UserRow[]);
+    } catch (e) {
+      if (!isNetworkError(e)) {
+        toast.error((e as Error)?.message ?? "Could not load users");
+      } else {
+        try {
+          const list = await mockAuth.listUsers();
+          setRows(list as unknown as UserRow[]);
+        } catch (e2: any) {
+          toast.error(e2?.message ?? "Could not load users");
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -36,16 +48,34 @@ function AdminPage() {
 
   const changeRole = async (uid: string, role: AppRole) => {
     try {
-      await mockAuth.changeRole(uid, role);
+      await apiClient.changeRole(uid, role);
       toast.success(`Role updated to ${ROLE_LABEL[role]}`);
       load();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not change role");
+    } catch (e) {
+      if (!isNetworkError(e)) {
+        toast.error((e as Error)?.message ?? "Could not change role");
+        return;
+      }
+      try {
+        await mockAuth.changeRole(uid, role);
+        toast.success(`Role updated to ${ROLE_LABEL[role]}`);
+        load();
+      } catch (e2: any) {
+        toast.error(e2?.message ?? "Could not change role");
+      }
     }
   };
 
   const removeUser = async (uid: string) => {
-    await mockAuth.deleteUser(uid);
+    try {
+      await apiClient.deleteUser(uid);
+    } catch (e) {
+      if (!isNetworkError(e)) {
+        toast.error((e as Error)?.message ?? "Could not delete user");
+        return;
+      }
+      await mockAuth.deleteUser(uid);
+    }
     toast.success("User removed");
     load();
   };
@@ -53,14 +83,24 @@ function AdminPage() {
   const createUser = async () => {
     if (!newUser.email || !newUser.name) { toast.error("Name and email required"); return; }
     try {
-      await mockAuth.createUser(newUser);
+      await apiClient.createUser(newUser);
       toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}`);
-      setOpen(false);
-      setNewUser({ email: "", name: "", role: "student" });
-      load();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not create user");
+    } catch (e) {
+      if (!isNetworkError(e)) {
+        toast.error((e as Error)?.message ?? "Could not create user");
+        return;
+      }
+      try {
+        await mockAuth.createUser(newUser);
+        toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}`);
+      } catch (e2: any) {
+        toast.error(e2?.message ?? "Could not create user");
+        return;
+      }
     }
+    setOpen(false);
+    setNewUser({ email: "", name: "", role: "student" });
+    load();
   };
 
   return (
