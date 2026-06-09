@@ -57,7 +57,7 @@ function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label
 function StudentDashboard() {
   const colors = useColors();
   const { profile } = useAuth();
-  const grades = mockDb.getGrades();
+  const grades = mockDb.list<any>("grades").filter((g: any) => g.student === "Mariama Doe");
   const s = sectionStyles(colors);
   return (
     <>
@@ -73,9 +73,9 @@ function StudentDashboard() {
       </View>
       <View style={s.section}>
         <Text style={s.sectionTitle}>Recent Grades</Text>
-        {grades.map((g) => (
-          <View key={g.course} style={s.listRow}>
-            <Text style={s.listMain}>{g.course}</Text>
+        {grades.map((g: any) => (
+          <View key={g.id} style={s.listRow}>
+            <Text style={s.listMain}>{g.subject}</Text>
             <Text style={[s.listBadge, { color: colors.primary }]}>{g.grade}</Text>
           </View>
         ))}
@@ -87,7 +87,7 @@ function StudentDashboard() {
 function TeacherDashboard() {
   const colors = useColors();
   const { profile } = useAuth();
-  const schedule = mockDb.getSchedule();
+  const schedule = mockDb.list<any>("timetable").find((d: any) => d.day === "Monday")?.slots ?? mockDb.list<any>("timetable")[0]?.slots ?? [];
   const s = sectionStyles(colors);
   return (
     <>
@@ -124,7 +124,7 @@ function TeacherDashboard() {
 
 function ParentDashboard() {
   const colors = useColors();
-  const children = mockDb.getChildren();
+  const children = mockDb.list<any>("children");
   const s = sectionStyles(colors);
   return (
     <View style={s.section}>
@@ -154,8 +154,8 @@ function ParentDashboard() {
 
 function AlumniDashboard() {
   const colors = useColors();
-  const events = mockDb.getEvents();
-  const jobs = mockDb.getJobs();
+  const events = mockDb.list<any>("events");
+  const jobs = mockDb.list<any>("jobs");
   const s = sectionStyles(colors);
   return (
     <>

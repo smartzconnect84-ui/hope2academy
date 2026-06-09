@@ -18,7 +18,11 @@ function NativeTabLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="announcements">
         <Icon sf={{ default: "bell", selected: "bell.fill" }} />
-        <Label>Announcements</Label>
+        <Label>Notices</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="modules">
+        <Icon sf={{ default: "square.grid.2x2", selected: "square.grid.2x2.fill" }} />
+        <Label>Modules</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
@@ -82,6 +86,18 @@ function ClassicTabLayout() {
               <SymbolView name="bell.fill" tintColor={color} size={22} />
             ) : (
               <Ionicons name="notifications-outline" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="modules"
+        options={{
+          title: "Modules",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="square.grid.2x2.fill" tintColor={color} size={22} />
+            ) : (
+              <Feather name="grid" size={22} color={color} />
             ),
         }}
       />
