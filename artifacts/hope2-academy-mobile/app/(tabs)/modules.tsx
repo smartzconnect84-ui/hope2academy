@@ -1,16 +1,18 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -107,6 +109,178 @@ function StudentModules({ colors, profile }: { colors: Colors; profile: any }) {
   );
 }
 
+const todayISO = () => new Date().toISOString().split("T")[0];
+
+function AttendanceModal({ colors, visible, onClose }: { colors: Colors; visible: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({ date: todayISO(), class: "", present: "", absent: "", late: "" });
+  const [error, setError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => apiClient.createItem("attendance", data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+      setForm({ date: todayISO(), class: "", present: "", absent: "", late: "" });
+      setError("");
+      onClose();
+    },
+    onError: (e: any) => setError(e?.message ?? "Could not save"),
+  });
+
+  const submit = () => {
+    if (!form.class.trim()) { setError("Class name is required"); return; }
+    if (form.present === "" || form.absent === "") { setError("Present and absent counts are required"); return; }
+    setError("");
+    mutation.mutate({
+      date: form.date,
+      class: form.class.trim(),
+      present: Number(form.present),
+      absent: Number(form.absent),
+      late: form.late ? Number(form.late) : 0,
+    });
+  };
+
+  const inp = (label: string, key: keyof typeof form, opts?: { numeric?: boolean }) => (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.mutedForeground, marginBottom: 4 }}>
+        {label}
+      </Text>
+      <TextInput
+        value={form[key]}
+        onChangeText={(v) => setForm((f) => ({ ...f, [key]: v }))}
+        keyboardType={opts?.numeric ? "number-pad" : "default"}
+        style={{
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 10,
+          paddingHorizontal: 12,
+          paddingVertical: Platform.OS === "ios" ? 12 : 8,
+          fontSize: 15,
+          color: colors.foreground,
+          backgroundColor: colors.card,
+          fontFamily: "Inter_400Regular",
+        }}
+        placeholderTextColor={colors.mutedForeground}
+        placeholder={opts?.numeric ? "0" : ""}
+      />
+    </View>
+  );
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }} onPress={onClose} />
+        <View style={{
+          backgroundColor: colors.background,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+          padding: 24,
+          paddingBottom: 36,
+        }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <Text style={{ fontSize: 18, fontFamily: "Inter_700Bold", color: colors.foreground }}>Log Attendance</Text>
+            <Pressable onPress={onClose}><Ionicons name="close" size={22} color={colors.mutedForeground} /></Pressable>
+          </View>
+          {inp("Date", "date")}
+          {inp("Class name", "class")}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>{inp("Present", "present", { numeric: true })}</View>
+            <View style={{ flex: 1 }}>{inp("Absent", "absent", { numeric: true })}</View>
+            <View style={{ flex: 1 }}>{inp("Late", "late", { numeric: true })}</View>
+          </View>
+          {error ? <Text style={{ color: "#C43427", fontSize: 13, marginBottom: 8 }}>{error}</Text> : null}
+          <Pressable
+            onPress={submit}
+            disabled={mutation.isPending}
+            style={({ pressed }) => ({
+              backgroundColor: mutation.isPending ? colors.muted : colors.primary,
+              borderRadius: 12,
+              paddingVertical: 14,
+              alignItems: "center",
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            {mutation.isPending
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={{ color: "#fff", fontSize: 15, fontFamily: "Inter_700Bold" }}>Save Record</Text>
+            }
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function TeacherAttendanceSection({ colors }: { colors: Colors }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const { data: attendance = [], isLoading } = useQuery({
+    queryKey: ["attendance"],
+    queryFn: () => apiClient.getCollection<any>("attendance"),
+  });
+
+  const today = todayISO();
+  const todayRecords = attendance.filter((a: any) => a.date === today);
+  const recent = attendance.slice().sort((a: any, b: any) => b.date.localeCompare(a.date)).slice(0, 6);
+
+  return (
+    <>
+      <View style={[s.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <Text style={[s.sectionTitle, { color: colors.foreground }]}>Attendance</Text>
+          <Pressable
+            onPress={() => setModalOpen(true)}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              backgroundColor: colors.primary,
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Ionicons name="add" size={14} color="#fff" />
+            <Text style={{ color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" }}>Log Today</Text>
+          </Pressable>
+        </View>
+        {todayRecords.length > 0 && (
+          <View style={{ backgroundColor: colors.primary + "12", borderRadius: 8, padding: 10, marginBottom: 8 }}>
+            <Text style={{ fontSize: 12, fontFamily: "Inter_600SemiBold", color: colors.primary }}>
+              Today — {todayRecords.length} class{todayRecords.length > 1 ? "es" : ""} logged
+            </Text>
+            {todayRecords.map((r: any) => (
+              <Text key={r.id} style={{ fontSize: 12, color: colors.foreground, marginTop: 2 }}>
+                {r.class}: {r.present} present · {r.absent} absent{r.late ? ` · ${r.late} late` : ""}
+              </Text>
+            ))}
+          </View>
+        )}
+        {isLoading
+          ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 8 }} />
+          : recent.length === 0
+            ? <Text style={[s.rowSub, { color: colors.mutedForeground, paddingTop: 8 }]}>No records yet. Log your first class.</Text>
+            : recent.map((a: any) => (
+                <View key={a.id} style={[s.row, { borderTopColor: colors.border }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.rowMain, { color: colors.foreground }]}>{a.class}</Text>
+                    <Text style={[s.rowSub, { color: colors.mutedForeground }]}>{a.date}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text style={{ fontSize: 13, fontFamily: "Inter_600SemiBold", color: colors.primary }}>
+                      {a.present} / {Number(a.present) + Number(a.absent || 0) + Number(a.late || 0)}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground }}>present</Text>
+                  </View>
+                </View>
+              ))
+        }
+      </View>
+      <AttendanceModal colors={colors} visible={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
+  );
+}
+
 function TeacherModules({ colors }: { colors: Colors }) {
   const { data: assignments = [] } = useQuery({
     queryKey: ["assignments"],
@@ -122,6 +296,7 @@ function TeacherModules({ colors }: { colors: Colors }) {
   });
   return (
     <>
+      <TeacherAttendanceSection colors={colors} />
       <Section title="Assignments" colors={colors}>
         {assignments.map((a: any) => (
           <View key={a.id} style={[s.row, { borderTopColor: colors.border }]}>
@@ -138,7 +313,7 @@ function TeacherModules({ colors }: { colors: Colors }) {
           <View key={lp.id} style={[s.row, { borderTopColor: colors.border }]}>
             <View style={{ flex: 1 }}>
               <Text style={[s.rowMain, { color: colors.foreground }]}>{lp.title}</Text>
-              <Text style={[s.rowSub, { color: colors.mutedForeground }]}>{lp.class} · {lp.week}</Text>
+              <Text style={[s.rowSub, { color: colors.mutedForeground }]}>{lp.week}</Text>
             </View>
             <StatusBadge status={lp.status} colors={colors} />
           </View>

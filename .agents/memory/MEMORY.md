@@ -2,3 +2,5 @@
 - [Mock backend split](mock-backend-split.md) — client uses mockAuth/mockDb (localStorage), server uses in-memory mock-store.ts; users stored separately from other collections
 - [API-first with mock fallback](api-mock-fallback.md) — frontend tries live API first, falls back to localStorage mock on error; JWT stored as h2l.apiToken; signIn exposed via AuthProvider context
 - [Pre-existing TS error](preexisting-ts-error.md) — resizable.tsx shadcn component has a non-breaking TS error; ignore it in CI checks
+- [Vercel build config](vercel-deploy.md) — PORT must not be required at vite config top-level (crashes build); VITE_API_BASE_URL needed for Vercel→Replit API routing
+- [Mobile write operations](mobile-attendance.md) — useMutation + apiClient.createItem() is the correct pattern for teacher POST operations on mobile

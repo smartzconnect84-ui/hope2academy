@@ -10,7 +10,7 @@
 
 import type { AppRole } from "./mock-backend";
 
-const BASE = "/api-server/api";
+const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "/api-server/api";
 const KEY_TOKEN = "h2l.apiToken";
 
 export interface ApiUser {
