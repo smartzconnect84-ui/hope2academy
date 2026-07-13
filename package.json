@@ -4,9 +4,9 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "dev": "cd artifacts/hope2-academy && bun x vite --config vite.config.ts --host 0.0.0.0",
+    "dev": "artifacts/hope2-academy/node_modules/.bin/vite --config artifacts/hope2-academy/vite.config.ts --root artifacts/hope2-academy --host 0.0.0.0",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "build:dev": "cd artifacts/hope2-academy && bun x vite build --config vite.config.ts --mode development",
+    "build:dev": "artifacts/hope2-academy/node_modules/.bin/vite build --config artifacts/hope2-academy/vite.config.ts --root artifacts/hope2-academy --mode development",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
