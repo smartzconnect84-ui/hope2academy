@@ -5,7 +5,8 @@
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "dev": "artifacts/hope2-academy/node_modules/.bin/vite --config artifacts/hope2-academy/vite.config.ts --host 0.0.0.0 artifacts/hope2-academy",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build && pnpm run copy-dist",
+    "copy-dist": "rm -rf dist && cp -r artifacts/hope2-academy/dist/public dist",
     "build:dev": "artifacts/hope2-academy/node_modules/.bin/vite build --config artifacts/hope2-academy/vite.config.ts --mode development artifacts/hope2-academy",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
