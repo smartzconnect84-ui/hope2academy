@@ -5,52 +5,13 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import fs from "fs";
 
-// Map asset JSON filenames (without .asset.json) to local fallback images.
-// The Lovable CDN is inaccessible from Replit, so we use the bundled images.
-const ASSET_FALLBACKS: Record<string, string> = {
-  // Hope/dept/stories images
-  "dept-mission.jpg":         "/src/assets/hope/dept-outreach-BqPAShO5.jpg",
-  "dept-academy.jpg":         "/src/assets/hope/dept-education-aYewL80F.jpg",
-  "dept-church.jpg":          "/src/assets/hope/banner-1-CIHbaCOS.jpg",
-  "dept-media.jpg":           "/src/assets/hope/dept-community-DR-ZUlx6.jpg",
-  "hope2-logo.png":           "/src/assets/hope/team-1-Bn-q5HvV.jpg",
-  // Hero slides (5 slides → 5 distinct images)
-  "IMG-20260521-WA0022-2.jpg": "/src/assets/hope/dept-education-aYewL80F.jpg",
-  "IMG-20260521-WA0000.jpg":   "/src/assets/hope/banner-1-CIHbaCOS.jpg",
-  "IMG-20260521-WA0003-2.jpg": "/src/assets/hope/dept-health-xwwilth4.jpg",
-  "IMG-20260521-WA0006.jpg":   "/src/assets/hope/dept-outreach-BqPAShO5.jpg",
-  "IMG-20260521-WA0012-2.jpg": "/src/assets/hope/dept-community-DR-ZUlx6.jpg",
-  // Upload images
-  "IMG-20260521-WA0012.jpg":  "/src/assets/hope/story-classroom-D9IJEfzp.jpg",
-  "IMG-20260521-WA0031.jpg":  "/src/assets/hope/story-well-6CEMCBHm.jpg",
-  "IMG-20260521-WA0022.jpg":  "/src/assets/hope/story-clinic-DsVCT660.jpg",
-  "IMG-20260521-WA0003.jpg":  "/src/assets/hope/dept-outreach-BqPAShO5.jpg",
-  "IMG-20260521-WA0018.jpg":  "/src/assets/hope/project-village-BG6QOkRo.jpg",
-  "IMG-20260521-WA0017.jpg":  "/src/assets/hope/project-school-C5dtR3hs.jpg",
-  "IMG-20260521-WA0027.jpg":  "/src/assets/hope/about-portrait-eKNmGVTA.jpg",
-  "IMG-20260521-WA0040.jpg":  "/src/assets/hope/dept-health-xwwilth4.jpg",
-  "IMG-20260521-WA0039.jpg":  "/src/assets/hope/dept-community-DR-ZUlx6.jpg",
-  "IMG-20260521-WA0034.jpg":  "/src/assets/hope/banner-1-CIHbaCOS.jpg",
-};
-
 function lovableAssetPlugin(): Plugin {
-  const srcAssetsHope = path.resolve(import.meta.dirname, "src/assets/hope");
   return {
     name: "lovable-asset-json",
     transform(_code, id) {
       if (!id.endsWith(".asset.json")) return null;
       try {
         const json = JSON.parse(fs.readFileSync(id, "utf-8"));
-        const originalFilename: string = json.original_filename || path.basename(id, ".asset.json");
-        const fallbackRelative = ASSET_FALLBACKS[originalFilename];
-        if (fallbackRelative) {
-          // Emit a real import so Vite processes the image correctly
-          const absoluteFallback = path.resolve(srcAssetsHope, path.basename(fallbackRelative));
-          return {
-            code: `import __img from ${JSON.stringify(absoluteFallback)}; export default { ...${JSON.stringify(json)}, url: __img };`,
-            map: null,
-          };
-        }
         return {
           code: `export default ${JSON.stringify({ ...json, url: json.url ?? "" })}`,
           map: null,
