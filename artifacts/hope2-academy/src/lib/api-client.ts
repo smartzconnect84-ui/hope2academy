@@ -48,11 +48,24 @@ function authHeaders(): HeadersInit {
   return t ? { Authorization: `Bearer ${t}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
 }
 
+/** Thrown when the API server is not reachable / not deployed. */
+export class ApiUnavailableError extends Error {}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { ...authHeaders(), ...(init?.headers ?? {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...init,
+      headers: { ...authHeaders(), ...(init?.headers ?? {}) },
+    });
+  } catch {
+    throw new ApiUnavailableError("API server unreachable");
+  }
+  // No API server deployed: the SPA host answers with 404/5xx or an HTML page.
+  const ct = res.headers.get("content-type") ?? "";
+  if (res.status === 404 || res.status === 405 || res.status >= 500 || !ct.includes("application/json")) {
+    throw new ApiUnavailableError("API server unavailable");
+  }
   if (!res.ok) {
     let msg = `API error ${res.status}`;
     try { const j = await res.json(); msg = j.error ?? msg; } catch { /* */ }
@@ -169,5 +182,5 @@ export const apiClient = {
  * Use this to decide whether to fall back to the local mock backend.
  */
 export function isNetworkError(e: unknown): boolean {
-  return e instanceof TypeError;
+  return e instanceof TypeError || e instanceof ApiUnavailableError;
 }
