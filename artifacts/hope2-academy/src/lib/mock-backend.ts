@@ -75,6 +75,18 @@ function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
 
+const ROLE_SEED_PROFILE: Partial<Record<AppRole, Partial<MockUser>>> = {
+  superadmin: { bio: "Director of Programs and Governance." },
+  admin: { department: "Operations", bio: "Manages campuses and staffing." },
+  admin_assistant: { department: "Administration", bio: "Front office, correspondence, scheduling and school records support." },
+  registrar: { department: "Registry", bio: "Custodian of student records, enrolment, transcripts and grade books." },
+  admissions_officer: { department: "Admissions", bio: "Guides families through applications, interviews and enrolment offers." },
+  teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
+  student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
+  parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
+  alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
+};
+
 function readUsers(): MockUser[] {
   if (!isBrowser()) return [];
   const raw = localStorage.getItem(KEY_USERS);
