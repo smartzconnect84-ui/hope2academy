@@ -1114,6 +1114,203 @@ function MediaModule() {
 }
 
 // =========================================================================
+// In-app messaging — private (one account) or bulk (whole audience)
+// =========================================================================
+function BroadcastModule() {
+  const principal = usePrincipal();
+  const [users, setUsers] = useState<any[]>([]);
+  const [sent, setSent] = useState<any[]>([]);
+  const [mode, setMode] = useState<"private" | "bulk">("private");
+  const [to, setTo] = useState("");
+  const [audience, setAudience] = useState("All");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try { setUsers(await mockAuth.listUsers()); } catch { setUsers([]); }
+    try {
+      const list = await apiClient.list("messages");
+      setSent(list as any[]);
+    } catch (e) {
+      if (isNetworkError(e)) setSent(mockDb.list<any>("messages"));
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const audienceRoles: Record<string, AppRole[]> = {
+    All: ["superadmin","admin","admin_assistant","registrar","admissions_officer","teacher","student","parent","alumni"],
+    Students: ["student"],
+    Parents: ["parent"],
+    Staff: ["superadmin","admin","admin_assistant","registrar","admissions_officer","teacher"],
+    Teachers: ["teacher"],
+    Alumni: ["alumni"],
+  };
+
+  const recipients = mode === "private"
+    ? users.filter((u) => u.email === to)
+    : users.filter((u) => audienceRoles[audience]?.includes(u.role));
+
+  const send = async () => {
+    if (!subject.trim() || !body.trim()) { toast.error("Subject and message are required"); return; }
+    if (mode === "private" && !to) { toast.error("Choose a recipient"); return; }
+    if (recipients.length === 0) { toast.error("No matching recipients"); return; }
+    setBusy(true);
+    const date = new Date().toISOString().slice(0, 10);
+    for (const r of recipients) {
+      const msg = {
+        from: principal?.name ?? "Administration",
+        to: r.name,
+        toEmail: r.email,
+        subject,
+        preview: body.slice(0, 120),
+        body,
+        date,
+        unread: true,
+        kind: mode,
+      };
+      try {
+        await apiClient.create("messages", msg);
+      } catch (e) {
+        if (isNetworkError(e)) mockDb.create("messages", msg);
+      }
+    }
+    setBusy(false);
+    setSubject(""); setBody("");
+    toast.success(`Message delivered to ${recipients.length} account${recipients.length === 1 ? "" : "s"}`);
+    load();
+  };
+
+  const mine = sent.filter((m) => m.from === (principal?.name ?? ""));
+
+  return (
+    <div className="space-y-5">
+      <StaggerGroup className="grid sm:grid-cols-3 gap-4">
+        <StatCard icon={Users} label="Reachable accounts" value={users.length} />
+        <StatCard icon={Send} label="Messages I sent" value={mine.length} accent="accent" />
+        <StatCard icon={Inbox} label="Selected recipients" value={recipients.length} accent="secondary" />
+      </StaggerGroup>
+
+      <Card className="p-5 space-y-4 max-w-3xl">
+        <div className="flex gap-2">
+          {(["private", "bulk"] as const).map((mo) => (
+            <button key={mo} onClick={() => setMode(mo)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${mode === mo ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/70"}`}>
+              {mo === "private" ? "Private message" : "Bulk broadcast"}
+            </button>
+          ))}
+        </div>
+
+        {mode === "private" ? (
+          <div>
+            <Label>Recipient</Label>
+            <Select value={to} onValueChange={setTo}>
+              <SelectTrigger><SelectValue placeholder="Choose an account"/></SelectTrigger>
+              <SelectContent>
+                {users.map((u) => (
+                  <SelectItem key={u.email} value={u.email}>{u.name} — {ROLE_LABEL[u.role as AppRole] ?? u.role}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div>
+            <Label>Audience</Label>
+            <Select value={audience} onValueChange={setAudience}>
+              <SelectTrigger><SelectValue/></SelectTrigger>
+              <SelectContent>
+                {Object.keys(audienceRoles).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Term 3 re-enrolment reminder"/></div>
+        <div><Label>Message</Label><Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…"/></div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{recipients.length} recipient{recipients.length === 1 ? "" : "s"}</p>
+          <Button className="gap-2" disabled={busy} onClick={send}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>} Send
+          </Button>
+        </div>
+      </Card>
+
+      <div>
+        <h3 className="font-display text-lg font-semibold mb-3">Recently sent</h3>
+        <TableShell
+          head={["Date", "To", "Subject", "Type"]}
+          rows={mine.slice(-25).reverse().map((m) => [
+            m.date, m.to, m.subject, <Badge variant="secondary">{m.kind === "bulk" ? "Broadcast" : "Private"}</Badge>,
+          ])}
+        />
+      </div>
+    </div>
+  );
+}
+
+// =========================================================================
+// Finance overview — income vs payroll vs expenses (USD with LRD equivalent)
+// =========================================================================
+function FinanceOverview() {
+  const [state, setState] = useState<{ fees: any[]; donations: any[]; payroll: any[]; expenses: any[]; scholarships: any[] }>({
+    fees: [], donations: [], payroll: [], expenses: [], scholarships: [],
+  });
+
+  useEffect(() => {
+    (async () => {
+      const pull = async (c: string) => {
+        try { return (await apiClient.list(c)) as any[]; }
+        catch (e) { return isNetworkError(e) ? mockDb.list<any>(c) : []; }
+      };
+      setState({
+        fees: await pull("fees"),
+        donations: await pull("donations"),
+        payroll: await pull("payroll"),
+        expenses: await pull("expenses"),
+        scholarships: await pull("scholarships"),
+      });
+    })();
+  }, []);
+
+  const sum = (rows: any[], key: string) => rows.reduce((t, r) => t + Number(r[key] ?? 0), 0);
+  const feesPaid = sum(state.fees.filter((f) => String(f.status).toLowerCase() === "paid"), "amount");
+  const feesDue = sum(state.fees.filter((f) => String(f.status).toLowerCase() !== "paid"), "amount");
+  const donations = sum(state.donations, "amountUsd") + sum(state.donations, "amount");
+  const payroll = sum(state.payroll, "salaryUsd") + sum(state.payroll, "allowanceUsd");
+  const expenses = sum(state.expenses, "amountUsd");
+  const awards = sum(state.scholarships, "amountUsd");
+  const net = feesPaid + donations - payroll - expenses - awards;
+
+  const Row = ({ label, value, tone = "" }: { label: string; value: number; tone?: string }) => (
+    <div className="flex items-center justify-between px-5 py-3.5 border-b border-border last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={`font-display font-semibold ${tone}`}>{fmtMoney(value)}</span>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={DollarSign} label="Fees collected" value={fmtUSD(feesPaid)} />
+        <StatCard icon={Heart} label="Donations" value={fmtUSD(donations)} accent="accent" />
+        <StatCard icon={Wallet} label="Payroll" value={fmtUSD(payroll)} accent="secondary" />
+        <StatCard icon={Receipt} label="Expenses" value={fmtUSD(expenses)} />
+      </StaggerGroup>
+      <Card className="max-w-2xl overflow-hidden">
+        <Row label="Fees collected" value={feesPaid} tone="text-primary" />
+        <Row label="Fees outstanding" value={feesDue} tone="text-destructive" />
+        <Row label="Donations received" value={donations} tone="text-primary" />
+        <Row label="Payroll commitments" value={payroll} />
+        <Row label="Operating expenses" value={expenses} />
+        <Row label="Scholarship awards" value={awards} />
+        <Row label="Net position" value={net} tone={net >= 0 ? "text-primary" : "text-destructive"} />
+      </Card>
+    </div>
+  );
+}
+
+// =========================================================================
 // CMS — Navigation Manager
 // =========================================================================
 function NavigationModule() {
