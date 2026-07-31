@@ -1,13 +1,17 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { LogIn, Mail, Lock, Loader2, Copy, Sparkles } from "lucide-react";
+import { Mail, Lock, Loader2, Copy, Sparkles, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
-import { DEMO_CREDENTIALS, ROLE_LABEL } from "@/lib/mock-backend";
+import { DEMO_CREDENTIALS, ROLE_LABEL, mockAuth } from "@/lib/mock-backend";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import { Logo, BrandWordmark } from "@/components/Logo";
 import { useBrand } from "@/lib/brand";
 
@@ -16,8 +20,11 @@ function LoginPage() {
   const { user, loading, refresh, signIn } = useAuth();
   const navigate = useNavigate();
   const brand = useBrand();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => mockAuth.getRememberedEmail());
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(() => Boolean(mockAuth.getRememberedEmail()));
+  const [forgotOpen, setForgotOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -29,6 +36,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await signIn(email, password);
+      mockAuth.setRememberedEmail(remember ? email : null);
       toast.success("Welcome back");
       navigate("/portal");
     } catch (err: any) {
