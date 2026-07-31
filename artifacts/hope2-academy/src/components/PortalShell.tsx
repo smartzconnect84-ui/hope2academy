@@ -6,7 +6,7 @@ import {
   LogOut, Settings, Bell, Award, FileText, UserCog, Shield,
   Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
-  ListTree, Search as SearchIcon,
+  ListTree, Search as SearchIcon, CheckCircle2,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
@@ -20,6 +20,7 @@ import {
   CommandGroup, CommandItem,
 } from "@/components/ui/command";
 import { mockDb } from "@/lib/mock-backend";
+import { approvalsStore } from "@/lib/approvals";
 import { Logo, BrandWordmark } from "@/components/Logo";
 
 type NavItem = { to: string; label: string; icon: any };
@@ -33,6 +34,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/superadmin", label: "Dashboard", icon: Shield },
       { to: m("analytics"), label: "Analytics", icon: BarChart3 },
       { to: m("audit"), label: "Audit Logs", icon: ClipboardList },
+    ]},
+    { group: "Approvals", items: [
+      { to: m("approvals"), label: "Final Approvals", icon: CheckCircle2 },
     ]},
     { group: "People & Access", items: [
       { to: "/portal/admin", label: "User Management", icon: Users },
@@ -74,6 +78,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Command Center", items: [
       { to: "/portal/admin", label: "Dashboard", icon: LayoutDashboard },
       { to: m("analytics"), label: "Analytics", icon: BarChart3 },
+    ]},
+    { group: "Approvals", items: [
+      { to: m("approvals"), label: "Approval Queue", icon: CheckCircle2 },
     ]},
     { group: "People", items: [
       { to: "/portal/admin", label: "User Management", icon: Users },
@@ -125,6 +132,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("staff"), label: "Staff Directory", icon: Users },
       { to: m("attendance"), label: "Attendance", icon: ClipboardList },
       { to: m("resources"), label: "Resources", icon: Library },
+      { to: m("approvals"), label: "My Submissions", icon: CheckCircle2 },
     ]},
     { group: "Operations", items: [
       { to: m("inventory"), label: "Assets & Inventory", icon: FolderTree },
@@ -146,6 +154,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("attendance"), label: "Attendance", icon: ClipboardList },
       { to: m("behavior"), label: "Behavior Records", icon: Award },
       { to: m("directory"), label: "Directory", icon: Users },
+      { to: m("approvals"), label: "My Submissions", icon: CheckCircle2 },
     ]},
     { group: "Admissions", items: [
       { to: m("admissions"), label: "Admissions Register", icon: ClipboardList },
@@ -162,6 +171,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("admissions"), label: "Applications", icon: ClipboardList },
       { to: m("scholarships"), label: "Scholarships & Aid", icon: Award },
       { to: m("classes"), label: "Class Capacity", icon: GraduationCap },
+      { to: m("approvals"), label: "My Submissions", icon: CheckCircle2 },
     ]},
     { group: "Family Engagement", items: [
       { to: m("messages"), label: "Messages", icon: MessageSquare },
@@ -185,6 +195,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("grades"), label: "Grade Book", icon: Award },
       { to: m("behavior"), label: "Behavior Log", icon: Award },
       { to: m("resources"), label: "Resources", icon: Library },
+      { to: m("approvals"), label: "Submit for Approval", icon: CheckCircle2 },
     ]},
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
@@ -340,7 +351,7 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
               <p className="truncate font-display text-base font-semibold">{title}</p>
             </div>
             <CommandPalette role={primaryRole} groups={groups} />
-            <button className="h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"><Bell className="h-[18px] w-[18px]" /></button>
+            <NotificationsBell />
             <button className="hidden sm:grid h-10 w-10 rounded-full bg-card border border-border place-items-center hover:bg-muted"><Settings className="h-[18px] w-[18px]" /></button>
           </header>
 
