@@ -12,8 +12,19 @@ function lovableAssetPlugin(): Plugin {
       if (!id.endsWith(".asset.json")) return null;
       try {
         const json = JSON.parse(fs.readFileSync(id, "utf-8"));
+        const localAssetPath = path.resolve(
+          import.meta.dirname,
+          "src/assets/originals",
+          `${json.asset_id}-${json.original_filename}`,
+        );
+        if (!fs.existsSync(localAssetPath)) {
+          throw new Error(`Missing bundled asset for ${json.original_filename}`);
+        }
         return {
-          code: `export default ${JSON.stringify({ ...json, url: json.url ?? "" })}`,
+          code: `import localUrl from ${JSON.stringify(`${localAssetPath}?url`)};
+const asset = ${JSON.stringify({ ...json, url: "" })};
+asset.url = localUrl;
+export default asset;`,
           map: null,
         };
       } catch {
@@ -63,6 +74,10 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // The portal is intentionally shipped as one application bundle. Keep Vite
+    // from writing its advisory chunk-size warning to stderr, which the
+    // distribution validator interprets as a failed build.
+    chunkSizeWarningLimit: 1200,
   },
   server: {
     port,
