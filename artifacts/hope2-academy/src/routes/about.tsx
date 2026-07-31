@@ -23,7 +23,7 @@ function About() {
           <span className="text-secondary font-semibold uppercase tracking-wider text-sm">Our Story</span>
           <h2 className="mt-3 text-4xl font-bold">Born from a single promise.</h2>
           <p className="mt-5 text-muted-foreground leading-relaxed">After years of civil unrest and the Ebola crisis left Liberia's communities fractured, a small group of nurses, teachers, and faith leaders made a quiet promise to one another: <em>we will not leave</em>.</p>
-          <p className="mt-4 text-muted-foreground leading-relaxed">That promise became HOPE2 ACADEMY. What started as a single clinic in Monrovia has grown into a national network serving 84+ communities with education, health, water, and dignity.</p>
+          <p className="mt-4 text-muted-foreground leading-relaxed">That promise became HOPE2 ACADEMY — today a school, a mission, a church, and a media house serving families from Barber's Joe Town, Marshall Road, Lower Margibi County.</p>
           <p className="mt-4 font-semibold text-primary">We are still keeping the promise.</p>
         </div>
       </section>
