@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
+import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
+import { approvalsStore, APPROVAL_CATEGORIES, type ApprovalRequest } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
@@ -51,6 +54,21 @@ type ModuleDef = {
   allow?: AppRole[];
   render: () => ReactElement;
 };
+
+/** Build the RBAC principal for the signed-in user. */
+export function usePrincipal(): Principal | null {
+  const { profile, primaryRole } = useAuth();
+  if (!profile) return null;
+  return {
+    id: profile.$id,
+    name: profile.full_name ?? profile.email ?? "",
+    email: profile.email,
+    role: primaryRole,
+    class_name: (profile as any).class_name ?? null,
+    grade: (profile as any).grade ?? null,
+    linked_children: (profile as any).linked_children ?? null,
+  };
+}
 
 function Toolbar({ children, action }: { children?: React.ReactNode; action?: React.ReactNode }) {
   return (
