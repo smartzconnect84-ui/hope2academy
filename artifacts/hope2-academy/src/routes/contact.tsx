@@ -1,12 +1,28 @@
 
+import { useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { MapPin, Mail, Phone, Clock, Facebook, Instagram, Twitter, Youtube, MessageCircle } from "lucide-react";
 import { useBrand } from "@/lib/brand";
+import { publicForms } from "@/lib/public-forms";
 
 
 function Contact() {
   const brand = useBrand();
   const wa = brand.phone.replace(/[^0-9]/g, "");
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      toast.error("Please add your name, email and message.");
+      return;
+    }
+    publicForms.submitInquiry(form);
+    setForm({ name: "", email: "", subject: "", message: "" });
+    toast.success("Message sent — our team will reply within one working day.");
+  }
   return (
     <div>
       <PageHeader eyebrow="Get in Touch" title="Let's talk about hope" lead="Whether you have a question, a partnership idea, or just want to say hello — we're listening." />
@@ -28,15 +44,15 @@ function Contact() {
             </div>
           </div>
         </div>
-        <form className="rounded-3xl bg-card border border-border p-8 shadow-[var(--shadow-soft)]">
+        <form onSubmit={onSubmit} className="rounded-3xl bg-card border border-border p-8 shadow-[var(--shadow-soft)]">
           <h2 className="text-2xl font-bold">Send us a message</h2>
           <div className="mt-6 space-y-4">
-            <Field label="Name" />
-            <Field label="Email" type="email" />
-            <Field label="Subject" />
+            <Field label="Name" value={form.name} onChange={(v) => set("name", v)} />
+            <Field label="Email" type="email" value={form.email} onChange={(v) => set("email", v)} />
+            <Field label="Subject" value={form.subject} onChange={(v) => set("subject", v)} />
             <div>
               <label className="block text-sm font-medium mb-1.5">Message</label>
-              <textarea rows={5} className="w-full rounded-2xl border border-border bg-background px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
+              <textarea rows={5} value={form.message} onChange={(e) => set("message", e.target.value)} className="w-full rounded-2xl border border-border bg-background px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
             </div>
             <button type="submit" className="w-full rounded-full bg-secondary text-secondary-foreground py-4 font-semibold hover:brightness-110">Send Message</button>
           </div>
@@ -68,11 +84,11 @@ function Info({ icon: Icon, title, lines, children }: { icon: any; title: string
   );
 }
 
-function Field({ label, type = "text" }: { label: string; type?: string }) {
+function Field({ label, type = "text", value, onChange }: { label: string; type?: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
-      <input type={type} className="w-full rounded-full border border-border bg-background px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-full border border-border bg-background px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
     </div>
   );
 }
