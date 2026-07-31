@@ -16,7 +16,7 @@ import {
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
   Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw, Loader2,
 } from "lucide-react";
-import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet } from "lucide-react";
+import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,6 +26,7 @@ import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
+import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -477,6 +478,26 @@ Object.assign(MODULES, {
     title: "Team Page", subtitle: "Edit the public Team page — heading, copy, quote and member cards",
     icon: Users, allow: ["superadmin", "admin"],
     render: () => <TeamPageModule/>,
+  },
+  homepage: {
+    title: "Homepage Sections", subtitle: "Edit the ribbon, manifesto, chapters, quote, facts and featured cards",
+    icon: LayoutTemplate, allow: ["superadmin", "admin"],
+    render: () => <HomepageContentModule/>,
+  },
+  projectspage: {
+    title: "Projects Page", subtitle: "Create, edit and publish public project reports",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => <ProjectsContentModule/>,
+  },
+  storiespage: {
+    title: "Stories Page", subtitle: "Create, edit and publish public field stories & news",
+    icon: Newspaper, allow: ["superadmin", "admin"],
+    render: () => <StoriesContentModule/>,
+  },
+  divisionspage: {
+    title: "Divisions Page", subtitle: "Edit the four HOPE2 divisions shown on the public Departments page",
+    icon: FolderTree, allow: ["superadmin", "admin"],
+    render: () => <DivisionsContentModule/>,
   },
   admissions: {
     title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
