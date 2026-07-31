@@ -18,10 +18,6 @@ function About() {
       <section className="container mx-auto px-6 py-20 grid lg:grid-cols-2 gap-14 items-center">
         <div className="relative">
           <img src={portrait} alt="Portrait of a Liberian elder smiling" className="rounded-3xl shadow-[var(--shadow-warm)] aspect-[4/5] object-cover" />
-          <div className="absolute -bottom-6 -left-6 bg-secondary text-secondary-foreground rounded-2xl p-6 shadow-[var(--shadow-soft)]">
-            <div className="text-4xl font-bold">12+</div>
-            <div className="text-sm">Years Serving</div>
-          </div>
         </div>
         <div>
           <span className="text-secondary font-semibold uppercase tracking-wider text-sm">Our Story</span>
