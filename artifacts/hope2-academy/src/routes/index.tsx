@@ -159,6 +159,7 @@ function Index() {
       </section>
 
       {/* STORIES ROW */}
+      {cards.length > 0 && (
       <section className="container mx-auto px-6 py-24 md:py-32">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
           <div>
@@ -182,7 +183,7 @@ function Index() {
               <Link to={s.href} className="block">
                 <div className="aspect-[4/5] overflow-hidden">
                   <img
-                    src={s.img}
+                    src={s.image}
                     alt={s.title}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -199,6 +200,7 @@ function Index() {
           ))}
         </StaggerGroup>
       </section>
+      )}
 
       {/* CTA */}
       <section className="container mx-auto px-6 pb-24">
