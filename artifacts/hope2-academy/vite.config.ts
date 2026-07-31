@@ -22,7 +22,9 @@ function lovableAssetPlugin(): Plugin {
         }
         return {
           code: `import localUrl from ${JSON.stringify(`${localAssetPath}?url`)};
-export default ${JSON.stringify({ ...json, url: "" })}.url = localUrl;`,
+const asset = ${JSON.stringify({ ...json, url: "" })};
+asset.url = localUrl;
+export default asset;`,
           map: null,
         };
       } catch {
