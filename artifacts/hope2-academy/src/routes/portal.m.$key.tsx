@@ -71,19 +71,6 @@ export function usePrincipal(): Principal | null {
   };
 }
 
-function Toolbar({ children, action }: { children?: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search…" className="pl-9 bg-card" />
-      </div>
-      {children}
-      {action}
-    </div>
-  );
-}
-
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-2xl bg-card border border-border shadow-[var(--shadow-soft)] ${className}`}>{children}</div>;
 }
