@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import { AuthProvider } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/sonner";
+import { hydratePublicContent } from "@/lib/content-hydrate";
 import "./styles.css";
+
+hydratePublicContent();
 
 const queryClient = new QueryClient();
 

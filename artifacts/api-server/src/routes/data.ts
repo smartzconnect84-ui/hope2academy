@@ -18,6 +18,7 @@ const PUBLIC_READ = new Set([
   "events",
   "calendar",
   "departments",
+  "sitecontent",
 ]);
 
 const COLLECTIONS = new Set([
@@ -26,7 +27,7 @@ const COLLECTIONS = new Set([
   "donations", "departments", "audit", "resources", "library",
   "admissions", "exams", "behavior", "lessonplans", "transport",
   "clinic", "calendar", "inventory", "staff", "scholarships",
-  "settings", "pages", "posts", "media",
+  "settings", "pages", "posts", "media", "sitecontent",
 ]);
 
 function guardCollection(col: string, res: any): boolean {

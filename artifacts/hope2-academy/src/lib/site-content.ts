@@ -4,6 +4,7 @@
  * Persisted to localStorage and broadcast so public pages update live.
  */
 import { useEffect, useState } from "react";
+import { pushDoc } from "./content-sync";
 import missionAsset from "@/assets/departments/dept-mission.jpg.asset.json";
 import academyAsset from "@/assets/departments/dept-academy.jpg.asset.json";
 import churchAsset from "@/assets/departments/dept-church.jpg.asset.json";
@@ -215,6 +216,7 @@ function write(v: SiteContent) {
   if (!isBrowser()) return;
   localStorage.setItem(KEY, JSON.stringify(v));
   window.dispatchEvent(new CustomEvent(EVT));
+  pushDoc("site", v);
 }
 
 type ListKey = "projects" | "stories" | "divisions";
@@ -255,4 +257,15 @@ export function useSiteContent(): SiteContent {
     return () => { window.removeEventListener(EVT, h); window.removeEventListener("storage", h); };
   }, []);
   return v;
+}
+
+/** Apply a document published by the backend (server wins over the local cache). */
+export function applyRemoteSite(remote: unknown): void {
+  if (!remote || !isBrowser()) return;
+  try {
+    const next = JSON.stringify(remote);
+    if (localStorage.getItem(KEY) === next) return;
+    localStorage.setItem(KEY, next);
+    window.dispatchEvent(new CustomEvent(EVT));
+  } catch { /* ignore */ }
 }

@@ -5,6 +5,7 @@
  * re-renders the moment slides change.
  */
 import { useEffect, useState } from "react";
+import { pushDoc } from "./content-sync";
 import s1 from "@/assets/hero/IMG-20260521-WA0022-2.jpg.asset.json";
 import s2 from "@/assets/hero/IMG-20260521-WA0000.jpg.asset.json";
 import s3 from "@/assets/hero/IMG-20260521-WA0003-2.jpg.asset.json";
@@ -101,6 +102,7 @@ function write(v: HeroSlide[]) {
   if (!isBrowser()) return;
   localStorage.setItem(KEY, JSON.stringify(v));
   window.dispatchEvent(new CustomEvent("h2l.hero.change"));
+  pushDoc("hero", v);
 }
 
 export const heroStore = {
@@ -136,4 +138,14 @@ export function useHeroSlides(): HeroSlide[] {
     };
   }, []);
   return v;
+}
+/** Apply a document published by the backend (server wins over the local cache). */
+export function applyRemoteHero(remote: unknown): void {
+  if (!remote || !isBrowser()) return;
+  try {
+    const next = JSON.stringify(remote);
+    if (localStorage.getItem(KEY) === next) return;
+    localStorage.setItem(KEY, next);
+    window.dispatchEvent(new CustomEvent("h2l.hero.change"));
+  } catch { /* ignore */ }
 }
