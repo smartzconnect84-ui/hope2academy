@@ -2808,6 +2808,8 @@ function AssignmentsModule() {
 function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null; classes: ClassRow[]; onClose: () => void }) {
   const [form, setForm] = useState<Partial<AssignmentRow>>(row ?? { title: "", class: classes[0]?.name ?? "", due: "", submissions: 0, status: "Open" });
   const [saving, setSaving] = useState(false);
+  const books = ck12Store.list();
+  const selectedBook = books.find((b) => b.id === form.bookId);
   const save = async () => {
     if (!form.title || !form.class || !form.due) { toast.error("Title, class and due date are required"); return; }
     setSaving(true);
@@ -2855,6 +2857,42 @@ function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border p-3 space-y-3">
+            <p className="text-sm font-semibold">CK-12 reading (optional)</p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Book</Label>
+                <Select
+                  value={form.bookId ?? "none"}
+                  onValueChange={(v) => {
+                    if (v === "none") { setForm({ ...form, bookId: undefined, bookTitle: undefined, bookUrl: undefined, chapter: undefined }); return; }
+                    const b = books.find((x) => x.id === v);
+                    setForm({ ...form, bookId: v, bookTitle: b?.title, bookUrl: b?.url, chapter: undefined });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Attach a book"/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No book attached</SelectItem>
+                    {books.map((b) => <SelectItem key={b.id} value={b.id}>{b.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Chapter</Label>
+                <Select
+                  value={form.chapter ?? "all"}
+                  onValueChange={(v) => setForm({ ...form, chapter: v === "all" ? undefined : v })}
+                  disabled={!selectedBook}
+                >
+                  <SelectTrigger><SelectValue placeholder="Whole book"/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Whole book</SelectItem>
+                    {(selectedBook?.chapters ?? []).map((c) => <SelectItem key={c.id} value={c.title}>{c.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
