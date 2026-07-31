@@ -67,11 +67,11 @@ export const APPROVAL_CATEGORIES = [
 function now() { return new Date().toISOString(); }
 
 function audit(actor: string, action: string) {
-  mockDb.create(AUDIT, { at: now().slice(0, 16).replace("T", " "), actor, action });
+  mockDb.create<any>(AUDIT, { at: now().slice(0, 16).replace("T", " "), actor, action });
 }
 
 function notify(audienceRole: string, title: string, body: string, audienceUserId?: string) {
-  mockDb.create(NOTIF, { audienceRole, audienceUserId, title, body, at: now(), read: false });
+  mockDb.create<any>(NOTIF, { audienceRole, audienceUserId, title, body, at: now(), read: false });
 }
 
 export const approvalsStore = {
@@ -148,7 +148,7 @@ export const approvalsStore = {
 
   markAllRead(userId: string, role: AppRole | null) {
     for (const n of this.notifications(userId, role)) {
-      if (!n.read) mockDb.update(NOTIF, n.id, { read: true });
+      if (!n.read) mockDb.update<any>(NOTIF, n.id, { read: true });
     }
   },
 };
