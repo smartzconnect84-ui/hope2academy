@@ -2383,6 +2383,27 @@ function ApprovalsModule() {
                 <Label>Details</Label>
                 <Textarea rows={4} value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="What are you submitting and why?" />
               </div>
+              <div>
+                <Label>Attachments</Label>
+                <Input type="file" multiple className="cursor-pointer"
+                  onChange={(e) => { onPick(e.target.files); e.currentTarget.value = ""; }} />
+                <p className="text-xs text-muted-foreground mt-1">PDF, images, spreadsheets or documents — max 4MB each.</p>
+                {files.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {files.map((f, i) => (
+                      <li key={f.name + i} className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2">
+                        <span className="text-sm truncate">{f.name}</span>
+                        <span className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-muted-foreground">{(f.size / 1024).toFixed(0)} KB</span>
+                          <Button size="sm" variant="ghost" onClick={() => setFiles(files.filter((_, j) => j !== i))}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--primary))]"
                   checked={form.requiresSuperadmin}
@@ -2409,6 +2430,20 @@ function ApprovalsModule() {
                 {open.requiresSuperadmin && <Badge variant="outline">Super Admin sign-off required</Badge>}
               </div>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{open.details || "No details provided."}</p>
+
+              {!!open.attachments?.length && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Attachments</p>
+                  <ul className="space-y-2">
+                    {open.attachments.map((f, i) => (
+                      <li key={f.name + i} className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2">
+                        <span className="text-sm truncate">{f.name}</span>
+                        <a href={f.dataUrl} download={f.name} className="text-sm font-semibold text-primary shrink-0">Download</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Audit trail</p>
