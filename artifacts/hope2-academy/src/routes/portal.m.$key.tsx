@@ -739,7 +739,7 @@ Object.assign(MODULES, {
 // RBAC extension — grant the new staff roles access to the modules they own.
 // Only widens existing allow-lists; modules without an allow-list stay open.
 // =========================================================================
-const STAFF_ROLE_MODULES: Record<AppRole, string[]> = {
+const STAFF_ROLE_MODULES: Partial<Record<AppRole, string[]>> = {
   admin_assistant: [
     "calendar", "messages", "announcements", "staff", "attendance",
     "resources", "inventory", "transport", "clinic", "events",
@@ -753,13 +753,13 @@ const STAFF_ROLE_MODULES: Record<AppRole, string[]> = {
     "admissions", "scholarships", "classes", "messages",
     "announcements", "events", "calendar",
   ],
-} as Record<AppRole, string[]>;
+};
 
-for (const [role, keys] of Object.entries(STAFF_ROLE_MODULES)) {
+for (const [role, keys] of Object.entries(STAFF_ROLE_MODULES) as [AppRole, string[]][]) {
   for (const key of keys) {
     const def = MODULES[key];
     if (!def?.allow) continue;
-    if (!def.allow.includes(role as AppRole)) def.allow = [...def.allow, role as AppRole];
+    if (!def.allow.includes(role)) def.allow = [...def.allow, role];
   }
 }
 
