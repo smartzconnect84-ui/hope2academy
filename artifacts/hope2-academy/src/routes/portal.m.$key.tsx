@@ -701,7 +701,7 @@ Object.assign(MODULES, {
     ),
   },
   staff: {
-    title: "Staff & HR", subtitle: "Employees, contracts and payroll snapshots",
+    title: "Staff & HR", subtitle: "Employees, departments and contracts",
     icon: Users, allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
@@ -714,18 +714,142 @@ Object.assign(MODULES, {
           { name: "department", label: "Department", type: "select",
             options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
           { name: "phone", label: "Phone", type: "text" },
-          { name: "salaryUsd", label: "Monthly salary (USD)", type: "number" },
           { name: "status", label: "Status", type: "select", options: ["Active","On Leave","Terminated"], required: true },
         ]}
         columns={[
           { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
           { key: "role", label: "Role" },
           { key: "department", label: "Department" },
-          { key: "salaryUsd", label: "Salary (USD · LRD)", render: (v) => fmtMoney(v) },
           { key: "status", label: "Status", render: (v) => statusBadge(v) },
         ]}
       />
     ),
+  },
+  payroll: {
+    title: "Staff Salary & Payroll",
+    subtitle: "Confidential — Super Admin and Registrar only",
+    icon: Wallet, allow: ["superadmin", "registrar"],
+    render: () => (
+      <SimpleCrud
+        collection="payroll"
+        itemLabel="salary record"
+        createLabel="Add salary record"
+        fields={[
+          { name: "staff", label: "Staff member", type: "text", required: true },
+          { name: "role", label: "Position", type: "text", required: true },
+          { name: "department", label: "Department", type: "select",
+            options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
+          { name: "salaryUsd", label: "Monthly salary (USD)", type: "number", required: true },
+          { name: "allowanceUsd", label: "Allowances (USD)", type: "number" },
+          { name: "period", label: "Pay period", type: "text", required: true, placeholder: "July 2026" },
+          { name: "status", label: "Status", type: "select", options: ["Pending","Paid","On Hold"], required: true },
+        ]}
+        columns={[
+          { key: "staff", label: "Staff", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "role", label: "Position" },
+          { key: "department", label: "Department" },
+          { key: "salaryUsd", label: "Salary (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "allowanceUsd", label: "Allowances", render: (v) => fmtMoney(v) },
+          { key: "period", label: "Period" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  expenses: {
+    title: "Expenses & Payables", subtitle: "Operating costs, vendors and payment status",
+    icon: Receipt, allow: ["superadmin", "admin", "registrar"],
+    render: () => (
+      <SimpleCrud
+        collection="expenses"
+        itemLabel="expense"
+        createLabel="Record expense"
+        fields={[
+          { name: "item", label: "Expense", type: "text", required: true },
+          { name: "category", label: "Category", type: "select",
+            options: ["Utilities","Supplies","Maintenance","Transport","Salaries","Events","Other"], required: true },
+          { name: "vendor", label: "Vendor / payee", type: "text" },
+          { name: "amountUsd", label: "Amount (USD)", type: "number", required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
+        ]}
+        columns={[
+          { key: "item", label: "Expense", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "category", label: "Category", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "vendor", label: "Vendor" },
+          { key: "amountUsd", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
+          { key: "date", label: "Date" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  finance: {
+    title: "Finance Overview", subtitle: "Income, payroll and expense position in USD and LRD",
+    icon: PieChart, allow: ["superadmin", "admin", "registrar"],
+    render: () => <FinanceOverview/>,
+  },
+  campaigns: {
+    title: "Bulk Email Campaigns", subtitle: "Compose, schedule and track bulk mailings to school audiences",
+    icon: Mail, allow: ["superadmin", "admin", "admissions_officer", "admin_assistant"],
+    render: () => (
+      <SimpleCrud
+        collection="campaigns"
+        itemLabel="campaign"
+        createLabel="New campaign"
+        fields={[
+          { name: "name", label: "Campaign name", type: "text", required: true },
+          { name: "audience", label: "Audience", type: "select",
+            options: ["All Contacts","Prospective Families","Parents","Students","Staff","Alumni","Donors"], required: true },
+          { name: "subject", label: "Email subject", type: "text", required: true },
+          { name: "body", label: "Message", type: "textarea", required: true },
+          { name: "sendDate", label: "Send date", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Scheduled","Sent","Paused"], required: true },
+        ]}
+        columns={[
+          { key: "name", label: "Campaign", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "audience", label: "Audience", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "subject", label: "Subject" },
+          { key: "sendDate", label: "Send date" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  forms: {
+    title: "Online Forms", subtitle: "Build and manage public forms — applications, consents, surveys",
+    icon: FileSpreadsheet, allow: ["superadmin", "admin", "admissions_officer", "admin_assistant"],
+    render: () => (
+      <SimpleCrud
+        collection="forms"
+        itemLabel="form"
+        createLabel="New form"
+        fields={[
+          { name: "title", label: "Form title", type: "text", required: true },
+          { name: "type", label: "Type", type: "select",
+            options: ["Admission Application","Consent","Survey","Registration","Feedback","Request"], required: true },
+          { name: "audience", label: "Audience", type: "select",
+            options: ["Public","Parents","Students","Staff","Alumni"], required: true },
+          { name: "slug", label: "Public link", type: "text", required: true, placeholder: "/forms/admission-2026" },
+          { name: "fieldsSpec", label: "Fields (one per line)", type: "textarea", placeholder: "Full name\nEmail\nGrade applying for" },
+          { name: "submissions", label: "Submissions", type: "number" },
+          { name: "status", label: "Status", type: "select", options: ["Draft","Open","Closed"], required: true },
+        ]}
+        columns={[
+          { key: "title", label: "Form", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "type", label: "Type", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "audience", label: "Audience" },
+          { key: "slug", label: "Link" },
+          { key: "submissions", label: "Submissions" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  broadcast: {
+    title: "In-App Messaging", subtitle: "Send private messages or bulk broadcasts to any account",
+    icon: Send, allow: ["superadmin", "admin", "admissions_officer", "admin_assistant", "registrar"],
+    render: () => <BroadcastModule/>,
   },
   scholarships: {
     title: "Scholarships & Sponsorships", subtitle: "Sponsored students and award tracking",
