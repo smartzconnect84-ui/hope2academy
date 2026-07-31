@@ -4,12 +4,25 @@
  * for the demo without Appwrite/Supabase.
  */
 
-export const APP_ROLES = ["superadmin", "admin", "teacher", "student", "parent", "alumni"] as const;
+export const APP_ROLES = [
+  "superadmin",
+  "admin",
+  "admin_assistant",
+  "registrar",
+  "admissions_officer",
+  "teacher",
+  "student",
+  "parent",
+  "alumni",
+] as const;
 export type AppRole = typeof APP_ROLES[number];
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   superadmin: "Super Admin",
   admin: "Admin",
+  admin_assistant: "Administrative Assistant",
+  registrar: "Registrar",
+  admissions_officer: "Admission Officer",
   teacher: "Teacher",
   student: "Student",
   parent: "Parent",
@@ -40,10 +53,18 @@ export interface MockUser {
 const KEY_USERS = "h2l.users";
 const KEY_SESSION = "h2l.session";
 const KEY_DATA = "h2l.data";
+const KEY_RESET = "h2l.resetTokens";
+const KEY_REMEMBER = "h2l.rememberEmail";
+/** Bumped when demo accounts change so existing browsers pick up new roles. */
+const KEY_USERS_VERSION = "h2l.users.version";
+const USERS_VERSION = "3";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
   { role: "admin",      email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah" },
+  { role: "admin_assistant",    email: "assistant@hope2.demo", password: "demo1234", name: "Bendu Sirleaf" },
+  { role: "registrar",          email: "registrar@hope2.demo", password: "demo1234", name: "Emmanuel Gbaba" },
+  { role: "admissions_officer", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi" },
   { role: "teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman" },
   { role: "student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe" },
   { role: "parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe" },
@@ -53,6 +74,18 @@ export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: s
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
+
+const ROLE_SEED_PROFILE: Partial<Record<AppRole, Partial<MockUser>>> = {
+  superadmin: { bio: "Director of Programs and Governance." },
+  admin: { department: "Operations", bio: "Manages campuses and staffing." },
+  admin_assistant: { department: "Administration", bio: "Front office, correspondence, scheduling and school records support." },
+  registrar: { department: "Registry", bio: "Custodian of student records, enrolment, transcripts and grade books." },
+  admissions_officer: { department: "Admissions", bio: "Guides families through applications, interviews and enrolment offers." },
+  teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
+  student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
+  parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
+  alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
+};
 
 function readUsers(): MockUser[] {
   if (!isBrowser()) return [];
@@ -67,17 +100,34 @@ function writeUsers(u: MockUser[]) {
 
 function seedIfEmpty() {
   if (!isBrowser()) return;
-  if (readUsers().length > 0) return;
+  const existing = readUsers();
+  const version = localStorage.getItem(KEY_USERS_VERSION);
+  if (existing.length > 0) {
+    // Non-destructive upgrade: add any demo accounts (e.g. new staff roles) that are missing.
+    if (version !== USERS_VERSION) {
+      const now = new Date().toISOString();
+      const missing = DEMO_CREDENTIALS.filter(
+        (c) => !existing.some((u) => u.email.toLowerCase() === c.email.toLowerCase())
+      ).map((c) => ({
+        id: `usr_${c.role}`,
+        email: c.email,
+        password: c.password,
+        name: c.name,
+        role: c.role,
+        phone: "+231 775 975 544",
+        address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia",
+        createdAt: now,
+        ...(ROLE_SEED_PROFILE[c.role] ?? {}),
+      })) as MockUser[];
+      if (missing.length) writeUsers([...existing, ...missing]);
+      localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
+    }
+    return;
+  }
+  localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
 
   const now = new Date().toISOString();
-  const base: Partial<Record<AppRole, Partial<MockUser>>> = {
-    superadmin: { bio: "Director of Programs and Governance." },
-    admin: { department: "Operations", bio: "Manages campuses and staffing." },
-    teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
-    student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
-    parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
-    alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
-  };
+  const base = ROLE_SEED_PROFILE;
 
   const seed: MockUser[] = DEMO_CREDENTIALS.map((c, i) => ({
     id: `usr_${c.role}`,
@@ -164,6 +214,49 @@ export const mockAuth = {
 
   async deleteUser(id: string) {
     writeUsers(readUsers().filter(u => u.id !== id));
+  },
+
+  // ---------- Password reset (demo flow: token surfaced in-app) ----------
+  /** Issues a 6-digit reset code for the email. Throws if no such account. */
+  async requestPasswordReset(email: string): Promise<string> {
+    seedIfEmpty();
+    const u = readUsers().find(x => x.email.toLowerCase() === email.trim().toLowerCase());
+    if (!u) throw new Error("No account found with that email");
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    if (isBrowser()) {
+      const all = JSON.parse(localStorage.getItem(KEY_RESET) || "{}");
+      all[u.email.toLowerCase()] = { code, expires: Date.now() + 15 * 60 * 1000 };
+      localStorage.setItem(KEY_RESET, JSON.stringify(all));
+    }
+    return code;
+  },
+
+  /** Completes a reset using the issued code. */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    if (newPassword.length < 8) throw new Error("Password must be at least 8 characters");
+    const key = email.trim().toLowerCase();
+    const all = isBrowser() ? JSON.parse(localStorage.getItem(KEY_RESET) || "{}") : {};
+    const entry = all[key];
+    if (!entry || entry.code !== code.trim()) throw new Error("Invalid reset code");
+    if (Date.now() > entry.expires) throw new Error("Reset code has expired");
+    const users = readUsers();
+    const idx = users.findIndex(u => u.email.toLowerCase() === key);
+    if (idx === -1) throw new Error("No account found with that email");
+    users[idx] = { ...users[idx], password: newPassword };
+    writeUsers(users);
+    delete all[key];
+    if (isBrowser()) localStorage.setItem(KEY_RESET, JSON.stringify(all));
+  },
+
+  // ---------- Remember me ----------
+  getRememberedEmail(): string {
+    if (!isBrowser()) return "";
+    return localStorage.getItem(KEY_REMEMBER) ?? "";
+  },
+  setRememberedEmail(email: string | null) {
+    if (!isBrowser()) return;
+    if (email) localStorage.setItem(KEY_REMEMBER, email);
+    else localStorage.removeItem(KEY_REMEMBER);
   },
 };
 

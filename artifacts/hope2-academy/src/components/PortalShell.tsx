@@ -114,6 +114,62 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
   ],
+  admin_assistant: [
+    { group: "Front Office", items: [
+      { to: "/portal/admin_assistant", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+    ]},
+    { group: "Records Support", items: [
+      { to: m("staff"), label: "Staff Directory", icon: Users },
+      { to: m("attendance"), label: "Attendance", icon: ClipboardList },
+      { to: m("resources"), label: "Resources", icon: Library },
+    ]},
+    { group: "Operations", items: [
+      { to: m("inventory"), label: "Assets & Inventory", icon: FolderTree },
+      { to: m("transport"), label: "Transport", icon: FolderTree },
+      { to: m("clinic"), label: "Clinic & Health", icon: Award },
+      { to: m("events"), label: "Events", icon: Calendar },
+    ]},
+  ],
+  registrar: [
+    { group: "Registry", items: [
+      { to: "/portal/registrar", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("classes"), label: "Classes & Enrolment", icon: GraduationCap },
+      { to: m("timetable"), label: "Timetable", icon: Calendar },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+    { group: "Student Records", items: [
+      { to: m("grades"), label: "Grades & Transcripts", icon: Award },
+      { to: m("exams"), label: "Exams & Reports", icon: Award },
+      { to: m("attendance"), label: "Attendance", icon: ClipboardList },
+      { to: m("behavior"), label: "Behavior Records", icon: Award },
+      { to: m("directory"), label: "Directory", icon: Users },
+    ]},
+    { group: "Admissions", items: [
+      { to: m("admissions"), label: "Admissions Register", icon: ClipboardList },
+      { to: m("scholarships"), label: "Scholarships", icon: Award },
+    ]},
+    { group: "Communications", items: [
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+    ]},
+  ],
+  admissions_officer: [
+    { group: "Admissions", items: [
+      { to: "/portal/admissions_officer", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("admissions"), label: "Applications", icon: ClipboardList },
+      { to: m("scholarships"), label: "Scholarships & Aid", icon: Award },
+      { to: m("classes"), label: "Class Capacity", icon: GraduationCap },
+    ]},
+    { group: "Family Engagement", items: [
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("events"), label: "Open Days & Events", icon: Calendar },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+  ],
   teacher: [
     { group: "Today", items: [
       { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },

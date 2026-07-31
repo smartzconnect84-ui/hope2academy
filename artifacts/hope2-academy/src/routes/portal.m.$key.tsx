@@ -736,6 +736,34 @@ Object.assign(MODULES, {
 } satisfies Record<string, ModuleDef>);
 
 // =========================================================================
+// RBAC extension — grant the new staff roles access to the modules they own.
+// Only widens existing allow-lists; modules without an allow-list stay open.
+// =========================================================================
+const STAFF_ROLE_MODULES: Partial<Record<AppRole, string[]>> = {
+  admin_assistant: [
+    "calendar", "messages", "announcements", "staff", "attendance",
+    "resources", "inventory", "transport", "clinic", "events",
+  ],
+  registrar: [
+    "classes", "timetable", "calendar", "grades", "exams", "attendance",
+    "behavior", "directory", "admissions", "scholarships",
+    "announcements", "messages",
+  ],
+  admissions_officer: [
+    "admissions", "scholarships", "classes", "messages",
+    "announcements", "events", "calendar",
+  ],
+};
+
+for (const [role, keys] of Object.entries(STAFF_ROLE_MODULES) as [AppRole, string[]][]) {
+  for (const key of keys) {
+    const def = MODULES[key];
+    if (!def?.allow) continue;
+    if (!def.allow.includes(role)) def.allow = [...def.allow, role];
+  }
+}
+
+// =========================================================================
 // CMS — Pages module
 // =========================================================================
 function PagesModule() {
