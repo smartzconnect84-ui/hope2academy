@@ -3,12 +3,6 @@
  * Editable by Superadmin & Admin via the in-portal Team Editor module.
  */
 import { useEffect, useState } from "react";
-import t1 from "@/assets/hope/team-1-Bn-q5HvV.jpg";
-import t2 from "@/assets/hope/team-2-D4VCNnPr.jpg";
-import t3 from "@/assets/hope/team-3-tdy6Cq2g.jpg";
-import t4 from "@/assets/hope/team-4-2AMdCmzy.jpg";
-import t5 from "@/assets/hope/team-5-TEI3yivU.jpg";
-import t6 from "@/assets/hope/team-6-C_ZECXo7.jpg";
 
 export interface TeamMember {
   id: string;
@@ -32,24 +26,17 @@ export interface TeamPageContent {
   members: TeamMember[];
 }
 
-const KEY = "h2l.team.v1";
+const KEY = "h2l.team.v2";
 
 export const DEFAULT_TEAM: TeamPageContent = {
   eyebrow: "Our People",
   title: "The hands, hearts, and minds behind the mission.",
-  lead: "A Liberian-led team of directors, doctors, educators, and community builders — united by one promise.",
+  lead: "A Liberian-led team of educators, ministers, and community builders serving from Marshall Road, Lower Margibi County.",
   sectionHeading: "Meet the leadership",
-  sectionLead: "Six leaders. One mission. Every member of our team lives and works alongside the communities we serve in Margibi County and across Liberia.",
-  quote: "We are not visitors to Liberia. We are her sons and daughters, building the country we love.",
-  quoteAuthor: "— The HOPE2 ACADEMY Team",
-  members: [
-    { id: "tm1", img: t1, name: "Rev. Samuel K. Doe", role: "Founder & Executive Director", bio: "Founder of HOPE2 ACADEMY (2013) and lead visionary for the four divisions.", email: "samuel@hope2academy.org", linkedin: "#", enabled: true },
-    { id: "tm2", img: t2, name: "Mariama Johnson", role: "Director of Operations", bio: "Oversees daily operations across the Marshall Road campus.", email: "ops@hope2academy.org", linkedin: "#", enabled: true },
-    { id: "tm3", img: t3, name: "Dr. Emmanuel Tarpeh", role: "Head of Health & Wellness", bio: "Leads mobile clinics and HOPE2 MISSION health outreach.", email: "health@hope2academy.org", linkedin: "#", enabled: true },
-    { id: "tm4", img: t4, name: "Grace Kollie", role: "Director of HOPE2 ACADEMY", bio: "Director of the K-12 academy. Champions early literacy & STEM.", email: "grace@hope2academy.org", linkedin: "#", enabled: true },
-    { id: "tm5", img: t5, name: "Pastor Joseph Wreh", role: "Lead Pastor, HOPE2 CHURCH", bio: "Pastors the Marshall Road sanctuary and partner congregations.", email: "pastor@hope2academy.org", linkedin: "#", enabled: true },
-    { id: "tm6", img: t6, name: "Esther Pewee", role: "HOPE2 MISSION Coordinator", bio: "Coordinates field missions across Margibi and beyond.", email: "mission@hope2academy.org", linkedin: "#", enabled: true },
-  ],
+  sectionLead: "Team profiles are published by the HOPE2 ACADEMY administration.",
+  quote: "Learning To Serve For God's Purpose.",
+  quoteAuthor: "— HOPE2 ACADEMY",
+  members: [],
 };
 
 function isBrowser() { return typeof window !== "undefined" && typeof localStorage !== "undefined"; }
@@ -60,7 +47,7 @@ function read(): TeamPageContent {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULT_TEAM;
     const parsed = JSON.parse(raw) as Partial<TeamPageContent>;
-    return { ...DEFAULT_TEAM, ...parsed, members: parsed.members?.length ? parsed.members : DEFAULT_TEAM.members };
+    return { ...DEFAULT_TEAM, ...parsed, members: parsed.members ?? DEFAULT_TEAM.members };
   } catch { return DEFAULT_TEAM; }
 }
 function write(v: TeamPageContent) {
