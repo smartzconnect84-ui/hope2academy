@@ -27,6 +27,8 @@ import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSet
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
+import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
+import { ck12Store } from "@/lib/ck12-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -2721,7 +2723,10 @@ function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => vo
 // =========================================================================
 // Academics — Assignments (full CRUD)
 // =========================================================================
-type AssignmentRow = { id: string; title: string; class: string; due: string; submissions: number; status: string };
+type AssignmentRow = {
+  id: string; title: string; class: string; due: string; submissions: number; status: string;
+  bookId?: string; bookTitle?: string; bookUrl?: string; chapter?: string;
+};
 
 function AssignmentsModule() {
   const [q, setQ] = useState("");
@@ -2771,10 +2776,15 @@ function AssignmentsModule() {
         <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New assignment</Button>
       </div>
       <TableShell
-        head={["Title", "Class", "Due", "Submissions", "Status", ""]}
+        head={["Title", "Class", "Reading", "Due", "Submissions", "Status", ""]}
         rows={rows.map((a) => [
           <span className="font-medium">{a.title}</span>,
           a.class,
+          a.bookTitle
+            ? <a href={a.bookUrl || "#"} target="_blank" rel="noreferrer noopener" className="text-primary hover:underline text-xs">
+                {a.bookTitle}{a.chapter ? ` · ${a.chapter}` : ""}
+              </a>
+            : <span className="text-xs text-muted-foreground">—</span>,
           a.due,
           a.submissions,
           statusBadge(a.status),
