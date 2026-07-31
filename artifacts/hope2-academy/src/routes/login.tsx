@@ -200,4 +200,81 @@ function LoginPage() {
   );
 }
 
+function ForgotPasswordDialog({
+  open, onOpenChange, defaultEmail,
+}: { open: boolean; onOpenChange: (v: boolean) => void; defaultEmail: string }) {
+  const [step, setStep] = useState<"request" | "reset">("request");
+  const [email, setEmail] = useState(defaultEmail);
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (open) { setStep("request"); setEmail(defaultEmail); setCode(""); setNewPassword(""); } }, [open, defaultEmail]);
+
+  const request = async () => {
+    setBusy(true);
+    try {
+      const token = await mockAuth.requestPasswordReset(email);
+      setCode(token);
+      setStep("reset");
+      toast.success("Reset code generated", { description: `Demo mode — your code is ${token}` });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not start password reset");
+    } finally { setBusy(false); }
+  };
+
+  const reset = async () => {
+    setBusy(true);
+    try {
+      await mockAuth.resetPassword(email, code, newPassword);
+      toast.success("Password updated — you can sign in now");
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not reset password");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-primary" /> Reset your password
+          </DialogTitle>
+          <DialogDescription>
+            {step === "request"
+              ? "Enter your account email and we'll issue a reset code."
+              : "Enter the reset code and choose a new password."}
+          </DialogDescription>
+        </DialogHeader>
+
+        {step === "request" ? (
+          <div className="space-y-3">
+            <Label htmlFor="reset-email">Email</Label>
+            <Input id="reset-email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@hope2academy.org" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="reset-code">Reset code</Label>
+              <Input id="reset-code" value={code} onChange={(e)=>setCode(e.target.value)} className="mt-1.5 font-mono" />
+            </div>
+            <div>
+              <Label htmlFor="reset-pass">New password</Label>
+              <Input id="reset-pass" type="password" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} placeholder="At least 8 characters" className="mt-1.5" />
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={step === "request" ? request : reset} disabled={busy || (step === "request" ? !email : !code || newPassword.length < 8)}>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : step === "request" ? "Send reset code" : "Update password"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default LoginPage;
