@@ -20,7 +20,7 @@ import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet } from "lucide-r
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
-import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
+import { scopeRows, canWrite, canDownload, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
 import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
@@ -1120,12 +1120,15 @@ function BroadcastModule() {
   const principal = usePrincipal();
   const [users, setUsers] = useState<any[]>([]);
   const [sent, setSent] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<any[]>([]);
   const [mode, setMode] = useState<"private" | "bulk">("private");
-  const [to, setTo] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
   const [audience, setAudience] = useState("All");
+  const [excluded, setExcluded] = useState<string[]>([]);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try { setUsers(await mockAuth.listUsers()); } catch { setUsers([]); }
@@ -1134,6 +1137,11 @@ function BroadcastModule() {
       setSent(list as any[]);
     } catch (e) {
       if (isNetworkError(e)) setSent(mockDb.list<any>("messages"));
+    }
+    try {
+      setDrafts((await apiClient.list("message_drafts")) as any[]);
+    } catch (e) {
+      if (isNetworkError(e)) setDrafts(mockDb.list<any>("message_drafts"));
     }
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -1148,18 +1156,54 @@ function BroadcastModule() {
   };
 
   const recipients = mode === "private"
-    ? users.filter((u) => u.email === to)
-    : users.filter((u) => audienceRoles[audience]?.includes(u.role));
+    ? users.filter((u) => picked.includes(u.email))
+    : users.filter((u) => audienceRoles[audience]?.includes(u.role) && !excluded.includes(u.email));
+
+  const toggle = (list: string[], set: (v: string[]) => void, email: string) =>
+    set(list.includes(email) ? list.filter((e) => e !== email) : [...list, email]);
+
+  const write = async (collection: string, row: any) => {
+    try { await apiClient.create(collection, row); }
+    catch (e) { if (isNetworkError(e)) mockDb.create(collection, row); }
+  };
+
+  const resetForm = () => { setSubject(""); setBody(""); setDraftId(null); setPicked([]); setExcluded([]); };
+
+  const saveDraft = async () => {
+    if (!subject.trim() && !body.trim()) { toast.error("Nothing to save"); return; }
+    const row: any = {
+      from: principal?.name ?? "Administration",
+      fromId: principal?.id,
+      to: mode === "private" ? recipients.map((r) => r.name).join(", ") || "—" : audience,
+      recipients: recipients.map((r) => ({ name: r.name, email: r.email })),
+      subject, body, preview: body.slice(0, 120),
+      date: new Date().toISOString().slice(0, 10),
+      status: "draft", kind: mode, unread: false,
+    };
+    setBusy(true);
+    if (draftId) {
+      try { await apiClient.update("message_drafts", draftId, row); }
+      catch (e) { if (isNetworkError(e)) mockDb.update("message_drafts", draftId, row); }
+    } else {
+      await write("message_drafts", row);
+    }
+    setBusy(false);
+    toast.success("Draft saved");
+    resetForm();
+    load();
+  };
 
   const send = async () => {
     if (!subject.trim() || !body.trim()) { toast.error("Subject and message are required"); return; }
-    if (mode === "private" && !to) { toast.error("Choose a recipient"); return; }
+    if (mode === "private" && picked.length === 0) { toast.error("Choose at least one recipient"); return; }
     if (recipients.length === 0) { toast.error("No matching recipients"); return; }
     setBusy(true);
     const date = new Date().toISOString().slice(0, 10);
+    const threadId = `thr_${Date.now()}`;
     for (const r of recipients) {
       const msg: any = {
         from: principal?.name ?? "Administration",
+        fromId: principal?.id,
         to: r.name,
         toEmail: r.email,
         subject,
@@ -1167,6 +1211,10 @@ function BroadcastModule() {
         body,
         date,
         unread: true,
+        status: "sent",
+        threadId,
+        sentAt: new Date().toISOString(),
+        readAt: null,
         kind: mode,
       };
       try {
@@ -1175,20 +1223,37 @@ function BroadcastModule() {
         if (isNetworkError(e)) mockDb.create("messages", msg);
       }
     }
+    if (draftId) {
+      try { await apiClient.remove("message_drafts", draftId); }
+      catch (e) { if (isNetworkError(e)) mockDb.remove("message_drafts", draftId); }
+    }
     setBusy(false);
-    setSubject(""); setBody("");
+    resetForm();
     toast.success(`Message delivered to ${recipients.length} account${recipients.length === 1 ? "" : "s"}`);
     load();
   };
 
   const mine = sent.filter((m) => m.from === (principal?.name ?? ""));
+  const threads = Object.values(
+    mine.reduce((acc: Record<string, any>, m: any) => {
+      const key = m.threadId ?? m.id;
+      acc[key] = acc[key] ?? { key, date: m.date, subject: m.subject, kind: m.kind, total: 0, read: 0, to: m.to };
+      acc[key].total += 1;
+      if (!m.unread) acc[key].read += 1;
+      if (acc[key].total > 1) acc[key].to = `${acc[key].total} recipients`;
+      return acc;
+    }, {}),
+  ) as any[];
+  const readRate = threads.length
+    ? Math.round((mine.filter((m) => !m.unread).length / Math.max(mine.length, 1)) * 100)
+    : 0;
 
   return (
     <div className="space-y-5">
       <StaggerGroup className="grid sm:grid-cols-3 gap-4">
         <StatCard icon={Users} label="Reachable accounts" value={users.length} />
         <StatCard icon={Send} label="Messages I sent" value={mine.length} accent="accent" />
-        <StatCard icon={Inbox} label="Selected recipients" value={recipients.length} accent="secondary" />
+        <StatCard icon={CheckCircle2} label="Read receipts" value={`${readRate}%`} accent="secondary" />
       </StaggerGroup>
 
       <Card className="p-5 space-y-4 max-w-3xl">
@@ -1203,25 +1268,45 @@ function BroadcastModule() {
 
         {mode === "private" ? (
           <div>
-            <Label>Recipient</Label>
-            <Select value={to} onValueChange={setTo}>
-              <SelectTrigger><SelectValue placeholder="Choose an account"/></SelectTrigger>
-              <SelectContent>
-                {users.map((u) => (
-                  <SelectItem key={u.email} value={u.email}>{u.name} — {ROLE_LABEL[u.role as AppRole] ?? u.role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Recipients ({picked.length} selected)</Label>
+            <div className="mt-2 max-h-56 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+              {users.map((u) => (
+                <label key={u.email} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-muted/40">
+                  <input type="checkbox" className="h-4 w-4 accent-current"
+                    checked={picked.includes(u.email)}
+                    onChange={() => toggle(picked, setPicked, u.email)} />
+                  <span className="font-medium">{u.name}</span>
+                  <span className="text-xs text-muted-foreground">{ROLE_LABEL[u.role as AppRole] ?? u.role}</span>
+                </label>
+              ))}
+              {users.length === 0 && <p className="p-3 text-sm text-muted-foreground">No accounts found.</p>}
+            </div>
           </div>
         ) : (
-          <div>
-            <Label>Audience</Label>
-            <Select value={audience} onValueChange={setAudience}>
-              <SelectTrigger><SelectValue/></SelectTrigger>
-              <SelectContent>
-                {Object.keys(audienceRoles).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="space-y-3">
+            <div>
+              <Label>Audience</Label>
+              <Select value={audience} onValueChange={(v) => { setAudience(v); setExcluded([]); }}>
+                <SelectTrigger><SelectValue/></SelectTrigger>
+                <SelectContent>
+                  {Object.keys(audienceRoles).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Fine-tune recipients</Label>
+              <div className="mt-2 max-h-48 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+                {users.filter((u) => audienceRoles[audience]?.includes(u.role)).map((u) => (
+                  <label key={u.email} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-muted/40">
+                    <input type="checkbox" className="h-4 w-4 accent-current"
+                      checked={!excluded.includes(u.email)}
+                      onChange={() => toggle(excluded, setExcluded, u.email)} />
+                    <span className="font-medium">{u.name}</span>
+                    <span className="text-xs text-muted-foreground">{ROLE_LABEL[u.role as AppRole] ?? u.role}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -1229,19 +1314,53 @@ function BroadcastModule() {
         <div><Label>Message</Label><Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…"/></div>
 
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{recipients.length} recipient{recipients.length === 1 ? "" : "s"}</p>
-          <Button className="gap-2" disabled={busy} onClick={send}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>} Send
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            {recipients.length} recipient{recipients.length === 1 ? "" : "s"}
+            {draftId && <Badge variant="secondary" className="ml-2">Editing draft</Badge>}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" disabled={busy} onClick={saveDraft}>
+              <FileText className="h-4 w-4"/> Save draft
+            </Button>
+            <Button className="gap-2" disabled={busy} onClick={send}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin"/> : <Send className="h-4 w-4"/>} Send
+            </Button>
+          </div>
         </div>
       </Card>
 
       <div>
-        <h3 className="font-display text-lg font-semibold mb-3">Recently sent</h3>
+        <h3 className="font-display text-lg font-semibold mb-3">Drafts</h3>
         <TableShell
-          head={["Date", "To", "Subject", "Type"]}
-          rows={mine.slice(-25).reverse().map((m) => [
-            m.date, m.to, m.subject, <Badge variant="secondary">{m.kind === "bulk" ? "Broadcast" : "Private"}</Badge>,
+          head={["Date", "To", "Subject", "Status", ""]}
+          rows={drafts.map((d: any) => [
+            d.date, d.to, d.subject,
+            <Badge variant="outline">Draft</Badge>,
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+                setDraftId(d.id); setSubject(d.subject ?? ""); setBody(d.body ?? "");
+                setMode(d.kind === "bulk" ? "bulk" : "private");
+                setPicked((d.recipients ?? []).map((r: any) => r.email));
+              }}><Edit3 className="h-3.5 w-3.5"/>Open</Button>
+              <Button size="sm" variant="ghost" onClick={async () => {
+                try { await apiClient.remove("message_drafts", d.id); }
+                catch (e) { if (isNetworkError(e)) mockDb.remove("message_drafts", d.id); }
+                toast.success("Draft deleted"); load();
+              }}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+            </div>,
+          ])}
+        />
+      </div>
+
+      <div>
+        <h3 className="font-display text-lg font-semibold mb-3">Sent — delivery & read receipts</h3>
+        <TableShell
+          head={["Date", "To", "Subject", "Type", "Status", "Read receipts"]}
+          rows={threads.slice(-25).reverse().map((t: any) => [
+            t.date, t.to, t.subject,
+            <Badge variant="secondary">{t.kind === "bulk" ? "Broadcast" : "Private"}</Badge>,
+            <Badge variant={t.read === t.total ? "default" : "outline"}>{t.read === t.total ? "Read by all" : "Sent"}</Badge>,
+            `${t.read}/${t.total} read`,
           ])}
         />
       </div>
@@ -1716,11 +1835,13 @@ function SimpleCrud({
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
+  const [viewing, setViewing] = useState<any | null>(null);
   const [all, setAll] = useState<any[]>([]);
   const principal = usePrincipal();
   const locked = principal ? approvalsStore.lockedCollections(principal.id, principal.role) : [];
   const isLocked = locked.includes(collection);
   const writable = canWrite(collection, principal?.role ?? null, locked);
+  const downloadable = canDownload(collection, principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1740,6 +1861,37 @@ function SimpleCrud({
   );
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+
+  const exportCsv = () => {
+    const header = columns.map((c) => c.label);
+    const lines = [header, ...rows.map((r) => columns.map((c) => String(r[c.key] ?? "")))]
+      .map((cells) => cells.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([lines], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hope2-${collection}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Download started");
+  };
+
+  const printReport = () => {
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Allow pop-ups to print this report"); return; }
+    const head = columns.map((c) => `<th>${c.label}</th>`).join("");
+    const body = rows
+      .map((r) => `<tr>${columns.map((c) => `<td>${String(r[c.key] ?? "—")}</td>`).join("")}</tr>`)
+      .join("");
+    w.document.write(`<html><head><title>HOPE2 ACADEMY — ${itemLabel} report</title>
+      <style>body{font-family:Georgia,serif;padding:32px}h1{font-size:20px;margin:0}
+      p{color:#555;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:18px;font-size:12px}
+      th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}th{background:#f4f1ea}</style></head>
+      <body><h1>HOPE2 ACADEMY</h1><p>${cap(itemLabel)} report for ${principal?.name ?? ""} — ${new Date().toLocaleDateString()}</p>
+      <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></body></html>`);
+    w.document.close();
+    w.print();
+  };
 
   const remove = async (row: any) => {
     if (!writable) { toast.error("You don't have permission to delete this record"); return; }
@@ -1793,12 +1945,22 @@ function SimpleCrud({
           </Button>
         ) : (
           <Badge variant="secondary" className="h-9 px-3 grid place-items-center">
-            {isLocked ? "Locked — submitted for approval" : "Read-only"}
+            {isLocked ? "Locked — submitted for approval" : downloadable ? "View & download only" : "Read-only"}
           </Badge>
+        )}
+        {downloadable && (
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" onClick={exportCsv}>
+              <Download className="h-4 w-4" /> Download CSV
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={printReport}>
+              <FileText className="h-4 w-4" /> Print / PDF
+            </Button>
+          </div>
         )}
       </div>
       <TableShell
-        head={[...columns.map((c) => c.label), ...(writable ? [""] : [])]}
+        head={[...columns.map((c) => c.label), ...(writable || downloadable ? [""] : [])]}
         rows={rows.map((r) => [
           ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
           ...(writable
@@ -1812,9 +1974,36 @@ function SimpleCrud({
                   </Button>
                 </div>,
               ]
-            : []),
+            : downloadable
+              ? [
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setViewing(r)}>
+                      <Search className="h-3.5 w-3.5" />View
+                    </Button>
+                  </div>,
+                ]
+              : []),
         ])}
       />
+      {viewing && (
+        <Dialog open onOpenChange={(o) => !o && setViewing(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{cap(itemLabel)} details</DialogTitle></DialogHeader>
+            <div className="space-y-2">
+              {columns.map((c) => (
+                <div key={c.key} className="flex justify-between gap-6 border-b border-border py-2 text-sm">
+                  <span className="text-muted-foreground">{c.label}</span>
+                  <span className="font-medium text-right">{String(viewing[c.key] ?? "—")}</span>
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewing(null)}>Close</Button>
+              <Button className="gap-2" onClick={printReport}><Download className="h-4 w-4"/>Download report</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {(editing || creating) && (
         <SimpleEditor
           itemLabel={itemLabel}
@@ -2246,10 +2435,13 @@ function MessagesModule() {
   const unread = data.filter((m) => m.unread).length;
 
   const markRead = async (id: string) => {
+    const row = data.find((m) => m.id === id);
+    if (row && !row.unread) return;
+    const patch = { unread: false, status: "read", readAt: new Date().toISOString() };
     try {
-      await apiClient.update("messages", id, { unread: false });
+      await apiClient.update("messages", id, patch);
     } catch (e) {
-      if (isNetworkError(e)) mockDb.update<any>("messages", id, { unread: false });
+      if (isNetworkError(e)) mockDb.update<any>("messages", id, patch);
     }
     load();
   };
@@ -2280,11 +2472,19 @@ function MessagesModule() {
                   {m.unread && <span className="h-2 w-2 rounded-full bg-primary" />}
                   <p className="font-semibold">{m.from}</p>
                   <span className="text-xs text-muted-foreground">→ {m.to}</span>
+                  <Badge variant={m.unread ? "outline" : "secondary"} className="text-[10px]">
+                    {m.status === "draft" ? "Draft" : m.unread ? "Sent" : "Read"}
+                  </Badge>
                 </div>
                 <span className="text-xs text-muted-foreground">{m.date}</span>
               </div>
               <p className="mt-1 text-sm font-medium">{m.subject}</p>
               <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
+              {m.readAt && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Read receipt sent {new Date(m.readAt).toLocaleString()}
+                </p>
+              )}
             </div>
             <Button size="sm" variant="ghost" onClick={() => remove(m.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
