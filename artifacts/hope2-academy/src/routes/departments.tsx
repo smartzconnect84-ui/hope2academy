@@ -1,89 +1,20 @@
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
-import missionAsset from "@/assets/departments/dept-mission.jpg.asset.json";
-import academyAsset from "@/assets/departments/dept-academy.jpg.asset.json";
-import churchAsset from "@/assets/departments/dept-church.jpg.asset.json";
-import mediaAsset from "@/assets/departments/dept-media.jpg.asset.json";
-const missionImg = missionAsset.url;
-const academyImg = academyAsset.url;
-const churchImg = churchAsset.url;
-const mediaImg = mediaAsset.url;
-
-const pillars = [
-  {
-    img: missionImg, id: "mission", roman: "I", pillar: "Division I — Compassion in motion",
-    title: "HOPE2 MISSION", tag: "Hands and feet across Liberia.",
-    est: "Marshall Road, Lower Margibi County", area: "Serving Margibi County, Liberia",
-    body: [
-      "HOPE2 MISSION is the humanitarian heart of our movement — mobile clinics, clean water, food security and disaster response carried directly to the communities of Margibi County and across Liberia.",
-      "We work alongside local leaders to identify needs, design solutions, and measure results. Every project is co-built with the village it serves; nothing is imposed.",
-      "Our mission teams operate from Marshall Road, Margibi — carrying health outreach, clean-water and relief work to nearby communities.",
-    ],
-    bullets: [
-      "Mobile medical outreach across Margibi",
-      "Clean-water boreholes & sanitation projects",
-      "Food, clothing and emergency relief distribution",
-      "Skills training for women and youth",
-      "Partnerships with the Liberian Ministry of Health",
-    ],
-  },
-  {
-    img: academyImg, id: "academy", roman: "II", pillar: "Division II — Learning that lasts a lifetime",
-    title: "HOPE2 ACADEMY", tag: "Every child, a future.",
-    est: "ABC through 12th Grade", area: "Marshall Road, Lower Margibi County, Liberia",
-    body: [
-      "HOPE2 ACADEMY — affectionately known as The Lizard Kingdom — is the K-12 Christian school that anchors the movement. Our motto: \"Learning To Serve For God's Purpose.\"",
-      "Our program runs from ABC through 12th Grade — rigorous academics paired with character formation, sports, music and service learning. ",
-      "Every scholarship comes with a mentor and a six-month progress check. We measure success by attendance, literacy growth, and graduation.",
-    ],
-    bullets: [
-      "Tuition & uniform support for enrolled students",
-      "Solar-powered library and computer lab",
-      "ABC-to-12th-Grade STEM, civics and Bible curriculum",
-      "Annual scholarships for top secondary-school entrants",
-      "Teacher development in early literacy & STEM",
-    ],
-  },
-  {
-    img: churchImg, id: "church", roman: "III", pillar: "Division III — Worship, discipleship, community",
-    title: "HOPE2 CHURCH", tag: "A house of prayer for all people.",
-    est: "Marshall Road sanctuary", area: "Margibi County, Liberia",
-    body: [
-      "HOPE2 CHURCH is the spiritual home of the movement — local congregations that gather for worship, discipleship, prayer and pastoral care.",
-      "We serve children's church, youth fellowships, women's and men's ministries, and outreach to the elderly and incarcerated across Margibi County.",
-      "Every Sunday is open to anyone — student, parent, visitor, neighbour. Come as you are.",
-    ],
-    bullets: [
-      "Weekly Sunday worship at the Marshall Road sanctuary",
-      "Youth & children's discipleship classes",
-      "Pastoral counselling and home visitation",
-      "Community prayer & healing services",
-      "Marriage, baptism and dedication ceremonies",
-    ],
-  },
-  {
-    img: mediaImg, id: "media", roman: "IV", pillar: "Division IV — Telling Liberia's story",
-    title: "HOPE2 MEDIA", tag: "Stories that move hearts and hands.",
-    est: "Radio, social, print & video", area: "Studio in Margibi County, Liberia",
-    body: [
-      "HOPE2 MEDIA carries the voice of the movement — radio devotionals, short documentaries, social-media stories, and a quarterly print magazine produced from our Margibi studio.",
-      "We train young Liberian writers, photographers and producers to tell their own stories — beautifully, honestly, and with hope.",
-      "If you want to partner, sponsor, or contribute content, reach out via the Contact page.",
-    ],
-    bullets: [
-      "Weekly radio program on Margibi community FM",
-      "Documentary shorts on YouTube and Instagram",
-      "Quarterly print magazine \"Hope For Liberia\"",
-      "Training program for young Liberian journalists",
-      "Live-streamed worship and special events",
-    ],
-  },
-];
+import { useSiteContent } from "@/lib/site-content";
 
 function Departments() {
+  const c = useSiteContent();
+  const pillars = c.divisions
+    .filter((d) => d.published !== false)
+    .map((d) => ({
+      ...d,
+      img: d.image,
+      bodyParas: d.body.split(/\n\s*\n/).filter(Boolean),
+      bulletList: d.bullets.split("\n").map((b) => b.trim()).filter(Boolean),
+    }));
   return (
     <div>
-      <PageHeader eyebrow="Our Four Divisions" title="Four divisions. One unwavering mission." lead='"We do not bring solutions to Liberia. We build them, together, beside her people." — The HOPE2 Charter' />
+      <PageHeader eyebrow={c.divisionsEyebrow} title={c.divisionsTitle} lead={c.divisionsLead} />
       {pillars.map((p, i) => (
         <section key={p.id} id={p.id} className={`py-20 ${i % 2 === 1 ? "bg-muted" : ""}`}>
           <div className={`container mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center ${i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""}`}>
@@ -95,12 +26,12 @@ function Departments() {
               <span className="text-secondary font-semibold uppercase tracking-wider text-xs">{p.pillar}</span>
               <h2 className="mt-3 text-4xl md:text-5xl font-bold">{p.title}</h2>
               <p className="mt-2 text-xl italic text-foreground/70" style={{ fontFamily: "var(--font-display)" }}>{p.tag}</p>
-              {p.body.map((b, idx) => <p key={idx} className="mt-4 text-muted-foreground leading-relaxed">{b}</p>)}
+              {p.bodyParas.map((b, idx) => <p key={idx} className="mt-4 text-muted-foreground leading-relaxed">{b}</p>)}
               <div className="mt-6 text-sm">
                 <div className="text-muted-foreground">{p.est} · {p.area}</div>
               </div>
               <ul className="mt-6 space-y-2 text-sm">
-                {p.bullets.map((b) => <li key={b} className="flex gap-2"><span className="text-secondary">▸</span>{b}</li>)}
+                {p.bulletList.map((b) => <li key={b} className="flex gap-2"><span className="text-secondary">▸</span>{b}</li>)}
               </ul>
               <Link to="/team" className="mt-6 inline-flex text-primary font-semibold">Meet the {p.title} team →</Link>
             </div>
