@@ -622,34 +622,6 @@ Object.assign(MODULES, {
       />
     ),
   },
-  __admissions_legacy: {
-    title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
-    allow: ["superadmin", "admin"],
-    render: () => (
-      <SimpleCrud
-        collection="admissions"
-        itemLabel="application"
-        createLabel="New application"
-        fields={[
-          { name: "applicant", label: "Applicant name", type: "text", required: true },
-          { name: "grade", label: "Applying for grade", type: "select", required: true,
-            options: ["ABC","Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
-          { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
-          { name: "phone", label: "Phone", type: "text" },
-          { name: "submitted", label: "Submitted", type: "date", required: true },
-          { name: "status", label: "Status", type: "select", required: true,
-            options: ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"] },
-        ]}
-        columns={[
-          { key: "applicant", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "grade", label: "Grade" },
-          { key: "guardian", label: "Guardian" },
-          { key: "submitted", label: "Submitted" },
-          { key: "status", label: "Status", render: (v) => statusBadge(v) },
-        ]}
-      />
-    ),
-  },
   exams: {
     title: "Exams & Report Cards", subtitle: "Schedule term exams and publish report cards",
     icon: Award,
