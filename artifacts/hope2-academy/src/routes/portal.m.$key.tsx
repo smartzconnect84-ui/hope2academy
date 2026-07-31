@@ -27,6 +27,8 @@ import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSet
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
+import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
+import { ck12Store } from "@/lib/ck12-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -327,24 +329,10 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   library: {
-    title: "Library", subtitle: "Catalog and availability", icon: Library,
-    render: () => (
-      <SimpleCrud
-        collection="library"
-        itemLabel="book"
-        createLabel="Add title"
-        fields={[
-          { name: "title", label: "Title", type: "text", required: true },
-          { name: "author", label: "Author", type: "text", required: true },
-          { name: "available", label: "Copies available", type: "number", required: true },
-        ]}
-        columns={[
-          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "author", label: "Author" },
-          { key: "available", label: "Available" },
-        ]}
-      />
-    ),
+    title: "CK-12 Digital Library",
+    subtitle: "Free CK-12 FlexBooks by subject and grade — read, bookmark and track progress",
+    icon: Library,
+    render: () => <DigitalLibraryModule/>,
   },
   resources: {
     title: "Teaching Resources", subtitle: "Shared documents for staff", icon: Library,
@@ -2735,7 +2723,10 @@ function ClassEditor({ row, onClose }: { row: ClassRow | null; onClose: () => vo
 // =========================================================================
 // Academics — Assignments (full CRUD)
 // =========================================================================
-type AssignmentRow = { id: string; title: string; class: string; due: string; submissions: number; status: string };
+type AssignmentRow = {
+  id: string; title: string; class: string; due: string; submissions: number; status: string;
+  bookId?: string; bookTitle?: string; bookUrl?: string; chapter?: string;
+};
 
 function AssignmentsModule() {
   const [q, setQ] = useState("");
@@ -2785,10 +2776,15 @@ function AssignmentsModule() {
         <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New assignment</Button>
       </div>
       <TableShell
-        head={["Title", "Class", "Due", "Submissions", "Status", ""]}
+        head={["Title", "Class", "Reading", "Due", "Submissions", "Status", ""]}
         rows={rows.map((a) => [
           <span className="font-medium">{a.title}</span>,
           a.class,
+          a.bookTitle
+            ? <a href={a.bookUrl || "#"} target="_blank" rel="noreferrer noopener" className="text-primary hover:underline text-xs">
+                {a.bookTitle}{a.chapter ? ` · ${a.chapter}` : ""}
+              </a>
+            : <span className="text-xs text-muted-foreground">—</span>,
           a.due,
           a.submissions,
           statusBadge(a.status),
@@ -2812,6 +2808,8 @@ function AssignmentsModule() {
 function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null; classes: ClassRow[]; onClose: () => void }) {
   const [form, setForm] = useState<Partial<AssignmentRow>>(row ?? { title: "", class: classes[0]?.name ?? "", due: "", submissions: 0, status: "Open" });
   const [saving, setSaving] = useState(false);
+  const books = ck12Store.list();
+  const selectedBook = books.find((b) => b.id === form.bookId);
   const save = async () => {
     if (!form.title || !form.class || !form.due) { toast.error("Title, class and due date are required"); return; }
     setSaving(true);
@@ -2859,6 +2857,42 @@ function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border p-3 space-y-3">
+            <p className="text-sm font-semibold">CK-12 reading (optional)</p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Book</Label>
+                <Select
+                  value={form.bookId ?? "none"}
+                  onValueChange={(v) => {
+                    if (v === "none") { setForm({ ...form, bookId: undefined, bookTitle: undefined, bookUrl: undefined, chapter: undefined }); return; }
+                    const b = books.find((x) => x.id === v);
+                    setForm({ ...form, bookId: v, bookTitle: b?.title, bookUrl: b?.url, chapter: undefined });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Attach a book"/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No book attached</SelectItem>
+                    {books.map((b) => <SelectItem key={b.id} value={b.id}>{b.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Chapter</Label>
+                <Select
+                  value={form.chapter ?? "all"}
+                  onValueChange={(v) => setForm({ ...form, chapter: v === "all" ? undefined : v })}
+                  disabled={!selectedBook}
+                >
+                  <SelectTrigger><SelectValue placeholder="Whole book"/></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Whole book</SelectItem>
+                    {(selectedBook?.chapters ?? []).map((c) => <SelectItem key={c.id} value={c.title}>{c.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>

@@ -50,6 +50,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("exams"), label: "Exams & Reports", icon: Award },
       { to: m("behavior"), label: "Behavior & Discipline", icon: Award },
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
@@ -112,6 +113,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("exams"), label: "Exams & Reports", icon: Award },
       { to: m("behavior"), label: "Behavior", icon: Award },
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
@@ -251,6 +253,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("grades"), label: "Grade Book", icon: Award },
       { to: m("behavior"), label: "Behavior Log", icon: Award },
       { to: m("resources"), label: "Resources", icon: Library },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
       { to: m("approvals"), label: "Submit for Approval", icon: CheckCircle2 },
     ]},
     { group: "Communications", items: [
@@ -269,7 +272,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("classes"), label: "My Subjects", icon: BookOpen },
       { to: m("grades"), label: "Grades & Reports", icon: Award },
       { to: m("exams"), label: "Exams", icon: Award },
-      { to: m("library"), label: "Library", icon: Library },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
     ]},
     { group: "School Life", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
