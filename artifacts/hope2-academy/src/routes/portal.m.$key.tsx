@@ -751,6 +751,10 @@ Object.assign(MODULES, {
       />
     ),
   },
+  approvals: {
+    title: "Approvals", subtitle: "Submit, review and sign off school records", icon: CheckCircle2,
+    render: () => <ApprovalsModule/>,
+  },
 } satisfies Record<string, ModuleDef>);
 
 // =========================================================================
