@@ -16,6 +16,7 @@ import {
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
   Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw, Loader2,
 } from "lucide-react";
+import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
