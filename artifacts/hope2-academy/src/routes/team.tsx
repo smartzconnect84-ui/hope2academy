@@ -11,6 +11,14 @@ function Team() {
       <section className="container mx-auto px-6 py-20">
         <h2 className="text-3xl font-bold text-center">{content.sectionHeading}</h2>
         <p className="mt-3 text-center text-muted-foreground max-w-xl mx-auto">{content.sectionLead}</p>
+        {members.length === 0 && (
+          <div className="mt-12 mx-auto max-w-xl rounded-3xl border border-dashed border-border bg-card p-10 text-center">
+            <p className="text-muted-foreground">
+              Team profiles have not been published yet. Administrators can add staff and leadership
+              profiles from the portal Team Editor.
+            </p>
+          </div>
+        )}
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {members.map((m) => (
             <div key={m.name} className="group rounded-3xl overflow-hidden bg-card border border-border shadow-[var(--shadow-soft)]">
