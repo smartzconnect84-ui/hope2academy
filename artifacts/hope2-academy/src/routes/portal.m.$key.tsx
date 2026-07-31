@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
-import { approvalsStore, APPROVAL_CATEGORIES, type ApprovalRequest } from "@/lib/approvals";
+import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
@@ -2260,6 +2260,7 @@ function ApprovalsModule() {
   const [open, setOpen] = useState<ApprovalRequest | null>(null);
   const [comment, setComment] = useState("");
   const [form, setForm] = useState({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+  const [files, setFiles] = useState<ApprovalAttachment[]>([]);
 
   const reload = useCallback(() => {
     if (!principal) return;
@@ -2275,14 +2276,35 @@ function ApprovalsModule() {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
     approvalsStore.submit({
       ...form,
+      attachments: files,
       submittedBy: principal.name,
       submittedById: principal.id,
       submitterRole: principal.role ?? "staff",
     });
-    toast.success("Submitted for Admin review");
+    const locks = CATEGORY_LOCKS[form.category] ?? [];
+    toast.success(locks.length
+      ? `Submitted for Admin review — ${locks.join(", ")} are now locked`
+      : "Submitted for Admin review");
     setForm({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+    setFiles([]);
     setCreating(false);
     reload();
+  };
+
+  const onPick = async (list: FileList | null) => {
+    if (!list?.length) return;
+    const picked: ApprovalAttachment[] = [];
+    for (const f of Array.from(list)) {
+      if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4MB`); continue; }
+      const dataUrl: string = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result));
+        fr.onerror = () => rej(fr.error);
+        fr.readAsDataURL(f);
+      });
+      picked.push({ name: f.name, type: f.type || "file", size: f.size, dataUrl });
+    }
+    setFiles((prev) => [...prev, ...picked]);
   };
 
   const act = (action: "approve" | "reject" | "return" | "forward") => {
