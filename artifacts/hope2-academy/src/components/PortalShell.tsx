@@ -7,6 +7,7 @@ import {
   Image as ImageIcon, Newspaper, MessageSquare, ClipboardList,
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
   ListTree, Search as SearchIcon, CheckCircle2,
+  Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import {
@@ -57,6 +58,11 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("inventory"), label: "Assets & Inventory", icon: FolderTree },
       { to: m("scholarships"), label: "Scholarships", icon: Award },
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
+    ]},
+    { group: "Finance", items: [
+      { to: m("finance"), label: "Finance Overview", icon: PieChart },
+      { to: m("payroll"), label: "Staff Salary & Payroll", icon: Wallet },
+      { to: m("expenses"), label: "Expenses", icon: Receipt },
     ]},
     { group: "Website (CMS)", items: [
       { to: m("hero"), label: "Hero Slider", icon: ImageIcon },
