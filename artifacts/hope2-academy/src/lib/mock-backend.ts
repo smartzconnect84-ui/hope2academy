@@ -4,12 +4,25 @@
  * for the demo without Appwrite/Supabase.
  */
 
-export const APP_ROLES = ["superadmin", "admin", "teacher", "student", "parent", "alumni"] as const;
+export const APP_ROLES = [
+  "superadmin",
+  "admin",
+  "admin_assistant",
+  "registrar",
+  "admissions_officer",
+  "teacher",
+  "student",
+  "parent",
+  "alumni",
+] as const;
 export type AppRole = typeof APP_ROLES[number];
 
 export const ROLE_LABEL: Record<AppRole, string> = {
   superadmin: "Super Admin",
   admin: "Admin",
+  admin_assistant: "Administrative Assistant",
+  registrar: "Registrar",
+  admissions_officer: "Admission Officer",
   teacher: "Teacher",
   student: "Student",
   parent: "Parent",
@@ -40,10 +53,18 @@ export interface MockUser {
 const KEY_USERS = "h2l.users";
 const KEY_SESSION = "h2l.session";
 const KEY_DATA = "h2l.data";
+const KEY_RESET = "h2l.resetTokens";
+const KEY_REMEMBER = "h2l.rememberEmail";
+/** Bumped when demo accounts change so existing browsers pick up new roles. */
+const KEY_USERS_VERSION = "h2l.users.version";
+const USERS_VERSION = "3";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
   { role: "admin",      email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah" },
+  { role: "admin_assistant",    email: "assistant@hope2.demo", password: "demo1234", name: "Bendu Sirleaf" },
+  { role: "registrar",          email: "registrar@hope2.demo", password: "demo1234", name: "Emmanuel Gbaba" },
+  { role: "admissions_officer", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi" },
   { role: "teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman" },
   { role: "student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe" },
   { role: "parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe" },
