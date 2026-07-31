@@ -76,6 +76,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
+    { group: "Website Inbox", items: [
+      { to: m("inquiries"), label: "Website Inquiries", icon: Mail },
+      { to: m("volunteers"), label: "Volunteer Applications", icon: Users },
+      { to: m("subscribers"), label: "Newsletter Subscribers", icon: Send },
+      { to: m("pledges"), label: "Donation Pledges", icon: Heart },
+    ]},
     { group: "System", items: [
       { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
