@@ -356,12 +356,12 @@ function ensureSeedData() {
     { id: "a4", title: "Civic Duty Reflection", class: "Grade 7 — Civic Education", due: "2026-06-02", status: "Open", submissions: 0 },
   ];
   d.grades = [
-    { id: "g1", student: "Mariama Doe", subject: "Mathematics", grade: "A-", score: 91, term: "Term 2" },
-    { id: "g2", student: "Mariama Doe", subject: "English", grade: "B+", score: 87, term: "Term 2" },
-    { id: "g3", student: "Mariama Doe", subject: "Biology", grade: "A", score: 95, term: "Term 2" },
-    { id: "g4", student: "Kollie Boima", subject: "Literature", grade: "A", score: 94, term: "Term 2" },
-    { id: "g5", student: "Kollie Boima", subject: "Mathematics", grade: "B", score: 82, term: "Term 2" },
-    { id: "g6", student: "Fatu Kanneh", subject: "Civics", grade: "A+", score: 98, term: "Term 2" },
+    { id: "g1", student: "Mariama Doe", subject: "Mathematics", grade: "A-", score: 91, term: "Period 2" },
+    { id: "g2", student: "Mariama Doe", subject: "English", grade: "B+", score: 87, term: "Period 2" },
+    { id: "g3", student: "Mariama Doe", subject: "Biology", grade: "A", score: 95, term: "Period 2" },
+    { id: "g4", student: "Kollie Boima", subject: "Literature", grade: "A", score: 94, term: "Period 2" },
+    { id: "g5", student: "Kollie Boima", subject: "Mathematics", grade: "B", score: 82, term: "Period 2" },
+    { id: "g6", student: "Fatu Kanneh", subject: "Civics", grade: "A+", score: 98, term: "Period 2" },
   ];
   d.attendance = [
     { id: "at1", date: "2026-05-21", class: "Grade 9 — Mathematics", present: 26, absent: 2, late: 0 },
@@ -383,13 +383,13 @@ function ensureSeedData() {
     { id: "an4", title: "Donor visit on Tuesday", body: "Staff please prepare classroom showcases.", audience: "Staff", date: "2026-05-18" },
   ];
   d.messages = [
-    { id: "m1", from: "Grace Tubman", to: "Samuel Doe", subject: "Mariama's mid-term progress", preview: "I wanted to share some great news…", date: "2026-05-21", unread: true },
+    { id: "m1", from: "Grace Tubman", to: "Samuel Doe", subject: "Mariama's mid-period progress", preview: "I wanted to share some great news…", date: "2026-05-21", unread: true },
     { id: "m2", from: "Admin Office", to: "All Staff", subject: "Payroll cycle update", preview: "Please confirm bank details by Friday.", date: "2026-05-20", unread: true },
     { id: "m3", from: "Patience Kollie", to: "Alumni Network", subject: "Mentor sign-up open", preview: "We have 12 spots remaining.", date: "2026-05-18", unread: false },
   ];
   d.fees = [
-    { id: "f1", student: "Mariama Doe", item: "Term 2 Tuition", amount: 320, due: "2026-06-01", status: "Outstanding" },
-    { id: "f2", student: "Ezekiel Doe", item: "Term 2 Tuition", amount: 280, due: "2026-06-01", status: "Outstanding" },
+    { id: "f1", student: "Mariama Doe", item: "Period 2 Tuition", amount: 320, due: "2026-06-01", status: "Outstanding" },
+    { id: "f2", student: "Ezekiel Doe", item: "Period 2 Tuition", amount: 280, due: "2026-06-01", status: "Outstanding" },
     { id: "f3", student: "Mariama Doe", item: "Lab fee", amount: 45, due: "2026-05-15", status: "Paid" },
   ];
   d.children = [
@@ -477,10 +477,10 @@ function seedNewModules(d: DataShape) {
     { id: "ad4", applicant: "Joseph Karpeh", grade: "Grade 10", guardian: "Prince Karpeh",phone: "+231 770 777 888", submitted: "2026-05-20", status: "Waitlist" },
   ];
   d.exams = d.exams ?? [
-    { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Term 2", date: "2026-06-04", room: "R-108", status: "Scheduled" },
-    { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Term 2", date: "2026-06-05", room: "R-110", status: "Scheduled" },
-    { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Term", date: "2026-05-28", room: "Lab-1", status: "Completed" },
-    { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Term 2", date: "2026-06-02", room: "R-105", status: "Scheduled" },
+    { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Period 2", date: "2026-06-04", room: "R-108", status: "Scheduled" },
+    { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Period 2", date: "2026-06-05", room: "R-110", status: "Scheduled" },
+    { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Period", date: "2026-05-28", room: "Lab-1", status: "Completed" },
+    { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Period 2", date: "2026-06-02", room: "R-105", status: "Scheduled" },
   ];
   d.behavior = d.behavior ?? [
     { id: "bh1", student: "Mariama Doe",  class: "Grade 9",  type: "Commendation", description: "Top score in Math quiz", date: "2026-05-19", reporter: "Grace Tubman" },
@@ -503,7 +503,7 @@ function seedNewModules(d: DataShape) {
     { id: "cl3", student: "Fatu Kanneh", visitDate: "2026-05-16", reason: "Fever",          action: "Referred to clinic", nurse: "Nurse Helen", status: "Referred" },
   ];
   d.calendar = d.calendar ?? [
-    { id: "ca1", title: "Term 2 Mid-term Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" },
+    { id: "ca1", title: "Period 2 Mid-period Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" },
     { id: "ca2", title: "Independence Day",      type: "Holiday", startDate: "2026-07-26", endDate: "2026-07-26", audience: "All" },
     { id: "ca3", title: "PTA Meeting",           type: "PTA",     startDate: "2026-06-13", endDate: "2026-06-13", audience: "Parents" },
     { id: "ca4", title: "Inter-house Sports Day",type: "Sports",  startDate: "2026-06-20", endDate: "2026-06-20", audience: "All" },
@@ -523,9 +523,9 @@ function seedNewModules(d: DataShape) {
     { id: "st5", name: "Amos Flomo",     role: "Teacher",       department: "HOPE2 ACADEMY", phone: "+231 770 888 999", salaryUsd: 250, status: "On Leave" },
   ];
   d.scholarships = d.scholarships ?? [
-    { id: "sc1", student: "Mariama Doe",  sponsor: "Patience Kollie", amountUsd: 320, term: "Term 2", status: "Active" },
+    { id: "sc1", student: "Mariama Doe",  sponsor: "Patience Kollie", amountUsd: 320, term: "Period 2", status: "Active" },
     { id: "sc2", student: "Kollie Boima", sponsor: "Anonymous",        amountUsd: 480, term: "Annual", status: "Paid" },
-    { id: "sc3", student: "Fatu Kanneh",  sponsor: "Moses Weah",       amountUsd: 200, term: "Term 2", status: "Outstanding" },
+    { id: "sc3", student: "Fatu Kanneh",  sponsor: "Moses Weah",       amountUsd: 200, term: "Period 2", status: "Outstanding" },
   ];
 }
 

@@ -87,12 +87,12 @@ const SEED_DATA: Record<string, any[]> = {
     { id:"a4", title:"Civic Duty Reflection", class:"Grade 7 — Civic Education", due:"2026-06-02", status:"Open", submissions:0 },
   ],
   grades: [
-    { id:"g1", student:"Mariama Doe",  subject:"Mathematics", grade:"A-", score:91, term:"Term 2" },
-    { id:"g2", student:"Mariama Doe",  subject:"English",     grade:"B+", score:87, term:"Term 2" },
-    { id:"g3", student:"Mariama Doe",  subject:"Biology",     grade:"A",  score:95, term:"Term 2" },
-    { id:"g4", student:"Kollie Boima", subject:"Literature",  grade:"A",  score:94, term:"Term 2" },
-    { id:"g5", student:"Kollie Boima", subject:"Mathematics", grade:"B",  score:82, term:"Term 2" },
-    { id:"g6", student:"Fatu Kanneh",  subject:"Civics",      grade:"A+", score:98, term:"Term 2" },
+    { id:"g1", student:"Mariama Doe",  subject:"Mathematics", grade:"A-", score:91, term:"Period 2" },
+    { id:"g2", student:"Mariama Doe",  subject:"English",     grade:"B+", score:87, term:"Period 2" },
+    { id:"g3", student:"Mariama Doe",  subject:"Biology",     grade:"A",  score:95, term:"Period 2" },
+    { id:"g4", student:"Kollie Boima", subject:"Literature",  grade:"A",  score:94, term:"Period 2" },
+    { id:"g5", student:"Kollie Boima", subject:"Mathematics", grade:"B",  score:82, term:"Period 2" },
+    { id:"g6", student:"Fatu Kanneh",  subject:"Civics",      grade:"A+", score:98, term:"Period 2" },
   ],
   attendance: [
     { id:"at1", date:"2026-05-21", class:"Grade 9 — Mathematics",  present:26, absent:2, late:0 },
@@ -119,8 +119,8 @@ const SEED_DATA: Record<string, any[]> = {
     { id:"m3", from:"Patience Kollie", to:"Alumni Network", subject:"Mentor sign-up open",         preview:"We have 12 spots remaining.",            date:"2026-05-18", unread:false },
   ],
   fees: [
-    { id:"f1", student:"Mariama Doe", item:"Term 2 Tuition", amount:320, due:"2026-06-01", status:"Outstanding" },
-    { id:"f2", student:"Ezekiel Doe", item:"Term 2 Tuition", amount:280, due:"2026-06-01", status:"Outstanding" },
+    { id:"f1", student:"Mariama Doe", item:"Period 2 Tuition", amount:320, due:"2026-06-01", status:"Outstanding" },
+    { id:"f2", student:"Ezekiel Doe", item:"Period 2 Tuition", amount:280, due:"2026-06-01", status:"Outstanding" },
     { id:"f3", student:"Mariama Doe", item:"Lab fee",         amount:45,  due:"2026-05-15", status:"Paid" },
   ],
   children: [
@@ -144,10 +144,10 @@ const SEED_DATA: Record<string, any[]> = {
     { id:"dir4", name:"Prince Karpeh",   year:2018, role:"Public Health Officer", city:"Monrovia" },
   ],
   exams: [
-    { id:"ex1", subject:"Mathematics", class:"Grade 9",  term:"Term 2",   date:"2026-06-04", room:"R-108", status:"Scheduled" },
-    { id:"ex2", subject:"Literature",  class:"Grade 11", term:"Term 2",   date:"2026-06-05", room:"R-110", status:"Scheduled" },
-    { id:"ex3", subject:"Biology",     class:"Grade 10", term:"Mid-Term", date:"2026-05-28", room:"Lab-1", status:"Completed" },
-    { id:"ex4", subject:"Civics",      class:"Grade 7",  term:"Term 2",   date:"2026-06-02", room:"R-105", status:"Scheduled" },
+    { id:"ex1", subject:"Mathematics", class:"Grade 9",  term:"Period 2",   date:"2026-06-04", room:"R-108", status:"Scheduled" },
+    { id:"ex2", subject:"Literature",  class:"Grade 11", term:"Period 2",   date:"2026-06-05", room:"R-110", status:"Scheduled" },
+    { id:"ex3", subject:"Biology",     class:"Grade 10", term:"Mid-Period", date:"2026-05-28", room:"Lab-1", status:"Completed" },
+    { id:"ex4", subject:"Civics",      class:"Grade 7",  term:"Period 2",   date:"2026-06-02", room:"R-105", status:"Scheduled" },
   ],
   behavior: [
     { id:"bh1", student:"Mariama Doe",  class:"Grade 9",  type:"Commendation", description:"Top score in Math quiz",     date:"2026-05-19", reporter:"Grace Tubman" },
@@ -179,7 +179,7 @@ const SEED_DATA: Record<string, any[]> = {
     { id:"dp4", name:"HOPE2 MEDIA",    lead:"Patience Kollie", staff:7  },
   ],
   calendar: [
-    { id:"ca1", title:"Term 2 Mid-term Exams", type:"Exam",    startDate:"2026-05-28", endDate:"2026-06-05", audience:"Students" },
+    { id:"ca1", title:"Period 2 Mid-period Exams", type:"Exam",    startDate:"2026-05-28", endDate:"2026-06-05", audience:"Students" },
     { id:"ca2", title:"Independence Day",      type:"Holiday", startDate:"2026-07-26", endDate:"2026-07-26", audience:"All" },
     { id:"ca3", title:"PTA Meeting",           type:"PTA",     startDate:"2026-06-13", endDate:"2026-06-13", audience:"Parents" },
     { id:"ca4", title:"Inter-house Sports Day",type:"Sports",  startDate:"2026-06-20", endDate:"2026-06-20", audience:"All" },
@@ -195,9 +195,9 @@ const SEED_DATA: Record<string, any[]> = {
     { id:"lb3", title:"A Long Way Gone",       author:"Ishmael Beah",   available:6 },
   ],
   scholarships: [
-    { id:"sc1", student:"Mariama Doe",  sponsor:"Patience Kollie", amountUsd:320, term:"Term 2", status:"Active" },
+    { id:"sc1", student:"Mariama Doe",  sponsor:"Patience Kollie", amountUsd:320, term:"Period 2", status:"Active" },
     { id:"sc2", student:"Kollie Boima", sponsor:"Anonymous",        amountUsd:480, term:"Annual", status:"Paid" },
-    { id:"sc3", student:"Fatu Kanneh",  sponsor:"Moses Weah",       amountUsd:200, term:"Term 2", status:"Outstanding" },
+    { id:"sc3", student:"Fatu Kanneh",  sponsor:"Moses Weah",       amountUsd:200, term:"Period 2", status:"Outstanding" },
   ],
   donations: [
     { id:"d1", donor:"Patience Kollie", amount:250, fund:"Scholarship", date:"2026-05-12" },

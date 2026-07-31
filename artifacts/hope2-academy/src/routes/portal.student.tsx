@@ -11,7 +11,7 @@ interface Grade { id: string; student: string; subject: string; grade: string; s
 interface Assignment { id: string; title: string; due: string; status: string; }
 
 interface StudentStats {
-  activeCourses?: number;
+  activeSubjects?: number;
   gpa?: string;
   upcomingTests?: number;
   attendance?: string;
@@ -76,7 +76,7 @@ function StudentPage() {
       subtitle={className ? `${className}` : `Grade ${grade}`}
     >
       <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={BookOpen}      label="Active Courses"  value={apiStats?.activeCourses ?? (profile?.subjects?.length ?? grades.length ?? 6)} />
+        <StatCard icon={BookOpen}      label="Active Subjects"  value={apiStats?.activeSubjects ?? (profile?.subjects?.length ?? grades.length ?? 6)} />
         <StatCard icon={Award}         label="GPA"             value={gpaLabel || "B+"} accent="accent" />
         <StatCard icon={Calendar}      label="Upcoming Tests"  value={upcomingTests}    accent="secondary" />
         <StatCard icon={GraduationCap} label="Attendance"      value={apiStats?.attendance ?? "96%"} />

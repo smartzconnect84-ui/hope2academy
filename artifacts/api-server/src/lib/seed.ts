@@ -42,12 +42,12 @@ const SEED_ITEMS: Array<{ collection: string; id: string; data: Record<string, a
   { collection: "assignments", id: "a3", data: { id: "a3", title: "Photosynthesis Lab Report",       class: "Grade 10 — Biology",       due: "2026-05-24", status: "Grading", submissions: 26 } },
   { collection: "assignments", id: "a4", data: { id: "a4", title: "Civic Duty Reflection",           class: "Grade 7 — Civic Education", due: "2026-06-02", status: "Open",    submissions: 0  } },
   // grades
-  { collection: "grades", id: "g1", data: { id: "g1", student: "Mariama Doe",  subject: "Mathematics", grade: "A-", score: 91, term: "Term 2" } },
-  { collection: "grades", id: "g2", data: { id: "g2", student: "Mariama Doe",  subject: "English",     grade: "B+", score: 87, term: "Term 2" } },
-  { collection: "grades", id: "g3", data: { id: "g3", student: "Mariama Doe",  subject: "Biology",     grade: "A",  score: 95, term: "Term 2" } },
-  { collection: "grades", id: "g4", data: { id: "g4", student: "Kollie Boima", subject: "Literature",  grade: "A",  score: 94, term: "Term 2" } },
-  { collection: "grades", id: "g5", data: { id: "g5", student: "Kollie Boima", subject: "Mathematics", grade: "B",  score: 82, term: "Term 2" } },
-  { collection: "grades", id: "g6", data: { id: "g6", student: "Fatu Kanneh",  subject: "Civics",      grade: "A+", score: 98, term: "Term 2" } },
+  { collection: "grades", id: "g1", data: { id: "g1", student: "Mariama Doe",  subject: "Mathematics", grade: "A-", score: 91, term: "Period 2" } },
+  { collection: "grades", id: "g2", data: { id: "g2", student: "Mariama Doe",  subject: "English",     grade: "B+", score: 87, term: "Period 2" } },
+  { collection: "grades", id: "g3", data: { id: "g3", student: "Mariama Doe",  subject: "Biology",     grade: "A",  score: 95, term: "Period 2" } },
+  { collection: "grades", id: "g4", data: { id: "g4", student: "Kollie Boima", subject: "Literature",  grade: "A",  score: 94, term: "Period 2" } },
+  { collection: "grades", id: "g5", data: { id: "g5", student: "Kollie Boima", subject: "Mathematics", grade: "B",  score: 82, term: "Period 2" } },
+  { collection: "grades", id: "g6", data: { id: "g6", student: "Fatu Kanneh",  subject: "Civics",      grade: "A+", score: 98, term: "Period 2" } },
   // attendance
   { collection: "attendance", id: "at1", data: { id: "at1", date: "2026-05-21", class: "Grade 9 — Mathematics",    present: 26, absent: 2, late: 0 } },
   { collection: "attendance", id: "at2", data: { id: "at2", date: "2026-05-21", class: "Grade 11 — Literature",    present: 20, absent: 1, late: 1 } },
@@ -65,8 +65,8 @@ const SEED_ITEMS: Array<{ collection: string; id: string; data: Record<string, a
   { collection: "announcements", id: "an3", data: { id: "an3", title: "Vaccination drive complete",        body: "All participants reported healthy.",            audience: "Parents",  date: "2026-05-19" } },
   { collection: "announcements", id: "an4", data: { id: "an4", title: "Donor visit on Tuesday",            body: "Staff please prepare classroom showcases.",     audience: "Staff",    date: "2026-05-18" } },
   // fees
-  { collection: "fees", id: "f1", data: { id: "f1", student: "Mariama Doe", item: "Term 2 Tuition", amount: 320, due: "2026-06-01", status: "Outstanding" } },
-  { collection: "fees", id: "f2", data: { id: "f2", student: "Ezekiel Doe", item: "Term 2 Tuition", amount: 280, due: "2026-06-01", status: "Outstanding" } },
+  { collection: "fees", id: "f1", data: { id: "f1", student: "Mariama Doe", item: "Period 2 Tuition", amount: 320, due: "2026-06-01", status: "Outstanding" } },
+  { collection: "fees", id: "f2", data: { id: "f2", student: "Ezekiel Doe", item: "Period 2 Tuition", amount: 280, due: "2026-06-01", status: "Outstanding" } },
   { collection: "fees", id: "f3", data: { id: "f3", student: "Mariama Doe", item: "Lab fee",        amount: 45,  due: "2026-05-15", status: "Paid"        } },
   // children
   { collection: "children", id: "ch1", data: { id: "ch1", name: "Mariama Doe", grade: "Grade 9 — Blue", attendance: "96%", gpa: 3.7 } },
@@ -111,10 +111,10 @@ const SEED_ITEMS: Array<{ collection: string; id: string; data: Record<string, a
   { collection: "admissions", id: "ad3", data: { id: "ad3", applicant: "Naomi Flomo",   grade: "Grade 7",  guardian: "Amos Flomo",     phone: "+231 770 555 666", submitted: "2026-05-18", status: "Accepted"  } },
   { collection: "admissions", id: "ad4", data: { id: "ad4", applicant: "Joseph Karpeh", grade: "Grade 10", guardian: "Prince Karpeh",  phone: "+231 770 777 888", submitted: "2026-05-20", status: "Waitlist"  } },
   // exams
-  { collection: "exams", id: "ex1", data: { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Term 2",   date: "2026-06-04", room: "R-108", status: "Scheduled" } },
-  { collection: "exams", id: "ex2", data: { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Term 2",   date: "2026-06-05", room: "R-110", status: "Scheduled" } },
-  { collection: "exams", id: "ex3", data: { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Term", date: "2026-05-28", room: "Lab-1", status: "Completed" } },
-  { collection: "exams", id: "ex4", data: { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Term 2",   date: "2026-06-02", room: "R-105", status: "Scheduled" } },
+  { collection: "exams", id: "ex1", data: { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Period 2",   date: "2026-06-04", room: "R-108", status: "Scheduled" } },
+  { collection: "exams", id: "ex2", data: { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Period 2",   date: "2026-06-05", room: "R-110", status: "Scheduled" } },
+  { collection: "exams", id: "ex3", data: { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Period", date: "2026-05-28", room: "Lab-1", status: "Completed" } },
+  { collection: "exams", id: "ex4", data: { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Period 2",   date: "2026-06-02", room: "R-105", status: "Scheduled" } },
   // behavior
   { collection: "behavior", id: "bh1", data: { id: "bh1", student: "Mariama Doe",  class: "Grade 9",  type: "Commendation", description: "Top score in Math quiz",   date: "2026-05-19", reporter: "Grace Tubman" } },
   { collection: "behavior", id: "bh2", data: { id: "bh2", student: "Kollie Boima", class: "Grade 11", type: "Warning",      description: "Late submission of essay", date: "2026-05-18", reporter: "Amos Flomo"  } },
@@ -132,7 +132,7 @@ const SEED_ITEMS: Array<{ collection: string; id: string; data: Record<string, a
   { collection: "clinic", id: "cl2", data: { id: "cl2", student: "Ezekiel Doe", visitDate: "2026-05-17", reason: "Scraped knee",  action: "Cleaned & bandaged",       nurse: "Nurse Helen", status: "Treated"  } },
   { collection: "clinic", id: "cl3", data: { id: "cl3", student: "Fatu Kanneh", visitDate: "2026-05-16", reason: "Fever",         action: "Referred to clinic",       nurse: "Nurse Helen", status: "Referred" } },
   // calendar
-  { collection: "calendar", id: "ca1", data: { id: "ca1", title: "Term 2 Mid-term Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" } },
+  { collection: "calendar", id: "ca1", data: { id: "ca1", title: "Period 2 Mid-period Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" } },
   { collection: "calendar", id: "ca2", data: { id: "ca2", title: "Independence Day",       type: "Holiday", startDate: "2026-07-26", endDate: "2026-07-26", audience: "All"      } },
   { collection: "calendar", id: "ca3", data: { id: "ca3", title: "PTA Meeting",            type: "PTA",     startDate: "2026-06-13", endDate: "2026-06-13", audience: "Parents"  } },
   { collection: "calendar", id: "ca4", data: { id: "ca4", title: "Inter-house Sports Day", type: "Sports",  startDate: "2026-06-20", endDate: "2026-06-20", audience: "All"      } },
@@ -149,9 +149,9 @@ const SEED_ITEMS: Array<{ collection: string; id: string; data: Record<string, a
   { collection: "staff", id: "st4", data: { id: "st4", name: "Patience Kollie", role: "Media Lead",     department: "HOPE2 MEDIA",   phone: "+231 770 666 777", salaryUsd: 240, status: "Active"   } },
   { collection: "staff", id: "st5", data: { id: "st5", name: "Amos Flomo",      role: "Teacher",        department: "HOPE2 ACADEMY", phone: "+231 770 888 999", salaryUsd: 250, status: "On Leave" } },
   // scholarships
-  { collection: "scholarships", id: "sc1", data: { id: "sc1", student: "Mariama Doe",  sponsor: "Patience Kollie", amountUsd: 320, term: "Term 2", status: "Active"      } },
+  { collection: "scholarships", id: "sc1", data: { id: "sc1", student: "Mariama Doe",  sponsor: "Patience Kollie", amountUsd: 320, term: "Period 2", status: "Active"      } },
   { collection: "scholarships", id: "sc2", data: { id: "sc2", student: "Kollie Boima", sponsor: "Anonymous",       amountUsd: 480, term: "Annual", status: "Paid"        } },
-  { collection: "scholarships", id: "sc3", data: { id: "sc3", student: "Fatu Kanneh",  sponsor: "Moses Weah",      amountUsd: 200, term: "Term 2", status: "Outstanding" } },
+  { collection: "scholarships", id: "sc3", data: { id: "sc3", student: "Fatu Kanneh",  sponsor: "Moses Weah",      amountUsd: 200, term: "Period 2", status: "Outstanding" } },
   // settings
   { collection: "settings", id: "s1", data: { id: "s1", key: "Site name",     value: "HOPE2 ACADEMY"        } },
   { collection: "settings", id: "s2", data: { id: "s2", key: "Contact email", value: "info@hope2academy.org" } },

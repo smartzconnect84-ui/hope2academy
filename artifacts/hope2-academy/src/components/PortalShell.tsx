@@ -258,7 +258,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Learning", items: [
-      { to: m("classes"), label: "My Courses", icon: BookOpen },
+      { to: m("classes"), label: "My Subjects", icon: BookOpen },
       { to: m("grades"), label: "Grades & Reports", icon: Award },
       { to: m("exams"), label: "Exams", icon: Award },
       { to: m("library"), label: "Library", icon: Library },
