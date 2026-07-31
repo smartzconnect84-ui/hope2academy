@@ -1985,6 +1985,8 @@ function ClassesModule() {
   const [editing, setEditing] = useState<ClassRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<ClassRow[]>([]);
+  const principal = usePrincipal();
+  const writable = canWrite("classes", principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1999,6 +2001,7 @@ function ClassesModule() {
   const rows = all.filter((c) => !q || `${c.name} ${c.teacher} ${c.room}`.toLowerCase().includes(q.toLowerCase()));
 
   const remove = async (c: ClassRow) => {
+    if (!writable) { toast.error("Only Admin can delete classes"); return; }
     if (!confirm(`Delete class "${c.name}"?`)) return;
     try {
       await apiClient.remove("classes", c.id);
@@ -2017,20 +2020,26 @@ function ClassesModule() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search classes…" className="pl-9 bg-card" />
         </div>
-        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New class</Button>
+        {writable ? (
+          <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New class</Button>
+        ) : (
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+        )}
       </div>
       <TableShell
-        head={["Class", "Teacher", "Room", "Students", "Schedule", ""]}
+        head={["Class", "Teacher", "Room", "Students", "Schedule", ...(writable ? [""] : [])]}
         rows={rows.map((c) => [
           <span className="font-medium">{c.name}</span>,
           c.teacher,
           c.room,
           c.students,
           c.schedule,
-          <div className="flex items-center gap-2 justify-end">
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(c)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
-            <Button size="sm" variant="ghost" onClick={()=>remove(c)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-          </div>,
+          ...(writable ? [
+            <div className="flex items-center gap-2 justify-end">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(c)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+              <Button size="sm" variant="ghost" onClick={()=>remove(c)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+            </div>,
+          ] : []),
         ])}
       />
       {(editing || creating) && (
