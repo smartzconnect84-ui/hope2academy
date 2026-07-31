@@ -88,17 +88,34 @@ function writeUsers(u: MockUser[]) {
 
 function seedIfEmpty() {
   if (!isBrowser()) return;
-  if (readUsers().length > 0) return;
+  const existing = readUsers();
+  const version = localStorage.getItem(KEY_USERS_VERSION);
+  if (existing.length > 0) {
+    // Non-destructive upgrade: add any demo accounts (e.g. new staff roles) that are missing.
+    if (version !== USERS_VERSION) {
+      const now = new Date().toISOString();
+      const missing = DEMO_CREDENTIALS.filter(
+        (c) => !existing.some((u) => u.email.toLowerCase() === c.email.toLowerCase())
+      ).map((c) => ({
+        id: `usr_${c.role}`,
+        email: c.email,
+        password: c.password,
+        name: c.name,
+        role: c.role,
+        phone: "+231 775 975 544",
+        address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia",
+        createdAt: now,
+        ...(ROLE_SEED_PROFILE[c.role] ?? {}),
+      })) as MockUser[];
+      if (missing.length) writeUsers([...existing, ...missing]);
+      localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
+    }
+    return;
+  }
+  localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
 
   const now = new Date().toISOString();
-  const base: Partial<Record<AppRole, Partial<MockUser>>> = {
-    superadmin: { bio: "Director of Programs and Governance." },
-    admin: { department: "Operations", bio: "Manages campuses and staffing." },
-    teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
-    student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
-    parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
-    alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
-  };
+  const base = ROLE_SEED_PROFILE;
 
   const seed: MockUser[] = DEMO_CREDENTIALS.map((c, i) => ({
     id: `usr_${c.role}`,
