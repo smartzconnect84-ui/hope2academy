@@ -2,11 +2,37 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Heart, HandHelping, Building2 } from "lucide-react";
+import { toast } from "sonner";
+import { publicForms } from "@/lib/public-forms";
 
 
 function GetInvolved() {
   const [amount, setAmount] = useState(50);
   const [freq, setFreq] = useState<"once" | "monthly">("once");
+  const [donor, setDonor] = useState({ name: "", email: "" });
+  const [vol, setVol] = useState({ name: "", email: "", country: "", phone: "", interest: "Education", motivation: "" });
+  const setV = (k: keyof typeof vol, v: string) => setVol((f) => ({ ...f, [k]: v }));
+
+  function givePledge() {
+    if (!donor.name.trim() || !donor.email.trim()) {
+      toast.error("Add your name and email so we can confirm your gift.");
+      return;
+    }
+    publicForms.pledge({ donor: donor.name, email: donor.email, amountUsd: amount, frequency: freq === "monthly" ? "Monthly" : "One-time" });
+    setDonor({ name: "", email: "" });
+    toast.success(`Thank you! Your $${amount}${freq === "monthly" ? "/mo" : ""} pledge was recorded — we'll email payment details.`);
+  }
+
+  function submitVolunteer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!vol.name.trim() || !vol.email.trim()) {
+      toast.error("Please add your full name and email.");
+      return;
+    }
+    publicForms.submitVolunteer(vol);
+    setVol({ name: "", email: "", country: "", phone: "", interest: "Education", motivation: "" });
+    toast.success("Application received — our team will be in touch soon.");
+  }
   return (
     <div>
       <PageHeader eyebrow="Join the Mission" title="Be the hope someone is praying for" lead="There are three ways to walk with us. Choose yours." />
@@ -27,7 +53,11 @@ function GetInvolved() {
               </button>
             ))}
           </div>
-          <button className="mt-5 w-full rounded-full bg-secondary text-secondary-foreground py-3.5 font-semibold">Give ${amount}{freq === "monthly" ? "/mo" : ""}</button>
+          <div className="mt-4 space-y-2">
+            <input value={donor.name} onChange={(e) => setDonor({ ...donor, name: e.target.value })} placeholder="Your name" className="w-full rounded-full border border-border bg-background px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            <input value={donor.email} onChange={(e) => setDonor({ ...donor, email: e.target.value })} type="email" placeholder="Your email" className="w-full rounded-full border border-border bg-background px-5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
+          <button onClick={givePledge} className="mt-4 w-full rounded-full bg-secondary text-secondary-foreground py-3.5 font-semibold hover:brightness-110">Give ${amount}{freq === "monthly" ? "/mo" : ""}</button>
         </div>
         <div className="rounded-3xl bg-card border border-border p-8 shadow-[var(--shadow-soft)]">
           <span className="inline-flex h-14 w-14 rounded-2xl bg-primary text-primary-foreground items-center justify-center"><HandHelping className="h-6 w-6" /></span>
