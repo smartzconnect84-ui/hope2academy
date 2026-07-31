@@ -3,6 +3,7 @@
  * Editable by Superadmin & Admin via the in-portal Team Editor module.
  */
 import { useEffect, useState } from "react";
+import { pushDoc } from "./content-sync";
 
 export interface TeamMember {
   id: string;
@@ -54,6 +55,7 @@ function write(v: TeamPageContent) {
   if (!isBrowser()) return;
   localStorage.setItem(KEY, JSON.stringify(v));
   window.dispatchEvent(new CustomEvent("h2l.team.change"));
+  pushDoc("team", v);
 }
 
 export const teamStore = {
@@ -93,4 +95,14 @@ export function useTeamContent(): TeamPageContent {
     };
   }, []);
   return v;
+}
+/** Apply a document published by the backend (server wins over the local cache). */
+export function applyRemoteTeam(remote: unknown): void {
+  if (!remote || !isBrowser()) return;
+  try {
+    const next = JSON.stringify(remote);
+    if (localStorage.getItem(KEY) === next) return;
+    localStorage.setItem(KEY, next);
+    window.dispatchEvent(new CustomEvent("h2l.team.change"));
+  } catch { /* ignore */ }
 }

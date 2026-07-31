@@ -6,6 +6,7 @@
  */
 import logoAsset from "@/assets/hope2-logo.png.asset.json";
 import { useEffect, useState } from "react";
+import { pushDoc } from "./content-sync";
 
 export interface BrandSettings {
   name: string;          // HOPE2 ACADEMY
@@ -70,6 +71,7 @@ function write(v: BrandSettings) {
   if (!isBrowser()) return;
   localStorage.setItem(KEY, JSON.stringify(v));
   window.dispatchEvent(new CustomEvent("h2l.brand.change"));
+  pushDoc("brand", v);
 }
 
 export const brandStore = {
@@ -104,4 +106,14 @@ export function readFileAsDataUrl(file: File): Promise<string> {
     r.onerror = rej;
     r.readAsDataURL(file);
   });
+}
+/** Apply a document published by the backend (server wins over the local cache). */
+export function applyRemoteBrand(remote: unknown): void {
+  if (!remote || !isBrowser()) return;
+  try {
+    const next = JSON.stringify(remote);
+    if (localStorage.getItem(KEY) === next) return;
+    localStorage.setItem(KEY, next);
+    window.dispatchEvent(new CustomEvent("h2l.brand.change"));
+  } catch { /* ignore */ }
 }
