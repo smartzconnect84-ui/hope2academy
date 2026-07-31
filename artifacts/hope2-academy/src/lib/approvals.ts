@@ -23,6 +23,13 @@ export interface ApprovalEvent {
   comment?: string;
 }
 
+export interface ApprovalAttachment {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+}
+
 export interface ApprovalRequest {
   id: string;
   title: string;
@@ -33,6 +40,7 @@ export interface ApprovalRequest {
   submittedBy: string;
   submittedById: string;
   submitterRole: AppRole | string;
+  attachments?: ApprovalAttachment[];
   createdAt: string;
   updatedAt: string;
   history: ApprovalEvent[];
@@ -63,6 +71,22 @@ export const APPROVAL_CATEGORIES = [
   "Leave Request",
   "Policy Change",
 ];
+
+/**
+ * Which data collections a submission category freezes for the submitter.
+ * Once submitted (and while pending or approved) the owner can no longer
+ * add, edit or delete those records — only a "Returned for Revision"
+ * decision re-opens them.
+ */
+export const CATEGORY_LOCKS: Record<string, string[]> = {
+  "Grade Submission": ["grades"],
+  "Academic Record": ["grades", "behavior"],
+  "Attendance Report": ["attendance"],
+  "Lesson Plan": ["lessonplans"],
+  "Exam Paper": ["exams"],
+  "Operational Request": ["inventory"],
+  "Procurement": ["inventory"],
+};
 
 function now() { return new Date().toISOString(); }
 
