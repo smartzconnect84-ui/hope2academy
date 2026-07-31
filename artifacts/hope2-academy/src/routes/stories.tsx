@@ -3,8 +3,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { publicForms } from "@/lib/public-forms";
 import { PageHeader } from "@/components/PageHeader";
+import { useSiteContent } from "@/lib/site-content";
 
 function Stories() {
+  const c = useSiteContent();
+  const posts = c.stories.filter((s) => s.published !== false);
 
   const [email, setEmail] = useState("");
   function onSubscribe(e: React.FormEvent) {
@@ -16,15 +19,34 @@ function Stories() {
   }
   return (
     <div>
-      <PageHeader eyebrow="Field Updates & Stories" title="Voices from the ground" lead="Authentic reports from the communities, classrooms, and clinics where we serve." />
+      <PageHeader eyebrow={c.storiesEyebrow} title={c.storiesTitle} lead={c.storiesLead} />
       <section className="container mx-auto px-6 py-20">
-        <div className="mx-auto max-w-xl rounded-3xl border border-dashed border-border bg-card p-12 text-center">
-          <h2 className="text-2xl font-bold">No stories published yet</h2>
-          <p className="mt-3 text-muted-foreground">
-            Field updates and school news will appear here once the HOPE2 MEDIA team publishes them
-            from the portal.
-          </p>
-        </div>
+        {posts.length === 0 ? (
+          <div className="mx-auto max-w-xl rounded-3xl border border-dashed border-border bg-card p-12 text-center">
+            <h2 className="text-2xl font-bold">No stories published yet</h2>
+            <p className="mt-3 text-muted-foreground">
+              Field updates and school news will appear here once the HOPE2 MEDIA team publishes them
+              from the portal.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {posts.map((p) => (
+              <article key={p.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)]">
+                {p.image && <img src={p.image} alt={p.title} loading="lazy" className="aspect-[4/3] w-full object-cover" />}
+                <div className="p-6">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-secondary">
+                    {p.category}{p.date ? ` · ${p.date}` : ""}
+                  </div>
+                  <h2 className="mt-3 text-2xl font-bold leading-tight">{p.title}</h2>
+                  {p.excerpt && <p className="mt-3 text-muted-foreground">{p.excerpt}</p>}
+                  {p.body && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{p.body}</p>}
+                  {p.author && <p className="mt-4 text-sm font-medium">— {p.author}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
       <section className="bg-muted py-20">
         <div className="container mx-auto px-6 max-w-2xl text-center">

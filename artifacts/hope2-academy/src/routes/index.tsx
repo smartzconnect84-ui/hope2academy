@@ -3,85 +3,7 @@ import { ArrowRight, ArrowUpRight, Quote } from "lucide-react";
 import { motion } from "framer-motion";
 import { Reveal, StaggerGroup } from "@/components/Motion";
 import HeroSlider from "@/components/HeroSlider";
-import missionAsset from "@/assets/departments/dept-mission.jpg.asset.json";
-import academyAsset from "@/assets/departments/dept-academy.jpg.asset.json";
-import churchAsset from "@/assets/departments/dept-church.jpg.asset.json";
-import mediaAsset from "@/assets/departments/dept-media.jpg.asset.json";
-import storyClassroom from "@/assets/uploads/IMG-20260521-WA0012.jpg.asset.json";
-import storyKids from "@/assets/uploads/IMG-20260521-WA0039.jpg.asset.json";
-import storyGrad from "@/assets/uploads/IMG-20260521-WA0027.jpg.asset.json";
-
-// --- CONTENT ------------------------------------------------------------
-const ribbon = [
-  { k: "01", label: "Margibi, Liberia" },
-  { k: "02", label: "ABC – Grade 12" },
-  { k: "03", label: "Learning · Faith · Service" },
-  { k: "04", label: "USD & LRD tuition" },
-];
-
-const chapters = [
-  {
-    tag: "Chapter 01 — Academy",
-    title: "A classroom that raises leaders, not just students.",
-    body:
-      "From ABC through Grade 12, HOPE2 ACADEMY blends a rigorous Liberian curriculum with character formation, mentorship, and creative expression — so every child leaves prepared to serve their country.",
-    stat: { v: "ABC–12", u: "grades" },
-    href: "/departments",
-    cta: "Explore the academy",
-    img: academyAsset.url,
-    alt: "HOPE2 Academy students in class",
-    tone: "forest",
-  },
-  {
-    tag: "Chapter 02 — Mission",
-    title: "We walk the villages before we build in them.",
-    body:
-      "Our Mission team lives inside the communities we serve across Margibi and beyond — listening first, then building water, food security, and family support programs alongside local leaders.",
-    stat: { v: "Margibi", u: "and beyond" },
-    href: "/projects",
-    cta: "See the field work",
-    img: missionAsset.url,
-    alt: "HOPE2 Mission field team",
-    tone: "crimson",
-  },
-  {
-    tag: "Chapter 03 — Church",
-    title: "Faith that shows up on Monday morning.",
-    body:
-      "HOPE2 Church is the heartbeat of the campus. Sunday worship, midweek discipleship, and pastoral care for staff and families keep our purpose — Learning To Serve For God's Purpose — alive every day.",
-    stat: { v: "Sundays", u: "open to all" },
-    href: "/about",
-    cta: "Our story of faith",
-    img: churchAsset.url,
-    alt: "HOPE2 Church congregation",
-    tone: "gold",
-  },
-  {
-    tag: "Chapter 04 — Media",
-    title: "Telling Liberia's story in Liberia's voice.",
-    body:
-      "HOPE2 Media trains young creators in film, journalism, and design — documenting the movement, amplifying local heroes, and beaming lessons from Marshall Road to the rest of the world.",
-    stat: { v: "Studio", u: "Marshall Road" },
-    href: "/stories",
-    cta: "Watch, read, listen",
-    img: mediaAsset.url,
-    alt: "HOPE2 Media student crew",
-    tone: "forest",
-  },
-];
-
-const impactStats = [
-  { v: "ABC–12", label: "Grades taught at the Marshall Road campus" },
-  { v: "4", label: "Divisions: Mission, Academy, Church, Media" },
-  { v: "Mon–Fri", label: "Office hours 7:00 AM – 4:00 PM" },
-  { v: "USD + LRD", label: "Every fee, gift & scholarship in both" },
-];
-
-const stories = [
-  { img: storyClassroom.url, tag: "Academy", title: "Life at the Marshall Road campus", href: "/departments" },
-  { img: storyKids.url,      tag: "Mission",  title: "Serving families across Margibi", href: "/projects" },
-  { img: storyGrad.url,      tag: "Church",   title: "Faith and community at HOPE2", href: "/about" },
-];
+import { useSiteContent, type HomeChapter } from "@/lib/site-content";
 
 // --- COMPONENTS ---------------------------------------------------------
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
@@ -93,7 +15,7 @@ function SectionEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Chapter({ c, index }: { c: typeof chapters[number]; index: number }) {
+function Chapter({ c, index }: { c: HomeChapter; index: number }) {
   const reverse = index % 2 === 1;
   return (
     <section className="relative">
@@ -104,7 +26,7 @@ function Chapter({ c, index }: { c: typeof chapters[number]; index: number }) {
             <div className="relative">
               <div className="absolute -inset-3 md:-inset-4 rounded-[2rem] bg-[color:var(--color-gold)]/50 -z-10 translate-x-2 translate-y-2" />
               <img
-                src={c.img}
+                src={c.image}
                 alt={c.alt}
                 loading="lazy"
                 className="w-full aspect-[4/3] object-cover rounded-[1.75rem] shadow-[var(--shadow-warm)]"
@@ -117,9 +39,9 @@ function Chapter({ c, index }: { c: typeof chapters[number]; index: number }) {
                 className={`absolute -bottom-6 ${reverse ? "-right-4" : "-left-4"} md:-bottom-8 bg-[color:var(--color-forest)] text-[color:var(--color-cream)] rounded-2xl px-6 py-5 shadow-[var(--shadow-soft)]`}
               >
                 <div className="text-4xl md:text-5xl font-bold leading-none tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-                  {c.stat.v}
+                  {c.statValue}
                 </div>
-                <div className="mt-1 text-xs uppercase tracking-[0.2em] opacity-80">{c.stat.u}</div>
+                <div className="mt-1 text-xs uppercase tracking-[0.2em] opacity-80">{c.statUnit}</div>
               </motion.div>
             </div>
           </Reveal>
@@ -145,6 +67,9 @@ function Chapter({ c, index }: { c: typeof chapters[number]; index: number }) {
 }
 
 function Index() {
+  const content = useSiteContent();
+  const { ribbon, chapters, impactStats, cards } = content.home;
+  const h = content.home;
   return (
     <div className="bg-background">
       {/* HERO — untouched */}
@@ -168,12 +93,12 @@ function Index() {
       <section className="relative overflow-hidden">
         <div className="container mx-auto px-6 pt-24 md:pt-32 pb-8">
           <div className="max-w-5xl">
-            <SectionEyebrow>The HOPE2 movement</SectionEyebrow>
+            <SectionEyebrow>{h.manifestoEyebrow}</SectionEyebrow>
             <h2 className="mt-6 text-[2.75rem] md:text-[4.25rem] leading-[1.02] font-semibold text-[color:var(--color-forest)]" style={{ fontFamily: "var(--font-display)" }}>
-              Learning to serve, <span className="text-[color:var(--color-crimson)]">for God's purpose</span> — right here in Margibi.
+              {h.manifestoHeading} <span className="text-[color:var(--color-crimson)]">{h.manifestoAccent}</span>
             </h2>
             <p className="mt-8 max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed">
-              HOPE2 ACADEMY is more than a school. It's an academy, a mission, a church, and a media house — four hands of one movement raising Liberia's next generation of leaders, healers, and storytellers.
+              {h.manifestoLead}
             </p>
           </div>
         </div>
@@ -182,7 +107,7 @@ function Index() {
       {/* ZIGZAG CHAPTERS */}
       <div className="divide-y divide-[color:var(--color-forest)]/5">
         {chapters.map((c, i) => (
-          <Chapter c={c} index={i} key={c.tag} />
+          <Chapter c={c} index={i} key={c.id} />
         ))}
       </div>
 
@@ -197,13 +122,13 @@ function Index() {
               className="mt-6 text-3xl md:text-5xl font-medium leading-[1.15]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              "We are not raising graduates. We are raising people who will walk back into their villages and refuse to let them stay broken."
+              &ldquo;{h.quote}&rdquo;
             </blockquote>
             <div className="mt-8 flex items-center gap-4">
               <div className="h-px w-12 bg-[color:var(--color-gold)]" />
               <div>
-                <div className="font-semibold text-[color:var(--color-gold)]">HOPE2 ACADEMY</div>
-                <div className="text-sm opacity-80">Learning To Serve For God's Purpose</div>
+                <div className="font-semibold text-[color:var(--color-gold)]">{h.quoteAuthor}</div>
+                <div className="text-sm opacity-80">{h.quoteSub}</div>
               </div>
             </div>
           </div>
@@ -234,12 +159,13 @@ function Index() {
       </section>
 
       {/* STORIES ROW */}
+      {cards.length > 0 && (
       <section className="container mx-auto px-6 py-24 md:py-32">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
           <div>
-            <SectionEyebrow>Field notes</SectionEyebrow>
+            <SectionEyebrow>{h.cardsEyebrow}</SectionEyebrow>
             <h2 className="mt-4 text-4xl md:text-5xl font-semibold text-[color:var(--color-forest)]" style={{ fontFamily: "var(--font-display)" }}>
-              Stories from the movement
+              {h.cardsHeading}
             </h2>
           </div>
           <Link to="/stories" className="group inline-flex items-center gap-2 text-[color:var(--color-crimson)] font-semibold">
@@ -247,9 +173,9 @@ function Index() {
           </Link>
         </div>
         <StaggerGroup className="grid md:grid-cols-3 gap-6">
-          {stories.map((s) => (
+          {cards.map((s) => (
             <motion.div
-              key={s.title}
+              key={s.id}
               variants={{ hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
               whileHover={{ y: -6 }}
               className="group relative overflow-hidden rounded-[1.5rem] bg-card shadow-[var(--shadow-soft)]"
@@ -257,7 +183,7 @@ function Index() {
               <Link to={s.href} className="block">
                 <div className="aspect-[4/5] overflow-hidden">
                   <img
-                    src={s.img}
+                    src={s.image}
                     alt={s.title}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -274,6 +200,7 @@ function Index() {
           ))}
         </StaggerGroup>
       </section>
+      )}
 
       {/* CTA */}
       <section className="container mx-auto px-6 pb-24">

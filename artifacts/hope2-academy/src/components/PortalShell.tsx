@@ -67,6 +67,10 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Website (CMS)", items: [
       { to: m("hero"), label: "Hero Slider", icon: ImageIcon },
       { to: m("team"), label: "Team Page", icon: Users },
+      { to: m("homepage"), label: "Homepage Sections", icon: ImageIcon },
+      { to: m("projectspage"), label: "Projects Page", icon: FolderTree },
+      { to: m("storiespage"), label: "Stories Page", icon: Newspaper },
+      { to: m("divisionspage"), label: "Divisions Page", icon: FolderTree },
       { to: m("pages"), label: "Pages (CMS)", icon: FileText },
       { to: m("posts"), label: "Posts & Stories", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
@@ -122,6 +126,10 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Content", items: [
       { to: m("hero"), label: "Hero Slider", icon: ImageIcon },
       { to: m("team"), label: "Team Page", icon: Users },
+      { to: m("homepage"), label: "Homepage Sections", icon: ImageIcon },
+      { to: m("projectspage"), label: "Projects Page", icon: FolderTree },
+      { to: m("storiespage"), label: "Stories Page", icon: Newspaper },
+      { to: m("divisionspage"), label: "Divisions Page", icon: FolderTree },
       { to: m("posts"), label: "Stories & News", icon: Newspaper },
       { to: m("media"), label: "Media Library", icon: ImageIcon },
     ]},
