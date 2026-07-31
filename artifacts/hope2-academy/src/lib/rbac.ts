@@ -36,11 +36,16 @@ export const ADMIN_MANAGED_COLLECTIONS = [
 
 /** Collections a non-staff role may never mutate, only read (their own slice). */
 const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
-  student: ["grades", "attendance", "fees", "exams", "behavior", "classes", "timetable", "announcements", "library", "calendar", "scholarships"],
-  parent: ["grades", "attendance", "fees", "exams", "behavior", "children", "classes", "timetable", "announcements", "calendar", "scholarships", "transport"],
-  alumni: ["directory", "events", "jobs", "donations", "scholarships", "posts"],
-  teacher: ["fees", "scholarships", "staff", "admissions", "transport", "inventory", "clinic"],
+  student: ["grades", "attendance", "fees", "exams", "behavior", "classes", "timetable", "announcements", "library", "calendar", "scholarships", "payroll", "expenses"],
+  parent: ["grades", "attendance", "fees", "exams", "behavior", "children", "classes", "timetable", "announcements", "calendar", "scholarships", "transport", "payroll", "expenses"],
+  alumni: ["directory", "events", "jobs", "donations", "scholarships", "posts", "payroll", "expenses"],
+  teacher: ["fees", "scholarships", "staff", "admissions", "transport", "inventory", "clinic", "payroll", "expenses", "campaigns", "forms"],
+  admin_assistant: ["payroll", "expenses"],
+  admissions_officer: ["payroll", "expenses"],
 };
+
+/** Payroll/salary data is confidential to Super Admin and Registrar only. */
+export const CONFIDENTIAL_COLLECTIONS = ["payroll"];
 
 export function canWrite(
   collection: string,
@@ -48,6 +53,10 @@ export function canWrite(
   lockedCollections: string[] = [],
 ): boolean {
   if (!role) return false;
+  // Salary data: only Super Admin and Registrar may ever mutate it.
+  if (CONFIDENTIAL_COLLECTIONS.includes(collection)) {
+    return role === "superadmin" || role === "registrar";
+  }
   if (role === "superadmin" || role === "admin") return true;
   if (ADMIN_MANAGED_COLLECTIONS.includes(collection)) return false;
   // Records already submitted upward are frozen until returned for revision.
