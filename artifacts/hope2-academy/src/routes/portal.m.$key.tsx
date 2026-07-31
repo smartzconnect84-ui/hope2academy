@@ -1716,11 +1716,13 @@ function SimpleCrud({
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
+  const [viewing, setViewing] = useState<any | null>(null);
   const [all, setAll] = useState<any[]>([]);
   const principal = usePrincipal();
   const locked = principal ? approvalsStore.lockedCollections(principal.id, principal.role) : [];
   const isLocked = locked.includes(collection);
   const writable = canWrite(collection, principal?.role ?? null, locked);
+  const downloadable = canDownload(collection, principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1740,6 +1742,37 @@ function SimpleCrud({
   );
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
+
+  const exportCsv = () => {
+    const header = columns.map((c) => c.label);
+    const lines = [header, ...rows.map((r) => columns.map((c) => String(r[c.key] ?? "")))]
+      .map((cells) => cells.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const url = URL.createObjectURL(new Blob([lines], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hope2-${collection}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Download started");
+  };
+
+  const printReport = () => {
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) { toast.error("Allow pop-ups to print this report"); return; }
+    const head = columns.map((c) => `<th>${c.label}</th>`).join("");
+    const body = rows
+      .map((r) => `<tr>${columns.map((c) => `<td>${String(r[c.key] ?? "—")}</td>`).join("")}</tr>`)
+      .join("");
+    w.document.write(`<html><head><title>HOPE2 ACADEMY — ${itemLabel} report</title>
+      <style>body{font-family:Georgia,serif;padding:32px}h1{font-size:20px;margin:0}
+      p{color:#555;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:18px;font-size:12px}
+      th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}th{background:#f4f1ea}</style></head>
+      <body><h1>HOPE2 ACADEMY</h1><p>${cap(itemLabel)} report for ${principal?.name ?? ""} — ${new Date().toLocaleDateString()}</p>
+      <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></body></html>`);
+    w.document.close();
+    w.print();
+  };
 
   const remove = async (row: any) => {
     if (!writable) { toast.error("You don't have permission to delete this record"); return; }
@@ -1793,12 +1826,22 @@ function SimpleCrud({
           </Button>
         ) : (
           <Badge variant="secondary" className="h-9 px-3 grid place-items-center">
-            {isLocked ? "Locked — submitted for approval" : "Read-only"}
+            {isLocked ? "Locked — submitted for approval" : downloadable ? "View & download only" : "Read-only"}
           </Badge>
+        )}
+        {downloadable && (
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" onClick={exportCsv}>
+              <Download className="h-4 w-4" /> Download CSV
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={printReport}>
+              <FileText className="h-4 w-4" /> Print / PDF
+            </Button>
+          </div>
         )}
       </div>
       <TableShell
-        head={[...columns.map((c) => c.label), ...(writable ? [""] : [])]}
+        head={[...columns.map((c) => c.label), ...(writable || downloadable ? [""] : [])]}
         rows={rows.map((r) => [
           ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
           ...(writable
@@ -1812,9 +1855,36 @@ function SimpleCrud({
                   </Button>
                 </div>,
               ]
-            : []),
+            : downloadable
+              ? [
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setViewing(r)}>
+                      <Search className="h-3.5 w-3.5" />View
+                    </Button>
+                  </div>,
+                ]
+              : []),
         ])}
       />
+      {viewing && (
+        <Dialog open onOpenChange={(o) => !o && setViewing(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>{cap(itemLabel)} details</DialogTitle></DialogHeader>
+            <div className="space-y-2">
+              {columns.map((c) => (
+                <div key={c.key} className="flex justify-between gap-6 border-b border-border py-2 text-sm">
+                  <span className="text-muted-foreground">{c.label}</span>
+                  <span className="font-medium text-right">{String(viewing[c.key] ?? "—")}</span>
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewing(null)}>Close</Button>
+              <Button className="gap-2" onClick={printReport}><Download className="h-4 w-4"/>Download report</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       {(editing || creating) && (
         <SimpleEditor
           itemLabel={itemLabel}
