@@ -1120,6 +1120,7 @@ function BroadcastModule() {
   const principal = usePrincipal();
   const [users, setUsers] = useState<any[]>([]);
   const [sent, setSent] = useState<any[]>([]);
+  const [drafts, setDrafts] = useState<any[]>([]);
   const [mode, setMode] = useState<"private" | "bulk">("private");
   const [picked, setPicked] = useState<string[]>([]);
   const [audience, setAudience] = useState("All");
@@ -1136,6 +1137,11 @@ function BroadcastModule() {
       setSent(list as any[]);
     } catch (e) {
       if (isNetworkError(e)) setSent(mockDb.list<any>("messages"));
+    }
+    try {
+      setDrafts((await apiClient.list("message_drafts")) as any[]);
+    } catch (e) {
+      if (isNetworkError(e)) setDrafts(mockDb.list<any>("message_drafts"));
     }
   }, []);
   useEffect(() => { load(); }, [load]);
