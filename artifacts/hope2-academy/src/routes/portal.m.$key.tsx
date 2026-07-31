@@ -2435,10 +2435,13 @@ function MessagesModule() {
   const unread = data.filter((m) => m.unread).length;
 
   const markRead = async (id: string) => {
+    const row = data.find((m) => m.id === id);
+    if (row && !row.unread) return;
+    const patch = { unread: false, status: "read", readAt: new Date().toISOString() };
     try {
-      await apiClient.update("messages", id, { unread: false });
+      await apiClient.update("messages", id, patch);
     } catch (e) {
-      if (isNetworkError(e)) mockDb.update<any>("messages", id, { unread: false });
+      if (isNetworkError(e)) mockDb.update<any>("messages", id, patch);
     }
     load();
   };
@@ -2469,11 +2472,19 @@ function MessagesModule() {
                   {m.unread && <span className="h-2 w-2 rounded-full bg-primary" />}
                   <p className="font-semibold">{m.from}</p>
                   <span className="text-xs text-muted-foreground">→ {m.to}</span>
+                  <Badge variant={m.unread ? "outline" : "secondary"} className="text-[10px]">
+                    {m.status === "draft" ? "Draft" : m.unread ? "Sent" : "Read"}
+                  </Badge>
                 </div>
                 <span className="text-xs text-muted-foreground">{m.date}</span>
               </div>
               <p className="mt-1 text-sm font-medium">{m.subject}</p>
               <p className="text-xs text-muted-foreground truncate">{m.preview}</p>
+              {m.readAt && (
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Read receipt sent {new Date(m.readAt).toLocaleString()}
+                </p>
+              )}
             </div>
             <Button size="sm" variant="ghost" onClick={() => remove(m.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
