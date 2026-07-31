@@ -20,7 +20,7 @@ import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet } from "lucide-r
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
-import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
+import { scopeRows, canWrite, canDownload, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
 import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
