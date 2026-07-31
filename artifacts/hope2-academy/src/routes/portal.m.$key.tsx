@@ -132,14 +132,14 @@ const MODULES: Record<string, ModuleDef> = {
             { name: "subject", label: "Subject", type: "text", required: true },
             { name: "score", label: "Score (0-100)", type: "number", required: true },
             { name: "grade", label: "Letter grade", type: "text", required: true, placeholder: "A, B+, …" },
-            { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3"], required: true },
+            { name: "term", label: "Period", type: "select", options: ["Period 1","Period 2","Period 3"], required: true },
           ]}
           columns={[
             { key: "student", label: "Student" },
             { key: "subject", label: "Subject" },
             { key: "score", label: "Score", render: (v) => `${v}%` },
             { key: "grade", label: "Grade", render: (v) => <span className="font-display font-bold text-primary">{v}</span> },
-            { key: "term", label: "Term" },
+            { key: "term", label: "Period" },
           ]}
         />
       </>
@@ -206,7 +206,7 @@ const MODULES: Record<string, ModuleDef> = {
           itemLabel="fee"
           fields={[
             { name: "student", label: "Student", type: "text", required: true },
-            { name: "item", label: "Item", type: "text", required: true, placeholder: "Term tuition, Lab fee…" },
+            { name: "item", label: "Item", type: "text", required: true, placeholder: "Period tuition, Lab fee…" },
             { name: "amount", label: "Amount (USD)", type: "number", required: true },
             { name: "due", label: "Due date", type: "date", required: true },
             { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
@@ -610,7 +610,7 @@ Object.assign(MODULES, {
     ),
   },
   exams: {
-    title: "Exams & Report Cards", subtitle: "Schedule term exams and publish report cards",
+    title: "Exams & Report Cards", subtitle: "Schedule period exams and publish report cards",
     icon: Award,
     render: () => (
       <SimpleCrud
@@ -620,7 +620,7 @@ Object.assign(MODULES, {
         fields={[
           { name: "subject", label: "Subject", type: "text", required: true },
           { name: "class", label: "Class", type: "text", required: true },
-          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Mid-Term","Final"], required: true },
+          { name: "term", label: "Period", type: "select", options: ["Period 1","Period 2","Period 3","Mid-Period","Final"], required: true },
           { name: "date", label: "Date", type: "date", required: true },
           { name: "room", label: "Room", type: "text" },
           { name: "status", label: "Status", type: "select", options: ["Scheduled","In Progress","Completed","Published"], required: true },
@@ -628,7 +628,7 @@ Object.assign(MODULES, {
         columns={[
           { key: "subject", label: "Subject", render: (v) => <span className="font-medium">{v}</span> },
           { key: "class", label: "Class" },
-          { key: "term", label: "Term" },
+          { key: "term", label: "Period" },
           { key: "date", label: "Date" },
           { key: "room", label: "Room" },
           { key: "status", label: "Status", render: (v) => statusBadge(v) },
@@ -953,14 +953,14 @@ Object.assign(MODULES, {
           { name: "student", label: "Student", type: "text", required: true },
           { name: "sponsor", label: "Sponsor", type: "text", required: true },
           { name: "amountUsd", label: "Award amount (USD)", type: "number", required: true },
-          { name: "term", label: "Term", type: "select", options: ["Term 1","Term 2","Term 3","Annual"], required: true },
+          { name: "term", label: "Period", type: "select", options: ["Period 1","Period 2","Period 3","Annual"], required: true },
           { name: "status", label: "Status", type: "select", options: ["Active","Paid","Outstanding","Ended"], required: true },
         ]}
         columns={[
           { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
           { key: "sponsor", label: "Sponsor" },
           { key: "amountUsd", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
-          { key: "term", label: "Term" },
+          { key: "term", label: "Period" },
           { key: "status", label: "Status", render: (v) => statusBadge(v) },
         ]}
       />
@@ -1400,7 +1400,7 @@ function BroadcastModule() {
           </div>
         )}
 
-        <div><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Term 3 re-enrolment reminder"/></div>
+        <div><Label>Subject</Label><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Period 3 re-enrolment reminder"/></div>
         <div><Label>Message</Label><Textarea rows={6} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…"/></div>
 
         <div className="flex items-center justify-between">
@@ -2483,7 +2483,7 @@ function FeesStats() {
   return (
     <StaggerGroup className="grid sm:grid-cols-3 gap-4 mb-5">
       <StatCard icon={DollarSign} label="Outstanding" value={fmtMoney(outstanding)} />
-      <StatCard icon={CheckCircle2} label="Paid this term" value={fmtMoney(paid)} accent="secondary" />
+      <StatCard icon={CheckCircle2} label="Paid this period" value={fmtMoney(paid)} accent="secondary" />
       <StatCard icon={Heart} label="Donations YTD" value={fmtMoney(1325)} accent="accent" />
     </StaggerGroup>
   );
@@ -2981,7 +2981,7 @@ function ApprovalsModule() {
             <div className="space-y-3">
               <div>
                 <Label>Title *</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Term 2 grade sheet — Grade 6" />
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Period 2 grade sheet — Grade 6" />
               </div>
               <div>
                 <Label>Category</Label>
