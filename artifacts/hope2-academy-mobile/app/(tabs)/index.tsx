@@ -71,7 +71,7 @@ function StudentDashboard() {
   return (
     <>
       <View style={s.statsGrid}>
-        <StatCard icon={<Feather name="book-open" size={18} color={colors.primary} />} label="Active Courses" value={stats?.activeCourses ?? 6} />
+        <StatCard icon={<Feather name="book-open" size={18} color={colors.primary} />} label="Active Subjects" value={stats?.activeSubjects ?? 6} />
         <StatCard icon={<Feather name="award" size={18} color={colors.accent} />} label="GPA" value={stats?.gpa ?? "—"} accent={colors.accent} />
         <StatCard icon={<Feather name="calendar" size={18} color={colors.secondary} />} label="Upcoming Tests" value={stats?.upcomingTests ?? 0} accent={colors.secondary} />
         <StatCard icon={<Ionicons name="checkmark-circle-outline" size={18} color={colors.success} />} label="Attendance" value={stats?.attendance ?? "—"} accent={colors.success} />

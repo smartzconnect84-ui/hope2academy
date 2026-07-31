@@ -83,7 +83,7 @@ router.get("/stats", requireAuth, async (req, res) => {
         : 0;
       const upcomingExams = exams.filter((e: any) => e.status === "Scheduled" && (e.class ?? "").includes(user.grade ?? "")).length;
       res.json({
-        activeCourses: user.subjects?.length ?? 6,
+        activeSubjects: user.subjects?.length ?? 6,
         gpa: avgScore >= 90 ? "A" : avgScore >= 80 ? "B+" : avgScore >= 70 ? "B" : "C+",
         upcomingTests: upcomingExams,
         attendance: "96%",
