@@ -1396,7 +1396,9 @@ function SimpleCrud({
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<any[]>([]);
   const principal = usePrincipal();
-  const writable = canWrite(collection, principal?.role ?? null);
+  const locked = principal ? approvalsStore.lockedCollections(principal.id, principal.role) : [];
+  const isLocked = locked.includes(collection);
+  const writable = canWrite(collection, principal?.role ?? null, locked);
 
   const load = useCallback(async () => {
     try {
@@ -1468,7 +1470,9 @@ function SimpleCrud({
             <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
           </Button>
         ) : (
-          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">
+            {isLocked ? "Locked — submitted for approval" : "Read-only"}
+          </Badge>
         )}
       </div>
       <TableShell
