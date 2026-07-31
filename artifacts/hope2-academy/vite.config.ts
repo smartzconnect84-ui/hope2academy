@@ -63,6 +63,10 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // The portal is intentionally shipped as one application bundle. Keep Vite
+    // from writing its advisory chunk-size warning to stderr, which the
+    // distribution validator interprets as a failed build.
+    chunkSizeWarningLimit: 1200,
   },
   server: {
     port,
