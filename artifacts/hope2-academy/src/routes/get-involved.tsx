@@ -78,16 +78,16 @@ function GetInvolved() {
             <span className="text-secondary font-semibold uppercase tracking-wider text-sm">Volunteer Application</span>
             <h2 className="mt-3 text-4xl font-bold">Tell us about you</h2>
           </div>
-          <form className="mt-10 rounded-3xl bg-card border border-border p-8 shadow-[var(--shadow-soft)] space-y-4">
-            <Field label="Full Name" />
+          <form onSubmit={submitVolunteer} className="mt-10 rounded-3xl bg-card border border-border p-8 shadow-[var(--shadow-soft)] space-y-4">
+            <Field label="Full Name" value={vol.name} onChange={(v) => setV("name", v)} />
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Email" type="email" />
-              <Field label="Country" />
+              <Field label="Email" type="email" value={vol.email} onChange={(v) => setV("email", v)} />
+              <Field label="Country" value={vol.country} onChange={(v) => setV("country", v)} />
             </div>
-            <Field label="Phone" />
+            <Field label="Phone" value={vol.phone} onChange={(v) => setV("phone", v)} />
             <div>
               <label className="block text-sm font-medium mb-1.5">Area of Interest</label>
-              <select className="w-full rounded-full border border-border bg-background px-5 py-3">
+              <select value={vol.interest} onChange={(e) => setV("interest", e.target.value)} className="w-full rounded-full border border-border bg-background px-5 py-3">
                 <option>Education</option>
                 <option>Health & Wellness</option>
                 <option>Community Development</option>
@@ -96,9 +96,9 @@ function GetInvolved() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5">Why do you want to serve?</label>
-              <textarea rows={4} className="w-full rounded-2xl border border-border bg-background px-4 py-3" />
+              <textarea rows={4} value={vol.motivation} onChange={(e) => setV("motivation", e.target.value)} className="w-full rounded-2xl border border-border bg-background px-4 py-3" />
             </div>
-            <button className="w-full rounded-full bg-secondary text-secondary-foreground py-4 font-semibold">Submit Application</button>
+            <button type="submit" className="w-full rounded-full bg-secondary text-secondary-foreground py-4 font-semibold hover:brightness-110">Submit Application</button>
           </form>
         </div>
       </section>
@@ -106,11 +106,11 @@ function GetInvolved() {
   );
 }
 
-function Field({ label, type = "text" }: { label: string; type?: string }) {
+function Field({ label, type = "text", value, onChange }: { label: string; type?: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm font-medium mb-1.5">{label}</label>
-      <input type={type} className="w-full rounded-full border border-border bg-background px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full rounded-full border border-border bg-background px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary" />
     </div>
   );
 }
