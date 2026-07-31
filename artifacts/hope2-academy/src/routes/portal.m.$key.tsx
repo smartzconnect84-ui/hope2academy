@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, type ReactNode, type ReactElement } f
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
-import { mockDb } from "@/lib/mock-backend";
+import { mockDb, mockAuth, ROLE_LABEL } from "@/lib/mock-backend";
 import { apiClient, isNetworkError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
