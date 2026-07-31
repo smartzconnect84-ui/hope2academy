@@ -2225,3 +2225,194 @@ function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null
     </Dialog>
   );
 }
+
+// =========================================================================
+// Approvals — hierarchical workflow (Staff → Admin → Super Admin)
+// =========================================================================
+function approvalBadge(status: string) {
+  const map: Record<string, string> = {
+    "Approved": "bg-emerald-500/15 text-emerald-700",
+    "Rejected": "bg-destructive/15 text-destructive",
+    "Returned for Revision": "bg-amber-500/15 text-amber-700",
+    "Pending Admin": "bg-primary/15 text-primary",
+    "Pending Superadmin": "bg-violet-500/15 text-violet-700",
+  };
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${map[status] ?? "bg-muted text-muted-foreground"}`}>{status}</span>;
+}
+
+function ApprovalsModule() {
+  const principal = usePrincipal();
+  const [rows, setRows] = useState<ApprovalRequest[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [open, setOpen] = useState<ApprovalRequest | null>(null);
+  const [comment, setComment] = useState("");
+  const [form, setForm] = useState({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+
+  const reload = useCallback(() => {
+    if (!principal) return;
+    setRows(approvalsStore.visible(principal.id, principal.role));
+  }, [principal?.id, principal?.role]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  if (!principal) return null;
+  const reviewer = isAdminLevel(principal.role);
+
+  const submit = () => {
+    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    approvalsStore.submit({
+      ...form,
+      submittedBy: principal.name,
+      submittedById: principal.id,
+      submitterRole: principal.role ?? "staff",
+    });
+    toast.success("Submitted for Admin review");
+    setForm({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+    setCreating(false);
+    reload();
+  };
+
+  const act = (action: "approve" | "reject" | "return" | "forward") => {
+    if (!open) return;
+    approvalsStore.act(open.id, action, { name: principal.name, role: principal.role ?? "staff", id: principal.id }, comment);
+    toast.success("Decision recorded");
+    setComment("");
+    setOpen(null);
+    reload();
+  };
+
+  const stats = {
+    pending: rows.filter(r => r.status.startsWith("Pending")).length,
+    approved: rows.filter(r => r.status === "Approved").length,
+    returned: rows.filter(r => r.status === "Returned for Revision").length,
+    rejected: rows.filter(r => r.status === "Rejected").length,
+  };
+
+  const canDecide = (r: ApprovalRequest) =>
+    (principal.role === "admin" && r.status === "Pending Admin") ||
+    (principal.role === "superadmin" && (r.status === "Pending Superadmin" || r.status === "Pending Admin"));
+
+  return (
+    <>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={Inbox} label="Pending" value={String(stats.pending)} />
+        <StatCard icon={CheckCircle2} label="Approved" value={String(stats.approved)} />
+        <StatCard icon={RotateCcw} label="Returned" value={String(stats.returned)} />
+        <StatCard icon={Trash2} label="Rejected" value={String(stats.rejected)} />
+      </div>
+
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <p className="text-sm text-muted-foreground">
+          {reviewer
+            ? "Review submissions from staff. Approved items requiring final sign-off route to the Super Admin."
+            : "Track the records and reports you have submitted to the Admin office."}
+        </p>
+        <Button className="gap-2" onClick={() => setCreating(true)}><Plus className="h-4 w-4"/>New submission</Button>
+      </div>
+
+      <TableShell
+        head={["Title", "Category", "Submitted by", "Status", "Updated", ""]}
+        rows={rows.map((r) => [
+          <span className="font-medium">{r.title}</span>,
+          <Badge variant="secondary">{r.category}</Badge>,
+          r.submittedBy,
+          approvalBadge(r.status),
+          new Date(r.updatedAt).toLocaleString(),
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={() => setOpen(r)}>
+              {canDecide(r) ? "Review" : "View"}
+            </Button>
+          </div>,
+        ])}
+      />
+
+      {creating && (
+        <Dialog open onOpenChange={(o) => !o && setCreating(false)}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader><DialogTitle>New submission</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Title *</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Term 2 grade sheet — Grade 6" />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    {APPROVAL_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Details</Label>
+                <Textarea rows={4} value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="What are you submitting and why?" />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  checked={form.requiresSuperadmin}
+                  onChange={(e) => setForm({ ...form, requiresSuperadmin: e.target.checked })} />
+                Requires final Super Admin approval
+              </label>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              <Button onClick={submit}>Submit for review</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {open && (
+        <Dialog open onOpenChange={(o) => !o && setOpen(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{open.title}</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {approvalBadge(open.status)}
+                <Badge variant="secondary">{open.category}</Badge>
+                {open.requiresSuperadmin && <Badge variant="outline">Super Admin sign-off required</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{open.details || "No details provided."}</p>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Audit trail</p>
+                <ol className="space-y-3 border-l border-border pl-4">
+                  {open.history.map((h, i) => (
+                    <li key={i} className="relative">
+                      <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
+                      <p className="text-sm font-medium">{h.action} — {h.actor} <span className="text-muted-foreground font-normal">({String(h.actorRole)})</span></p>
+                      <p className="text-xs text-muted-foreground">{new Date(h.at).toLocaleString()}</p>
+                      {h.comment && <p className="text-sm mt-1">{h.comment}</p>}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {canDecide(open) && (
+                <div>
+                  <Label>Reviewer comment</Label>
+                  <Textarea rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional note for the submitter…" />
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex-wrap gap-2">
+              {canDecide(open) ? (
+                <>
+                  <Button variant="ghost" onClick={() => act("reject")}>Reject</Button>
+                  <Button variant="outline" onClick={() => act("return")}>Return for revision</Button>
+                  {principal.role === "admin" && (
+                    <Button variant="outline" onClick={() => act("forward")}>Forward to Super Admin</Button>
+                  )}
+                  <Button onClick={() => act("approve")}>Approve</Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setOpen(null)}>Close</Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
