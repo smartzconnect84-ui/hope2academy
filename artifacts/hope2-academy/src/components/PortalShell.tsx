@@ -122,6 +122,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("broadcast"), label: "In-App Messaging", icon: Send },
+      { to: m("campaigns"), label: "Email Campaigns", icon: Mail },
+      { to: m("forms"), label: "Online Forms", icon: FileSpreadsheet },
     ]},
     { group: "System", items: [
       { to: m("settings"), label: "Site Settings", icon: Settings },
@@ -133,6 +136,11 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
+    ]},
+    { group: "Outreach", items: [
+      { to: m("broadcast"), label: "In-App Messaging", icon: Send },
+      { to: m("campaigns"), label: "Bulk Email Campaigns", icon: Mail },
+      { to: m("forms"), label: "Online Forms", icon: FileSpreadsheet },
     ]},
     { group: "Records Support", items: [
       { to: m("staff"), label: "Staff Directory", icon: Users },
@@ -166,9 +174,17 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("admissions"), label: "Admissions Register", icon: ClipboardList },
       { to: m("scholarships"), label: "Scholarships", icon: Award },
     ]},
+    { group: "Finance", items: [
+      { to: m("finance"), label: "Finance Overview", icon: PieChart },
+      { to: m("fees"), label: "Fees & Tuition", icon: DollarSign },
+      { to: m("donations"), label: "Donations", icon: Heart },
+      { to: m("payroll"), label: "Staff Salary & Payroll", icon: Wallet },
+      { to: m("expenses"), label: "Expenses & Payables", icon: Receipt },
+    ]},
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("broadcast"), label: "In-App Messaging", icon: Send },
     ]},
   ],
   admissions_officer: [
@@ -181,6 +197,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Family Engagement", items: [
       { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("broadcast"), label: "In-App Messaging", icon: Send },
+      { to: m("campaigns"), label: "Bulk Email Campaigns", icon: Mail },
+      { to: m("forms"), label: "Online Forms", icon: FileSpreadsheet },
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("events"), label: "Open Days & Events", icon: Calendar },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
