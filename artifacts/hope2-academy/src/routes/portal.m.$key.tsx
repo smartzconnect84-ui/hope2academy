@@ -519,6 +519,137 @@ Object.assign(MODULES, {
       />
     ),
   },
+  inquiries: {
+    title: "Website Inquiries", subtitle: "Messages sent from the public contact form", icon: Mail,
+    allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
+    render: () => (
+      <SimpleCrud
+        collection="inquiries"
+        itemLabel="inquiry"
+        createLabel="Log inquiry"
+        fields={[
+          { name: "name", label: "Name", type: "text", required: true },
+          { name: "email", label: "Email", type: "text", required: true },
+          { name: "subject", label: "Subject", type: "text" },
+          { name: "message", label: "Message", type: "textarea" },
+          { name: "received", label: "Received", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true, options: ["New","In Progress","Replied","Closed"] },
+        ]}
+        columns={[
+          { key: "name", label: "From", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "email", label: "Email" },
+          { key: "subject", label: "Subject" },
+          { key: "received", label: "Received" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  volunteers: {
+    title: "Volunteer Applications", subtitle: "Applications from the Get Involved page", icon: Users,
+    allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
+    render: () => (
+      <SimpleCrud
+        collection="volunteers"
+        itemLabel="application"
+        createLabel="Add applicant"
+        fields={[
+          { name: "name", label: "Full name", type: "text", required: true },
+          { name: "email", label: "Email", type: "text", required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "country", label: "Country", type: "text" },
+          { name: "interest", label: "Area of interest", type: "select", options: ["Education","Health & Wellness","Community Development","Outreach & Missions"] },
+          { name: "motivation", label: "Motivation", type: "textarea" },
+          { name: "received", label: "Received", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true, options: ["Pending","Reviewing","Approved","Declined"] },
+        ]}
+        columns={[
+          { key: "name", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "email", label: "Email" },
+          { key: "country", label: "Country" },
+          { key: "interest", label: "Interest" },
+          { key: "received", label: "Received" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  subscribers: {
+    title: "Newsletter Subscribers", subtitle: "People subscribed from the Stories page", icon: Send,
+    allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
+    render: () => (
+      <SimpleCrud
+        collection="subscribers"
+        itemLabel="subscriber"
+        createLabel="Add subscriber"
+        fields={[
+          { name: "email", label: "Email", type: "text", required: true },
+          { name: "joined", label: "Joined", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true, options: ["Active","Unsubscribed"] },
+        ]}
+        columns={[
+          { key: "email", label: "Email", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "joined", label: "Joined" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  pledges: {
+    title: "Donation Pledges", subtitle: "Gifts pledged from the public Give page", icon: Heart,
+    allow: ["superadmin", "admin", "registrar"],
+    render: () => (
+      <SimpleCrud
+        collection="pledges"
+        itemLabel="pledge"
+        createLabel="Record pledge"
+        fields={[
+          { name: "donor", label: "Donor", type: "text", required: true },
+          { name: "email", label: "Email", type: "text" },
+          { name: "amountUsd", label: "Amount (USD)", type: "number", required: true },
+          { name: "frequency", label: "Frequency", type: "select", required: true, options: ["One-time","Monthly"] },
+          { name: "received", label: "Received", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true, options: ["Pending","Confirmed","Received","Cancelled"] },
+        ]}
+        columns={[
+          { key: "donor", label: "Donor", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "email", label: "Email" },
+          { key: "amountUsd", label: "Amount", render: (v) => fmtMoney(v) },
+          { key: "frequency", label: "Frequency" },
+          { key: "received", label: "Received" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  __admissions_legacy: {
+    title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
+    allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="admissions"
+        itemLabel="application"
+        createLabel="New application"
+        fields={[
+          { name: "applicant", label: "Applicant name", type: "text", required: true },
+          { name: "grade", label: "Applying for grade", type: "select", required: true,
+            options: ["ABC","Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
+          { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
+          { name: "phone", label: "Phone", type: "text" },
+          { name: "submitted", label: "Submitted", type: "date", required: true },
+          { name: "status", label: "Status", type: "select", required: true,
+            options: ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"] },
+        ]}
+        columns={[
+          { key: "applicant", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "grade", label: "Grade" },
+          { key: "guardian", label: "Guardian" },
+          { key: "submitted", label: "Submitted" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
   exams: {
     title: "Exams & Report Cards", subtitle: "Schedule term exams and publish report cards",
     icon: Award,
