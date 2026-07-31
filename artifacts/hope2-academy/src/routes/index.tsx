@@ -14,7 +14,7 @@ import storyGrad from "@/assets/uploads/IMG-20260521-WA0027.jpg.asset.json";
 // --- CONTENT ------------------------------------------------------------
 const ribbon = [
   { k: "01", label: "Margibi, Liberia" },
-  { k: "02", label: "Founded 2014" },
+  { k: "02", label: "ABC – Grade 12" },
   { k: "03", label: "Learning · Faith · Service" },
   { k: "04", label: "USD & LRD tuition" },
 ];
@@ -25,7 +25,7 @@ const chapters = [
     title: "A classroom that raises leaders, not just students.",
     body:
       "From ABC through Grade 12, HOPE2 ACADEMY blends a rigorous Liberian curriculum with character formation, mentorship, and creative expression — so every child leaves prepared to serve their country.",
-    stat: { v: "16", u: "grades" },
+    stat: { v: "ABC–12", u: "grades" },
     href: "/departments",
     cta: "Explore the academy",
     img: academyAsset.url,
@@ -37,7 +37,7 @@ const chapters = [
     title: "We walk the villages before we build in them.",
     body:
       "Our Mission team lives inside the communities we serve across Margibi and beyond — listening first, then building water, food security, and family support programs alongside local leaders.",
-    stat: { v: "84", u: "communities" },
+    stat: { v: "Margibi", u: "and beyond" },
     href: "/projects",
     cta: "See the field work",
     img: missionAsset.url,
@@ -49,7 +49,7 @@ const chapters = [
     title: "Faith that shows up on Monday morning.",
     body:
       "HOPE2 Church is the heartbeat of the campus. Sunday worship, midweek discipleship, and pastoral care for staff and families keep our purpose — Learning To Serve For God's Purpose — alive every day.",
-    stat: { v: "12", u: "years" },
+    stat: { v: "Sundays", u: "open to all" },
     href: "/about",
     cta: "Our story of faith",
     img: churchAsset.url,
@@ -61,7 +61,7 @@ const chapters = [
     title: "Telling Liberia's story in Liberia's voice.",
     body:
       "HOPE2 Media trains young creators in film, journalism, and design — documenting the movement, amplifying local heroes, and beaming lessons from Marshall Road to the rest of the world.",
-    stat: { v: "1000s", u: "of stories" },
+    stat: { v: "Studio", u: "Marshall Road" },
     href: "/stories",
     cta: "Watch, read, listen",
     img: mediaAsset.url,
@@ -71,16 +71,16 @@ const chapters = [
 ];
 
 const impactStats = [
-  { v: "12,400+", label: "Lives touched across Margibi & Liberia" },
-  { v: "142", label: "Community projects delivered since 2014" },
-  { v: "97%", label: "Grade-12 graduation rate in 2026" },
+  { v: "ABC–12", label: "Grades taught at the Marshall Road campus" },
+  { v: "4", label: "Divisions: Mission, Academy, Church, Media" },
+  { v: "Mon–Fri", label: "Office hours 7:00 AM – 4:00 PM" },
   { v: "USD + LRD", label: "Every fee, gift & scholarship in both" },
 ];
 
 const stories = [
-  { img: storyClassroom.url, tag: "Academy", title: "A Grade 9 classroom that talks back", href: "/stories" },
-  { img: storyKids.url,      tag: "Mission",  title: "Clean water in Kakata: year two", href: "/projects" },
-  { img: storyGrad.url,      tag: "Alumni",   title: "Where the Class of 2024 went next", href: "/stories" },
+  { img: storyClassroom.url, tag: "Academy", title: "Life at the Marshall Road campus", href: "/departments" },
+  { img: storyKids.url,      tag: "Mission",  title: "Serving families across Margibi", href: "/projects" },
+  { img: storyGrad.url,      tag: "Church",   title: "Faith and community at HOPE2", href: "/about" },
 ];
 
 // --- COMPONENTS ---------------------------------------------------------
@@ -202,8 +202,8 @@ function Index() {
             <div className="mt-8 flex items-center gap-4">
               <div className="h-px w-12 bg-[color:var(--color-gold)]" />
               <div>
-                <div className="font-semibold text-[color:var(--color-gold)]">Rev. Joseph Wreh</div>
-                <div className="text-sm opacity-80">Founder & Senior Pastor, HOPE2</div>
+                <div className="font-semibold text-[color:var(--color-gold)]">HOPE2 ACADEMY</div>
+                <div className="text-sm opacity-80">Learning To Serve For God's Purpose</div>
               </div>
             </div>
           </div>
@@ -299,7 +299,7 @@ function Index() {
                   Send a child to school in <span className="text-[color:var(--color-gold)]">Margibi</span>.
                 </h2>
                 <p className="mt-6 max-w-xl text-lg opacity-90">
-                  A full year of tuition, uniform, books and one meal a day costs USD 320 · LRD 60,800. Every gift is receipted and reported.
+                  Sponsor tuition, uniforms and books for a student. Contact the office for current rates in USD and LRD — every gift is receipted and reported.
                 </p>
               </div>
               <div className="lg:col-span-4 flex flex-col gap-3">
