@@ -36,9 +36,9 @@ export const ADMIN_MANAGED_COLLECTIONS = [
 
 /** Collections a non-staff role may never mutate, only read (their own slice). */
 const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
-  student: ["grades", "attendance", "fees", "exams", "behavior", "classes", "timetable", "announcements", "library", "calendar", "scholarships", "payroll", "expenses"],
-  parent: ["grades", "attendance", "fees", "exams", "behavior", "children", "classes", "timetable", "announcements", "calendar", "scholarships", "transport", "payroll", "expenses"],
-  alumni: ["directory", "events", "jobs", "donations", "scholarships", "posts", "payroll", "expenses"],
+  student: ["grades", "transcripts", "attendance", "fees", "exams", "assignments", "lessons", "resources", "behavior", "classes", "timetable", "announcements", "library", "calendar", "scholarships", "payroll", "expenses"],
+  parent: ["grades", "transcripts", "attendance", "fees", "exams", "assignments", "lessons", "resources", "behavior", "children", "classes", "timetable", "announcements", "calendar", "scholarships", "transport", "payroll", "expenses"],
+  alumni: ["grades", "transcripts", "exams", "assignments", "resources", "directory", "events", "jobs", "donations", "scholarships", "posts", "payroll", "expenses"],
   teacher: ["fees", "scholarships", "staff", "admissions", "transport", "inventory", "clinic", "payroll", "expenses", "campaigns", "forms"],
   admin_assistant: ["payroll", "expenses"],
   admissions_officer: ["payroll", "expenses"],
