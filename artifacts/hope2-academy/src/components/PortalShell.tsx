@@ -126,6 +126,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("campaigns"), label: "Email Campaigns", icon: Mail },
       { to: m("forms"), label: "Online Forms", icon: FileSpreadsheet },
     ]},
+    { group: "Website Inbox", items: [
+      { to: m("inquiries"), label: "Website Inquiries", icon: Mail },
+      { to: m("volunteers"), label: "Volunteer Applications", icon: Users },
+      { to: m("subscribers"), label: "Newsletter Subscribers", icon: Send },
+      { to: m("pledges"), label: "Donation Pledges", icon: Heart },
+    ]},
     { group: "System", items: [
       { to: m("settings"), label: "Site Settings", icon: Settings },
     ]},
@@ -141,6 +147,11 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("broadcast"), label: "In-App Messaging", icon: Send },
       { to: m("campaigns"), label: "Bulk Email Campaigns", icon: Mail },
       { to: m("forms"), label: "Online Forms", icon: FileSpreadsheet },
+    ]},
+    { group: "Website Inbox", items: [
+      { to: m("inquiries"), label: "Website Inquiries", icon: Mail },
+      { to: m("volunteers"), label: "Volunteer Applications", icon: Users },
+      { to: m("subscribers"), label: "Newsletter Subscribers", icon: Send },
     ]},
     { group: "Records Support", items: [
       { to: m("staff"), label: "Staff Directory", icon: Users },
@@ -178,6 +189,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("finance"), label: "Finance Overview", icon: PieChart },
       { to: m("fees"), label: "Fees & Tuition", icon: DollarSign },
       { to: m("donations"), label: "Donations", icon: Heart },
+      { to: m("pledges"), label: "Donation Pledges", icon: Heart },
       { to: m("payroll"), label: "Staff Salary & Payroll", icon: Wallet },
       { to: m("expenses"), label: "Expenses & Payables", icon: Receipt },
     ]},
@@ -203,6 +215,11 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("events"), label: "Open Days & Events", icon: Calendar },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+    { group: "Website Inbox", items: [
+      { to: m("inquiries"), label: "Website Inquiries", icon: Mail },
+      { to: m("volunteers"), label: "Volunteer Applications", icon: Users },
+      { to: m("subscribers"), label: "Newsletter Subscribers", icon: Send },
     ]},
   ],
   teacher: [
