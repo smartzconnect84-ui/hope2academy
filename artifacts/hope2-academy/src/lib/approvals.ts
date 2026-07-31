@@ -23,6 +23,13 @@ export interface ApprovalEvent {
   comment?: string;
 }
 
+export interface ApprovalAttachment {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+}
+
 export interface ApprovalRequest {
   id: string;
   title: string;
@@ -33,6 +40,7 @@ export interface ApprovalRequest {
   submittedBy: string;
   submittedById: string;
   submitterRole: AppRole | string;
+  attachments?: ApprovalAttachment[];
   createdAt: string;
   updatedAt: string;
   history: ApprovalEvent[];
@@ -64,6 +72,22 @@ export const APPROVAL_CATEGORIES = [
   "Policy Change",
 ];
 
+/**
+ * Which data collections a submission category freezes for the submitter.
+ * Once submitted (and while pending or approved) the owner can no longer
+ * add, edit or delete those records — only a "Returned for Revision"
+ * decision re-opens them.
+ */
+export const CATEGORY_LOCKS: Record<string, string[]> = {
+  "Grade Submission": ["grades"],
+  "Academic Record": ["grades", "behavior"],
+  "Attendance Report": ["attendance"],
+  "Lesson Plan": ["lessonplans"],
+  "Exam Paper": ["exams"],
+  "Operational Request": ["inventory"],
+  "Procurement": ["inventory"],
+};
+
 function now() { return new Date().toISOString(); }
 
 function audit(actor: string, action: string) {
@@ -89,6 +113,7 @@ export const approvalsStore = {
   submit(input: {
     title: string; category: string; details: string; requiresSuperadmin: boolean;
     submittedBy: string; submittedById: string; submitterRole: AppRole | string;
+    attachments?: ApprovalAttachment[];
   }): ApprovalRequest {
     const row: ApprovalRequest = {
       id: `apr_${Math.random().toString(36).slice(2, 9)}`,
@@ -144,6 +169,21 @@ export const approvalsStore = {
     return mockDb.list<PortalNotification>(NOTIF)
       .filter((n) => (n.audienceUserId ? n.audienceUserId === userId : n.audienceRole === role))
       .sort((a, b) => (a.at < b.at ? 1 : -1));
+  },
+
+  /**
+   * Collections frozen for this user because they have a submission in flight
+   * (Pending Admin / Pending Superadmin) or already finally approved.
+   */
+  lockedCollections(userId: string, role: AppRole | null): string[] {
+    if (role === "admin" || role === "superadmin") return [];
+    const locked = new Set<string>();
+    for (const r of this.all()) {
+      if (r.submittedById !== userId) continue;
+      if (r.status === "Returned for Revision" || r.status === "Rejected") continue;
+      for (const c of CATEGORY_LOCKS[r.category] ?? []) locked.add(c);
+    }
+    return [...locked];
   },
 
   markAllRead(userId: string, role: AppRole | null) {

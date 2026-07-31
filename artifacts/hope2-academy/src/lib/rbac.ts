@@ -25,6 +25,15 @@ export const STAFF_ROLES: AppRole[] = [
 export const isStaff = (r: AppRole | null | undefined) => !!r && STAFF_ROLES.includes(r);
 export const isAdminLevel = (r: AppRole | null | undefined) => r === "admin" || r === "superadmin";
 
+/**
+ * Collections only Admin / Super Admin may mutate. Everyone else — including
+ * teachers, registrar, admissions officer and administrative assistant —
+ * has read-only access.
+ */
+export const ADMIN_MANAGED_COLLECTIONS = [
+  "students", "classes", "timetable", "calendar", "announcements",
+];
+
 /** Collections a non-staff role may never mutate, only read (their own slice). */
 const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
   student: ["grades", "attendance", "fees", "exams", "behavior", "classes", "timetable", "announcements", "library", "calendar", "scholarships"],
@@ -33,9 +42,16 @@ const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
   teacher: ["fees", "scholarships", "staff", "admissions", "transport", "inventory", "clinic"],
 };
 
-export function canWrite(collection: string, role: AppRole | null): boolean {
+export function canWrite(
+  collection: string,
+  role: AppRole | null,
+  lockedCollections: string[] = [],
+): boolean {
   if (!role) return false;
   if (role === "superadmin" || role === "admin") return true;
+  if (ADMIN_MANAGED_COLLECTIONS.includes(collection)) return false;
+  // Records already submitted upward are frozen until returned for revision.
+  if (lockedCollections.includes(collection)) return false;
   const blocked = READ_ONLY_FOR[role];
   if (blocked?.includes(collection)) return false;
   return true;

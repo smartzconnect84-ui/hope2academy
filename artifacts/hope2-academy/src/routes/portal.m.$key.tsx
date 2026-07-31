@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
-import { approvalsStore, APPROVAL_CATEGORIES, type ApprovalRequest } from "@/lib/approvals";
+import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
@@ -1396,7 +1396,9 @@ function SimpleCrud({
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<any[]>([]);
   const principal = usePrincipal();
-  const writable = canWrite(collection, principal?.role ?? null);
+  const locked = principal ? approvalsStore.lockedCollections(principal.id, principal.role) : [];
+  const isLocked = locked.includes(collection);
+  const writable = canWrite(collection, principal?.role ?? null, locked);
 
   const load = useCallback(async () => {
     try {
@@ -1468,7 +1470,9 @@ function SimpleCrud({
             <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
           </Button>
         ) : (
-          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">
+            {isLocked ? "Locked — submitted for approval" : "Read-only"}
+          </Badge>
         )}
       </div>
       <TableShell
@@ -1981,6 +1985,8 @@ function ClassesModule() {
   const [editing, setEditing] = useState<ClassRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<ClassRow[]>([]);
+  const principal = usePrincipal();
+  const writable = canWrite("classes", principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1995,6 +2001,7 @@ function ClassesModule() {
   const rows = all.filter((c) => !q || `${c.name} ${c.teacher} ${c.room}`.toLowerCase().includes(q.toLowerCase()));
 
   const remove = async (c: ClassRow) => {
+    if (!writable) { toast.error("Only Admin can delete classes"); return; }
     if (!confirm(`Delete class "${c.name}"?`)) return;
     try {
       await apiClient.remove("classes", c.id);
@@ -2013,20 +2020,26 @@ function ClassesModule() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search classes…" className="pl-9 bg-card" />
         </div>
-        <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New class</Button>
+        {writable ? (
+          <Button className="gap-2" onClick={()=>setCreating(true)}><Plus className="h-4 w-4"/> New class</Button>
+        ) : (
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+        )}
       </div>
       <TableShell
-        head={["Class", "Teacher", "Room", "Students", "Schedule", ""]}
+        head={["Class", "Teacher", "Room", "Students", "Schedule", ...(writable ? [""] : [])]}
         rows={rows.map((c) => [
           <span className="font-medium">{c.name}</span>,
           c.teacher,
           c.room,
           c.students,
           c.schedule,
-          <div className="flex items-center gap-2 justify-end">
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(c)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
-            <Button size="sm" variant="ghost" onClick={()=>remove(c)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-          </div>,
+          ...(writable ? [
+            <div className="flex items-center gap-2 justify-end">
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={()=>setEditing(c)}><Edit3 className="h-3.5 w-3.5"/>Edit</Button>
+              <Button size="sm" variant="ghost" onClick={()=>remove(c)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
+            </div>,
+          ] : []),
         ])}
       />
       {(editing || creating) && (
@@ -2247,6 +2260,7 @@ function ApprovalsModule() {
   const [open, setOpen] = useState<ApprovalRequest | null>(null);
   const [comment, setComment] = useState("");
   const [form, setForm] = useState({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+  const [files, setFiles] = useState<ApprovalAttachment[]>([]);
 
   const reload = useCallback(() => {
     if (!principal) return;
@@ -2262,14 +2276,35 @@ function ApprovalsModule() {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
     approvalsStore.submit({
       ...form,
+      attachments: files,
       submittedBy: principal.name,
       submittedById: principal.id,
       submitterRole: principal.role ?? "staff",
     });
-    toast.success("Submitted for Admin review");
+    const locks = CATEGORY_LOCKS[form.category] ?? [];
+    toast.success(locks.length
+      ? `Submitted for Admin review — ${locks.join(", ")} are now locked`
+      : "Submitted for Admin review");
     setForm({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+    setFiles([]);
     setCreating(false);
     reload();
+  };
+
+  const onPick = async (list: FileList | null) => {
+    if (!list?.length) return;
+    const picked: ApprovalAttachment[] = [];
+    for (const f of Array.from(list)) {
+      if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4MB`); continue; }
+      const dataUrl: string = await new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result));
+        fr.onerror = () => rej(fr.error);
+        fr.readAsDataURL(f);
+      });
+      picked.push({ name: f.name, type: f.type || "file", size: f.size, dataUrl });
+    }
+    setFiles((prev) => [...prev, ...picked]);
   };
 
   const act = (action: "approve" | "reject" | "return" | "forward") => {
@@ -2348,6 +2383,27 @@ function ApprovalsModule() {
                 <Label>Details</Label>
                 <Textarea rows={4} value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="What are you submitting and why?" />
               </div>
+              <div>
+                <Label>Attachments</Label>
+                <Input type="file" multiple className="cursor-pointer"
+                  onChange={(e) => { onPick(e.target.files); e.currentTarget.value = ""; }} />
+                <p className="text-xs text-muted-foreground mt-1">PDF, images, spreadsheets or documents — max 4MB each.</p>
+                {files.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {files.map((f, i) => (
+                      <li key={f.name + i} className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2">
+                        <span className="text-sm truncate">{f.name}</span>
+                        <span className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-muted-foreground">{(f.size / 1024).toFixed(0)} KB</span>
+                          <Button size="sm" variant="ghost" onClick={() => setFiles(files.filter((_, j) => j !== i))}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--primary))]"
                   checked={form.requiresSuperadmin}
@@ -2374,6 +2430,20 @@ function ApprovalsModule() {
                 {open.requiresSuperadmin && <Badge variant="outline">Super Admin sign-off required</Badge>}
               </div>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{open.details || "No details provided."}</p>
+
+              {!!open.attachments?.length && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Attachments</p>
+                  <ul className="space-y-2">
+                    {open.attachments.map((f, i) => (
+                      <li key={f.name + i} className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2">
+                        <span className="text-sm truncate">{f.name}</span>
+                        <a href={f.dataUrl} download={f.name} className="text-sm font-semibold text-primary shrink-0">Download</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Audit trail</p>
