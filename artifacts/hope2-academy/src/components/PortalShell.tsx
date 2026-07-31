@@ -488,3 +488,59 @@ export function StatCard({ icon: Icon, label, value, delta, accent = "primary" }
 }
 
 export { FileText, Calendar, Users, BookOpen, GraduationCap, Heart, Award };
+/** Header bell: approval-workflow notifications for the signed-in user. */
+function NotificationsBell() {
+  const { profile, primaryRole } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setItems(approvalsStore.notifications(profile.$id, primaryRole));
+  }, [profile?.$id, primaryRole, open]);
+
+  const unread = items.filter((n) => !n.read).length;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Notifications"
+        className="relative h-10 w-10 rounded-full bg-card border border-border grid place-items-center hover:bg-muted"
+      >
+        <Bell className="h-[18px] w-[18px]" />
+        {unread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold grid place-items-center">
+            {unread}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 rounded-xl border border-border bg-card shadow-lg z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold">Notifications</p>
+            {items.length > 0 && (
+              <button
+                className="text-xs text-primary font-semibold"
+                onClick={() => { if (profile) approvalsStore.markAllRead(profile.$id, primaryRole); setItems(approvalsStore.notifications(profile!.$id, primaryRole)); }}
+              >
+                Mark all read
+              </button>
+            )}
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {items.length === 0 ? (
+              <p className="px-4 py-6 text-sm text-muted-foreground text-center">You're all caught up.</p>
+            ) : items.slice(0, 20).map((n) => (
+              <div key={n.id} className={`px-4 py-3 border-b border-border last:border-0 ${n.read ? "" : "bg-muted/40"}`}>
+                <p className="text-sm font-medium">{n.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">{new Date(n.at).toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
