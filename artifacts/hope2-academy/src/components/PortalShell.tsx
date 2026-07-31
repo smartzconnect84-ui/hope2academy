@@ -50,6 +50,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("exams"), label: "Exams & Reports", icon: Award },
       { to: m("behavior"), label: "Behavior & Discipline", icon: Award },
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
@@ -112,6 +113,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("exams"), label: "Exams & Reports", icon: Award },
       { to: m("behavior"), label: "Behavior", icon: Award },
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
+      { to: m("library"), label: "CK-12 Digital Library", icon: Library },
       { to: m("calendar"), label: "School Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
