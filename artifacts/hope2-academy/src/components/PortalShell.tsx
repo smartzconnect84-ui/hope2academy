@@ -115,7 +115,6 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
   ],
   teacher: [
-    { group: "Teaching", items: [
     { group: "Today", items: [
       { to: "/portal/teacher", label: "Dashboard", icon: LayoutDashboard },
       { to: m("timetable"), label: "Timetable", icon: Calendar },
