@@ -12,8 +12,17 @@ function lovableAssetPlugin(): Plugin {
       if (!id.endsWith(".asset.json")) return null;
       try {
         const json = JSON.parse(fs.readFileSync(id, "utf-8"));
+        const localAssetPath = path.resolve(
+          import.meta.dirname,
+          "src/assets/originals",
+          `${json.asset_id}-${json.original_filename}`,
+        );
+        if (!fs.existsSync(localAssetPath)) {
+          throw new Error(`Missing bundled asset for ${json.original_filename}`);
+        }
         return {
-          code: `export default ${JSON.stringify({ ...json, url: json.url ?? "" })}`,
+          code: `import localUrl from ${JSON.stringify(`${localAssetPath}?url`)};
+export default ${JSON.stringify({ ...json, url: "" })}.url = localUrl;`,
           map: null,
         };
       } catch {
