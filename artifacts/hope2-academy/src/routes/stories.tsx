@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
+import { publicForms } from "@/lib/public-forms";
 import { PageHeader } from "@/components/PageHeader";
 import logoAsset from "@/assets/hope2-logo.png.asset.json";
 import classroomA from "@/assets/uploads/IMG-20260521-WA0012.jpg.asset.json";
@@ -31,6 +34,14 @@ const stories = [
 ];
 
 function Stories() {
+  const [email, setEmail] = useState("");
+  function onSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/.+@.+\..+/.test(email)) { toast.error("Enter a valid email address."); return; }
+    publicForms.subscribe(email);
+    setEmail("");
+    toast.success("You're subscribed — field updates land in your inbox monthly.");
+  }
   return (
     <div>
       <PageHeader eyebrow="Field Updates & Stories" title="Voices from the ground" lead="Authentic reports from the communities, classrooms, and clinics where we serve." />
