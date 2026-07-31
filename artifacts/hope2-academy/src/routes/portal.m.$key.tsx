@@ -327,24 +327,10 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   library: {
-    title: "Library", subtitle: "Catalog and availability", icon: Library,
-    render: () => (
-      <SimpleCrud
-        collection="library"
-        itemLabel="book"
-        createLabel="Add title"
-        fields={[
-          { name: "title", label: "Title", type: "text", required: true },
-          { name: "author", label: "Author", type: "text", required: true },
-          { name: "available", label: "Copies available", type: "number", required: true },
-        ]}
-        columns={[
-          { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "author", label: "Author" },
-          { key: "available", label: "Available" },
-        ]}
-      />
-    ),
+    title: "CK-12 Digital Library",
+    subtitle: "Free CK-12 FlexBooks by subject and grade — read, bookmark and track progress",
+    icon: Library,
+    render: () => <DigitalLibraryModule/>,
   },
   resources: {
     title: "Teaching Resources", subtitle: "Shared documents for staff", icon: Library,
