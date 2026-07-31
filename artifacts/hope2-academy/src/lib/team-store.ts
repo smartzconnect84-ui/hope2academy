@@ -26,7 +26,7 @@ export interface TeamPageContent {
   members: TeamMember[];
 }
 
-const KEY = "h2l.team.v1";
+const KEY = "h2l.team.v2";
 
 export const DEFAULT_TEAM: TeamPageContent = {
   eyebrow: "Our People",
