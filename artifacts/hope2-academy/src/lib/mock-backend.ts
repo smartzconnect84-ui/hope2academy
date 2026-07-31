@@ -187,6 +187,24 @@ export const mockAuth = {
     return users[idx];
   },
 
+  /** Self-service password change — requires the current password. */
+  async changePassword(id: string, currentPassword: string, newPassword: string) {
+    const users = readUsers();
+    const idx = users.findIndex(u => u.id === id);
+    if (idx === -1) throw new Error("User not found");
+    if (users[idx].password !== currentPassword) throw new Error("Current password is incorrect");
+    if (newPassword.length < 8) throw new Error("New password must be at least 8 characters");
+    if (newPassword === currentPassword) throw new Error("New password must be different");
+    users[idx] = { ...users[idx], password: newPassword };
+    writeUsers(users);
+    return true;
+  },
+
+  /** Store an avatar (data URL) on the account. Pass null to remove it. */
+  async setAvatar(id: string, dataUrl: string | null) {
+    return this.updateProfile(id, { avatar: dataUrl ?? undefined } as Partial<MockUser>);
+  },
+
   async listUsers(): Promise<MockUser[]> {
     seedIfEmpty();
     return readUsers();

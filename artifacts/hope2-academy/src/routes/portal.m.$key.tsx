@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
+import { scopeRows, canWrite, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
+import { approvalsStore, APPROVAL_CATEGORIES, type ApprovalRequest } from "@/lib/approvals";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
@@ -51,6 +54,21 @@ type ModuleDef = {
   allow?: AppRole[];
   render: () => ReactElement;
 };
+
+/** Build the RBAC principal for the signed-in user. */
+export function usePrincipal(): Principal | null {
+  const { profile, primaryRole } = useAuth();
+  if (!profile) return null;
+  return {
+    id: profile.$id,
+    name: profile.full_name ?? profile.email ?? "",
+    email: profile.email,
+    role: primaryRole,
+    class_name: (profile as any).class_name ?? null,
+    grade: (profile as any).grade ?? null,
+    linked_children: (profile as any).linked_children ?? null,
+  };
+}
 
 function Toolbar({ children, action }: { children?: React.ReactNode; action?: React.ReactNode }) {
   return (
@@ -733,6 +751,10 @@ Object.assign(MODULES, {
       />
     ),
   },
+  approvals: {
+    title: "Approvals", subtitle: "Submit, review and sign off school records", icon: CheckCircle2,
+    render: () => <ApprovalsModule/>,
+  },
 } satisfies Record<string, ModuleDef>);
 
 // =========================================================================
@@ -1373,6 +1395,8 @@ function SimpleCrud({
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<any[]>([]);
+  const principal = usePrincipal();
+  const writable = canWrite(collection, principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1385,13 +1409,16 @@ function SimpleCrud({
 
   useEffect(() => { load(); }, [load]);
 
-  const rows = all.filter((r) =>
+  // Data isolation: users only ever see rows their role/identity entitles them to.
+  const visible = scopeRows(collection, all, principal);
+  const rows = visible.filter((r) =>
     !q || columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
   );
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
   const remove = async (row: any) => {
+    if (!writable) { toast.error("You don't have permission to delete this record"); return; }
     if (!confirm(`Delete this ${itemLabel}?`)) return;
     try {
       await apiClient.remove(collection, row.id);
@@ -1404,11 +1431,13 @@ function SimpleCrud({
   };
 
   const handleSave = async (values: Record<string, any>) => {
+    if (!writable) { toast.error("You don't have permission to edit this record"); return; }
     const normalized: any = {};
     for (const f of fields) {
       const v = values[f.name];
       normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
     }
+    if (!editing) Object.assign(normalized, stampOwner(normalized, principal));
     try {
       if (editing) {
         await apiClient.update(collection, editing.id, normalized);
@@ -1434,22 +1463,30 @@ function SimpleCrud({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${itemLabel}s…`} className="pl-9 bg-card" />
         </div>
-        <Button className="gap-2" onClick={() => setCreating(true)}>
-          <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
-        </Button>
+        {writable ? (
+          <Button className="gap-2" onClick={() => setCreating(true)}>
+            <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
+          </Button>
+        ) : (
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+        )}
       </div>
       <TableShell
-        head={[...columns.map((c) => c.label), ""]}
+        head={[...columns.map((c) => c.label), ...(writable ? [""] : [])]}
         rows={rows.map((r) => [
           ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
-          <div className="flex items-center gap-2 justify-end">
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
-              <Edit3 className="h-3.5 w-3.5" />Edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => remove(r)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>,
+          ...(writable
+            ? [
+                <div className="flex items-center gap-2 justify-end">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
+                    <Edit3 className="h-3.5 w-3.5" />Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(r)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>,
+              ]
+            : []),
         ])}
       />
       {(editing || creating) && (
@@ -2186,5 +2223,196 @@ function AssignmentEditor({ row, classes, onClose }: { row: AssignmentRow | null
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// =========================================================================
+// Approvals — hierarchical workflow (Staff → Admin → Super Admin)
+// =========================================================================
+function approvalBadge(status: string) {
+  const map: Record<string, string> = {
+    "Approved": "bg-emerald-500/15 text-emerald-700",
+    "Rejected": "bg-destructive/15 text-destructive",
+    "Returned for Revision": "bg-amber-500/15 text-amber-700",
+    "Pending Admin": "bg-primary/15 text-primary",
+    "Pending Superadmin": "bg-violet-500/15 text-violet-700",
+  };
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${map[status] ?? "bg-muted text-muted-foreground"}`}>{status}</span>;
+}
+
+function ApprovalsModule() {
+  const principal = usePrincipal();
+  const [rows, setRows] = useState<ApprovalRequest[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [open, setOpen] = useState<ApprovalRequest | null>(null);
+  const [comment, setComment] = useState("");
+  const [form, setForm] = useState({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+
+  const reload = useCallback(() => {
+    if (!principal) return;
+    setRows(approvalsStore.visible(principal.id, principal.role));
+  }, [principal?.id, principal?.role]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  if (!principal) return null;
+  const reviewer = isAdminLevel(principal.role);
+
+  const submit = () => {
+    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    approvalsStore.submit({
+      ...form,
+      submittedBy: principal.name,
+      submittedById: principal.id,
+      submitterRole: principal.role ?? "staff",
+    });
+    toast.success("Submitted for Admin review");
+    setForm({ title: "", category: APPROVAL_CATEGORIES[0], details: "", requiresSuperadmin: false });
+    setCreating(false);
+    reload();
+  };
+
+  const act = (action: "approve" | "reject" | "return" | "forward") => {
+    if (!open) return;
+    approvalsStore.act(open.id, action, { name: principal.name, role: principal.role ?? "staff", id: principal.id }, comment);
+    toast.success("Decision recorded");
+    setComment("");
+    setOpen(null);
+    reload();
+  };
+
+  const stats = {
+    pending: rows.filter(r => r.status.startsWith("Pending")).length,
+    approved: rows.filter(r => r.status === "Approved").length,
+    returned: rows.filter(r => r.status === "Returned for Revision").length,
+    rejected: rows.filter(r => r.status === "Rejected").length,
+  };
+
+  const canDecide = (r: ApprovalRequest) =>
+    (principal.role === "admin" && r.status === "Pending Admin") ||
+    (principal.role === "superadmin" && (r.status === "Pending Superadmin" || r.status === "Pending Admin"));
+
+  return (
+    <>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={Inbox} label="Pending" value={String(stats.pending)} />
+        <StatCard icon={CheckCircle2} label="Approved" value={String(stats.approved)} />
+        <StatCard icon={RotateCcw} label="Returned" value={String(stats.returned)} />
+        <StatCard icon={Trash2} label="Rejected" value={String(stats.rejected)} />
+      </div>
+
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <p className="text-sm text-muted-foreground">
+          {reviewer
+            ? "Review submissions from staff. Approved items requiring final sign-off route to the Super Admin."
+            : "Track the records and reports you have submitted to the Admin office."}
+        </p>
+        <Button className="gap-2" onClick={() => setCreating(true)}><Plus className="h-4 w-4"/>New submission</Button>
+      </div>
+
+      <TableShell
+        head={["Title", "Category", "Submitted by", "Status", "Updated", ""]}
+        rows={rows.map((r) => [
+          <span className="font-medium">{r.title}</span>,
+          <Badge variant="secondary">{r.category}</Badge>,
+          r.submittedBy,
+          approvalBadge(r.status),
+          new Date(r.updatedAt).toLocaleString(),
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={() => setOpen(r)}>
+              {canDecide(r) ? "Review" : "View"}
+            </Button>
+          </div>,
+        ])}
+      />
+
+      {creating && (
+        <Dialog open onOpenChange={(o) => !o && setCreating(false)}>
+          <DialogContent className="max-w-xl">
+            <DialogHeader><DialogTitle>New submission</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Title *</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Term 2 grade sheet — Grade 6" />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue/></SelectTrigger>
+                  <SelectContent>
+                    {APPROVAL_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Details</Label>
+                <Textarea rows={4} value={form.details} onChange={(e) => setForm({ ...form, details: e.target.value })} placeholder="What are you submitting and why?" />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  checked={form.requiresSuperadmin}
+                  onChange={(e) => setForm({ ...form, requiresSuperadmin: e.target.checked })} />
+                Requires final Super Admin approval
+              </label>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
+              <Button onClick={submit}>Submit for review</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {open && (
+        <Dialog open onOpenChange={(o) => !o && setOpen(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{open.title}</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                {approvalBadge(open.status)}
+                <Badge variant="secondary">{open.category}</Badge>
+                {open.requiresSuperadmin && <Badge variant="outline">Super Admin sign-off required</Badge>}
+              </div>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{open.details || "No details provided."}</p>
+
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Audit trail</p>
+                <ol className="space-y-3 border-l border-border pl-4">
+                  {open.history.map((h, i) => (
+                    <li key={i} className="relative">
+                      <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
+                      <p className="text-sm font-medium">{h.action} — {h.actor} <span className="text-muted-foreground font-normal">({String(h.actorRole)})</span></p>
+                      <p className="text-xs text-muted-foreground">{new Date(h.at).toLocaleString()}</p>
+                      {h.comment && <p className="text-sm mt-1">{h.comment}</p>}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {canDecide(open) && (
+                <div>
+                  <Label>Reviewer comment</Label>
+                  <Textarea rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional note for the submitter…" />
+                </div>
+              )}
+            </div>
+            <DialogFooter className="flex-wrap gap-2">
+              {canDecide(open) ? (
+                <>
+                  <Button variant="ghost" onClick={() => act("reject")}>Reject</Button>
+                  <Button variant="outline" onClick={() => act("return")}>Return for revision</Button>
+                  {principal.role === "admin" && (
+                    <Button variant="outline" onClick={() => act("forward")}>Forward to Super Admin</Button>
+                  )}
+                  <Button onClick={() => act("approve")}>Approve</Button>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setOpen(null)}>Close</Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
