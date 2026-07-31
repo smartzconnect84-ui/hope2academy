@@ -89,8 +89,8 @@ function Stories() {
         <div className="container mx-auto px-6 max-w-2xl text-center">
           <h2 className="text-4xl font-bold">Want stories in your inbox?</h2>
           <p className="mt-3 text-muted-foreground">We send one field update each month — no spam, just real news from Liberia.</p>
-          <form className="mt-8 flex flex-col sm:flex-row gap-3">
-            <input type="email" placeholder="you@email.com" className="flex-1 rounded-full px-6 py-4 bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary" />
+          <form onSubmit={onSubscribe} className="mt-8 flex flex-col sm:flex-row gap-3">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="flex-1 rounded-full px-6 py-4 bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary" />
             <button type="submit" className="rounded-full bg-primary text-primary-foreground px-7 py-4 font-semibold">Subscribe</button>
           </form>
           <Link to="/get-involved" className="mt-6 inline-block text-primary font-semibold">Or get involved directly →</Link>
