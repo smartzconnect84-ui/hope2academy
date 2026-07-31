@@ -215,6 +215,49 @@ export const mockAuth = {
   async deleteUser(id: string) {
     writeUsers(readUsers().filter(u => u.id !== id));
   },
+
+  // ---------- Password reset (demo flow: token surfaced in-app) ----------
+  /** Issues a 6-digit reset code for the email. Throws if no such account. */
+  async requestPasswordReset(email: string): Promise<string> {
+    seedIfEmpty();
+    const u = readUsers().find(x => x.email.toLowerCase() === email.trim().toLowerCase());
+    if (!u) throw new Error("No account found with that email");
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    if (isBrowser()) {
+      const all = JSON.parse(localStorage.getItem(KEY_RESET) || "{}");
+      all[u.email.toLowerCase()] = { code, expires: Date.now() + 15 * 60 * 1000 };
+      localStorage.setItem(KEY_RESET, JSON.stringify(all));
+    }
+    return code;
+  },
+
+  /** Completes a reset using the issued code. */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    if (newPassword.length < 8) throw new Error("Password must be at least 8 characters");
+    const key = email.trim().toLowerCase();
+    const all = isBrowser() ? JSON.parse(localStorage.getItem(KEY_RESET) || "{}") : {};
+    const entry = all[key];
+    if (!entry || entry.code !== code.trim()) throw new Error("Invalid reset code");
+    if (Date.now() > entry.expires) throw new Error("Reset code has expired");
+    const users = readUsers();
+    const idx = users.findIndex(u => u.email.toLowerCase() === key);
+    if (idx === -1) throw new Error("No account found with that email");
+    users[idx] = { ...users[idx], password: newPassword };
+    writeUsers(users);
+    delete all[key];
+    if (isBrowser()) localStorage.setItem(KEY_RESET, JSON.stringify(all));
+  },
+
+  // ---------- Remember me ----------
+  getRememberedEmail(): string {
+    if (!isBrowser()) return "";
+    return localStorage.getItem(KEY_REMEMBER) ?? "";
+  },
+  setRememberedEmail(email: string | null) {
+    if (!isBrowser()) return;
+    if (email) localStorage.setItem(KEY_REMEMBER, email);
+    else localStorage.removeItem(KEY_REMEMBER);
+  },
 };
 
 // ---------- Generic mock data store ----------
