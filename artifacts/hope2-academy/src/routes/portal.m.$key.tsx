@@ -1391,6 +1391,8 @@ function SimpleCrud({
   const [editing, setEditing] = useState<any | null>(null);
   const [creating, setCreating] = useState(false);
   const [all, setAll] = useState<any[]>([]);
+  const principal = usePrincipal();
+  const writable = canWrite(collection, principal?.role ?? null);
 
   const load = useCallback(async () => {
     try {
@@ -1403,13 +1405,16 @@ function SimpleCrud({
 
   useEffect(() => { load(); }, [load]);
 
-  const rows = all.filter((r) =>
+  // Data isolation: users only ever see rows their role/identity entitles them to.
+  const visible = scopeRows(collection, all, principal);
+  const rows = visible.filter((r) =>
     !q || columns.some((c) => String(r[c.key] ?? "").toLowerCase().includes(q.toLowerCase()))
   );
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
   const remove = async (row: any) => {
+    if (!writable) { toast.error("You don't have permission to delete this record"); return; }
     if (!confirm(`Delete this ${itemLabel}?`)) return;
     try {
       await apiClient.remove(collection, row.id);
@@ -1422,11 +1427,13 @@ function SimpleCrud({
   };
 
   const handleSave = async (values: Record<string, any>) => {
+    if (!writable) { toast.error("You don't have permission to edit this record"); return; }
     const normalized: any = {};
     for (const f of fields) {
       const v = values[f.name];
       normalized[f.name] = f.type === "number" ? Number(v ?? 0) : v ?? "";
     }
+    if (!editing) Object.assign(normalized, stampOwner(normalized, principal));
     try {
       if (editing) {
         await apiClient.update(collection, editing.id, normalized);
@@ -1452,22 +1459,30 @@ function SimpleCrud({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${itemLabel}s…`} className="pl-9 bg-card" />
         </div>
-        <Button className="gap-2" onClick={() => setCreating(true)}>
-          <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
-        </Button>
+        {writable ? (
+          <Button className="gap-2" onClick={() => setCreating(true)}>
+            <Plus className="h-4 w-4" /> {createLabel ?? `New ${itemLabel}`}
+          </Button>
+        ) : (
+          <Badge variant="secondary" className="h-9 px-3 grid place-items-center">Read-only</Badge>
+        )}
       </div>
       <TableShell
-        head={[...columns.map((c) => c.label), ""]}
+        head={[...columns.map((c) => c.label), ...(writable ? [""] : [])]}
         rows={rows.map((r) => [
           ...columns.map((c) => (c.render ? c.render(r[c.key], r) : (r[c.key] ?? "—"))),
-          <div className="flex items-center gap-2 justify-end">
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
-              <Edit3 className="h-3.5 w-3.5" />Edit
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => remove(r)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>,
+          ...(writable
+            ? [
+                <div className="flex items-center gap-2 justify-end">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(r)}>
+                    <Edit3 className="h-3.5 w-3.5" />Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => remove(r)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>,
+              ]
+            : []),
         ])}
       />
       {(editing || creating) && (
