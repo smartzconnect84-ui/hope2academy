@@ -88,7 +88,7 @@ function LoginPage() {
               <Sparkles className="h-3.5 w-3.5 text-accent" /> Demo credentials
             </div>
             <p className="mt-1 text-xs text-primary-foreground/80">Click a role to sign in instantly.</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
               {DEMO_CREDENTIALS.map((c) => (
                 <button
                   key={c.role}
@@ -129,24 +129,55 @@ function LoginPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(true)}
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
                 <div className="relative mt-1.5">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" required value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="••••••••" className="pl-9" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-9 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
+                <Label htmlFor="remember" className="text-sm font-medium cursor-pointer">Remember me</Label>
               </div>
               <Button type="submit" disabled={submitting} className="w-full h-11 text-base font-semibold">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
               </Button>
             </form>
 
+            <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
+
             <div className="mt-6 rounded-xl bg-muted/50 p-4 text-xs text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Admin-invite only.</strong> Accounts are created by Super Admins or Admins. If you don't have credentials yet, <Link to="/contact" className="text-primary font-semibold underline">contact us</Link>.
             </div>
 
-            <div className="mt-4 lg:hidden">
+            <div className="mt-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Demo accounts</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                 {DEMO_CREDENTIALS.map((c) => (
                   <button
                     key={c.role}
@@ -155,6 +186,7 @@ function LoginPage() {
                     className="rounded-lg border border-border px-2.5 py-2 text-left text-[11px] hover:border-primary hover:text-primary transition"
                   >
                     <span className="font-semibold block">{ROLE_LABEL[c.role]}</span>
+                    <span className="text-muted-foreground block truncate">{c.email}</span>
                     <span className="text-muted-foreground flex items-center gap-1"><Copy className="h-3 w-3"/>Fill</span>
                   </button>
                 ))}
