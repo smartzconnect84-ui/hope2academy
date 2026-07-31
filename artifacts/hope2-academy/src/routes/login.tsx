@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Logo, BrandWordmark } from "@/components/Logo";
 import { useBrand } from "@/lib/brand";
+import loginBg from "@/assets/login-bg.jpg.asset.json";
 
 
 function LoginPage() {
@@ -61,29 +62,33 @@ function LoginPage() {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden">
       <div
-        className="absolute inset-0 -z-10"
-        style={{ background: "var(--gradient-hero)" }}
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg.url})` }}
       />
-      <div className="absolute inset-0 -z-10 bg-background/40 backdrop-blur-[2px]" />
-      <div className="container mx-auto px-6 py-16 grid lg:grid-cols-2 gap-12 items-center">
+      <div
+        className="absolute inset-0 -z-10 opacity-90"
+        style={{ background: "var(--gradient-hero)", mixBlendMode: "multiply" }}
+      />
+      <div className="absolute inset-0 -z-10 bg-background/20 backdrop-blur-[2px]" />
+      <div className="container mx-auto px-6 py-12 md:py-16 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] xl:grid-cols-2 gap-10 lg:gap-14 items-center">
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-primary-foreground hidden lg:block"
+          className="text-primary-foreground hidden lg:block min-w-0"
         >
           <div className="inline-flex items-center gap-3 rounded-full bg-white/15 backdrop-blur px-3 py-1.5 text-xs font-semibold tracking-widest uppercase">
             <Logo size={28} />
             <BrandWordmark /> Portal
           </div>
-          <h1 className="font-display text-5xl xl:text-6xl font-semibold leading-[1.05] mt-6">
+          <h1 className="font-display text-4xl xl:text-6xl font-semibold leading-[1.05] mt-6">
             Welcome back to the<br />movement of compassion.
           </h1>
-          <p className="mt-6 text-lg text-primary-foreground/90 max-w-md">
+          <p className="mt-5 text-base xl:text-lg text-primary-foreground/90 max-w-md">
             Sign in to access your dashboard — administrator, teacher, student, parent or alum.
           </p>
 
-          <div className="mt-10 rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-5 max-w-md">
+          <div className="mt-8 rounded-2xl bg-black/25 backdrop-blur-md border border-white/20 p-5 max-w-md">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
               <Sparkles className="h-3.5 w-3.5 text-accent" /> Demo credentials
             </div>
@@ -109,9 +114,9 @@ function LoginPage() {
           initial={{ opacity: 0, y: 30, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="mx-auto w-full max-w-md"
+          className="mx-auto w-full max-w-md md:max-w-lg lg:max-w-md"
         >
-          <div className="rounded-3xl bg-card shadow-[var(--shadow-warm)] border border-border p-8">
+          <div className="rounded-3xl bg-card/95 backdrop-blur shadow-[var(--shadow-warm)] border border-border p-6 sm:p-8">
             <div className="flex items-center gap-3">
               <Logo size={52} />
               <div>
@@ -175,9 +180,9 @@ function LoginPage() {
               <strong className="text-foreground">Admin-invite only.</strong> Accounts are created by Super Admins or Admins. If you don't have credentials yet, <Link to="/contact" className="text-primary font-semibold underline">contact us</Link>.
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 lg:hidden">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Demo accounts</p>
-              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1">
                 {DEMO_CREDENTIALS.map((c) => (
                   <button
                     key={c.role}
