@@ -47,6 +47,27 @@ const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
 /** Payroll/salary data is confidential to Super Admin and Registrar only. */
 export const CONFIDENTIAL_COLLECTIONS = ["payroll"];
 
+/**
+ * Academic records that Parents, Students and Alumni may VIEW and DOWNLOAD
+ * (export / print) but never create, edit or delete.
+ */
+export const VIEW_DOWNLOAD_COLLECTIONS = [
+  "grades", "transcripts", "exams", "attendance", "assignments",
+  "behavior", "timetable", "calendar", "lessons", "resources",
+];
+
+const DOWNLOAD_ROLES: AppRole[] = ["student", "parent", "alumni"];
+
+/** May this principal export/print rows of this collection? */
+export function canDownload(collection: string, role: AppRole | null): boolean {
+  if (!role) return false;
+  if (CONFIDENTIAL_COLLECTIONS.includes(collection)) {
+    return role === "superadmin" || role === "registrar";
+  }
+  if (isStaff(role) || role === "teacher") return true;
+  return DOWNLOAD_ROLES.includes(role) && VIEW_DOWNLOAD_COLLECTIONS.includes(collection);
+}
+
 export function canWrite(
   collection: string,
   role: AppRole | null,
