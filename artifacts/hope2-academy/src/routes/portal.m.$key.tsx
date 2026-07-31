@@ -2103,6 +2103,7 @@ function MessagesModule() {
 // =========================================================================
 // Academics — Classes (full CRUD)
 // =========================================================================
+// (Messaging & finance modules live at the bottom of this file)
 type ClassRow = { id: string; name: string; teacher: string; room: string; students: number; schedule: string };
 
 function ClassesModule() {
