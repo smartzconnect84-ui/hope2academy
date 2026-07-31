@@ -1158,7 +1158,7 @@ function BroadcastModule() {
     setBusy(true);
     const date = new Date().toISOString().slice(0, 10);
     for (const r of recipients) {
-      const msg = {
+      const msg: any = {
         from: principal?.name ?? "Administration",
         to: r.name,
         toEmail: r.email,
