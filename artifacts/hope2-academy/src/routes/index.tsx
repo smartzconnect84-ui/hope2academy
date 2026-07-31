@@ -26,7 +26,7 @@ function Chapter({ c, index }: { c: HomeChapter; index: number }) {
             <div className="relative">
               <div className="absolute -inset-3 md:-inset-4 rounded-[2rem] bg-[color:var(--color-gold)]/50 -z-10 translate-x-2 translate-y-2" />
               <img
-                src={c.img}
+                src={c.image}
                 alt={c.alt}
                 loading="lazy"
                 className="w-full aspect-[4/3] object-cover rounded-[1.75rem] shadow-[var(--shadow-warm)]"
