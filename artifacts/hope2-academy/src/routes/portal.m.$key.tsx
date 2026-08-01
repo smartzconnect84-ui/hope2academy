@@ -1124,6 +1124,10 @@ const STAFF_ROLE_MODULES: Partial<Record<AppRole, string[]>> = {
     "admissions", "scholarships", "classes", "messages",
     "announcements", "events", "calendar",
   ],
+  nurse: [
+    "clinic", "immunizations", "medications", "healthalerts", "medicalscreenings",
+    "students", "messages", "announcements", "calendar", "approvals", "resources",
+  ],
 };
 
 for (const [role, keys] of Object.entries(STAFF_ROLE_MODULES) as [AppRole, string[]][]) {

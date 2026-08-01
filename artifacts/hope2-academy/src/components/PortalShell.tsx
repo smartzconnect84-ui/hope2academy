@@ -64,6 +64,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("scholarships"), label: "Scholarships", icon: Award },
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
     ]},
+    { group: "Health & Wellness", items: [
+      { to: m("immunizations"), label: "Immunisation Register", icon: Heart },
+      { to: m("medications"), label: "Medications", icon: Heart },
+      { to: m("healthalerts"), label: "Health Alerts", icon: Heart },
+      { to: m("medicalscreenings"), label: "Health Screenings", icon: Heart },
+    ]},
     { group: "Finance", items: [
       { to: m("finance"), label: "Finance Overview", icon: PieChart },
       { to: m("payroll"), label: "Staff Salary & Payroll", icon: Wallet },
@@ -129,6 +135,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("clinic"), label: "Clinic & Health", icon: Award },
       { to: m("inventory"), label: "Inventory", icon: FolderTree },
       { to: m("scholarships"), label: "Scholarships", icon: Award },
+    ]},
+    { group: "Health & Wellness", items: [
+      { to: m("immunizations"), label: "Immunisation Register", icon: Heart },
+      { to: m("medications"), label: "Medications", icon: Heart },
+      { to: m("healthalerts"), label: "Health Alerts", icon: Heart },
+      { to: m("medicalscreenings"), label: "Health Screenings", icon: Heart },
     ]},
     { group: "Finance", items: [
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
