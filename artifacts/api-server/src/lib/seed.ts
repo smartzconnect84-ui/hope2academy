@@ -205,3 +205,14 @@ export async function seedIfEmpty() {
 
   console.log(`[seed] Done. Inserted ${SEED_USERS.length} users and ${SEED_ITEMS.length} items.`);
 }
+
+/** Inserts any demo accounts that are missing (e.g. roles added after first seed). */
+export async function ensureDemoUsers() {
+  for (const u of SEED_USERS) {
+    const existing = await dbStore.findUserByEmail(u.email);
+    if (!existing) {
+      await dbStore.createUser(u as any);
+      console.log(`[seed] Added missing demo user ${u.email}`);
+    }
+  }
+}
