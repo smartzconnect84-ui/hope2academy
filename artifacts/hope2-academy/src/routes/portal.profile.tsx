@@ -192,7 +192,14 @@ function PasswordCard() {
     if (next !== confirm) { toast.error("New passwords do not match"); return; }
     setBusy(true);
     try {
-      await mockAuth.changePassword(user.$id, cur, next);
+      try {
+        await apiClient.changePassword(cur, next);
+      } catch (err) {
+        if (!isNetworkError(err)) throw err;
+        await mockAuth.changePassword(user.$id, cur, next);
+      }
+      // Keep the local demo store in sync so offline sign-in also works.
+      try { await mockAuth.changePassword(user.$id, cur, next); } catch { /* already updated or absent */ }
       toast.success("Password updated");
       setCur(""); setNext(""); setConfirm("");
     } catch (e: any) {

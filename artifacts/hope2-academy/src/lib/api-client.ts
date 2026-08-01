@@ -117,6 +117,31 @@ export const apiClient = {
     return apiFetch<ApiUser>("/auth/me", { method: "PATCH", body: JSON.stringify(patch) });
   },
 
+  /** POST /auth/change-password — self-service password change. */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await apiFetch("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  /** POST /auth/password-reset/request — returns the demo reset code. */
+  async requestPasswordReset(email: string): Promise<string> {
+    const { code } = await apiFetch<{ code: string }>("/auth/password-reset/request", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    return code;
+  },
+
+  /** POST /auth/password-reset/confirm — completes a reset. */
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    await apiFetch("/auth/password-reset/confirm", {
+      method: "POST",
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+  },
+
   /** GET /users — list all users (admin/superadmin only). */
   async listUsers(): Promise<ApiUser[]> {
     return apiFetch<ApiUser[]>("/users");
