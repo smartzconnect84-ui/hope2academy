@@ -16,6 +16,9 @@ const SEED_USERS = [
   { id: "usr_student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe",     role: "student" as const,    grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
   { id: "usr_parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe",      role: "parent" as const,     linked_children: ["Mariama Doe","Ezekiel Doe"], bio: "Father of two HOPE2 students.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
   { id: "usr_alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie", role: "alumni" as const,     graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_assistant",  email: "assistant@hope2.demo",  password: "demo1234", name: "Bendu Sirleaf",   role: "admin_assistant" as const,    department: "Administration", bio: "Administrative Assistant.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_registrar",  email: "registrar@hope2.demo",  password: "demo1234", name: "Emmanuel Gbaba",  role: "registrar" as const,          department: "Registry", bio: "Registrar.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_admissions", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi",  role: "admissions_officer" as const, department: "Admissions", bio: "Admission Officer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
   { id: "usr_2", email: "ruth.gonpu@hope2.demo",     password: "demo1234", name: "Ruth Gonpu",     role: "teacher" as const, department: "Science",    subjects: ["Biology","Chemistry"],  createdAt: now },
   { id: "usr_3", email: "kollie.boima@hope2.demo",   password: "demo1234", name: "Kollie Boima",   role: "student" as const, grade: "11", class_name: "Grade 11 — Gold",          createdAt: now },
   { id: "usr_4", email: "fatu.kanneh@hope2.demo",    password: "demo1234", name: "Fatu Kanneh",    role: "student" as const, grade: "7",  class_name: "Grade 7 — Red",            createdAt: now },
@@ -182,6 +185,7 @@ export async function seedIfEmpty() {
   const count = parseInt(userCount[0]?.count ?? "0", 10);
   if (count > 0) {
     console.log(`[seed] Database already has ${count} users — skipping seed.`);
+    await ensureDemoUsers();
     return;
   }
 
