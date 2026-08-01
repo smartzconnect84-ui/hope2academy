@@ -28,6 +28,9 @@ import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
 import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
+import { SubmissionsModule } from "@/components/portal/Submissions";
+import { AssessmentsModule } from "@/components/portal/Assessments";
+import { GradeSheetModule, ReportCardModule } from "@/components/portal/ReportCards";
 import { ck12Store } from "@/lib/ck12-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -121,6 +124,22 @@ const MODULES: Record<string, ModuleDef> = {
   assignments: {
     title: "Assignments", subtitle: "Track open and graded work", icon: ClipboardList,
     render: () => <AssignmentsModule/>,
+  },
+  submissions: {
+    title: "Assignment Submissions", subtitle: "Upload, submit, review and grade student work", icon: Upload,
+    render: () => <SubmissionsModule/>,
+  },
+  assessments: {
+    title: "Quizzes, Tests & Exams", subtitle: "Auto-graded assessments posted straight to the grade sheet", icon: CheckCircle2,
+    render: () => <AssessmentsModule/>,
+  },
+  gradesheet: {
+    title: "Grade Sheet", subtitle: "1st–6th periods, semester exams and averages", icon: FileSpreadsheet,
+    render: () => <GradeSheetModule/>,
+  },
+  reportcard: {
+    title: "Report Card", subtitle: "Printable term and yearly report card", icon: Award,
+    render: () => <ReportCardModule/>,
   },
   grades: {
     title: "Grades", subtitle: "Scores by student and subject", icon: Award,
