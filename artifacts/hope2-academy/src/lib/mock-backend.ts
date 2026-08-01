@@ -514,6 +514,19 @@ function seedNewModules(d: DataShape) {
     { id: "cl2", student: "Ezekiel Doe", visitDate: "2026-05-17", reason: "Scraped knee",  action: "Cleaned & bandaged", nurse: "Nurse Helen", status: "Treated" },
     { id: "cl3", student: "Fatu Kanneh", visitDate: "2026-05-16", reason: "Fever",          action: "Referred to clinic", nurse: "Nurse Helen", status: "Referred" },
   ];
+  d.immunizations = d.immunizations ?? [
+    { id: "im1", student: "Mariama Doe", vaccine: "Measles (MR)", doseDate: "2026-03-12", nextDue: "2027-03-12", administeredBy: "Helen Wortor", status: "Complete" },
+    { id: "im2", student: "Ezekiel Doe", vaccine: "Polio (OPV)",  doseDate: "2026-02-08", nextDue: "2026-08-08", administeredBy: "Helen Wortor", status: "Due" },
+  ];
+  d.medications = d.medications ?? [
+    { id: "md1", student: "Fatu Kanneh", medication: "Amoxicillin 250mg", dosage: "1 tablet", schedule: "Twice daily · 12:00, 16:00", startDate: "2026-05-16", endDate: "2026-05-23", consent: "Parent consent on file", status: "Active" },
+  ];
+  d.healthalerts = d.healthalerts ?? [
+    { id: "ha1", student: "Mariama Doe", condition: "Asthma", severity: "Moderate", instructions: "Inhaler kept in clinic. Avoid strenuous outdoor drills on dusty days.", emergencyContact: "+231 775 975 544", status: "Active" },
+  ];
+  d.medicalscreenings = d.medicalscreenings ?? [
+    { id: "ms1", student: "Ezekiel Doe", screening: "Vision", date: "2026-04-10", result: "Normal", followUp: "None", status: "Cleared" },
+  ];
   d.calendar = d.calendar ?? [
     { id: "ca1", title: "Period 2 Mid-period Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" },
     { id: "ca2", title: "Independence Day",      type: "Holiday", startDate: "2026-07-26", endDate: "2026-07-26", audience: "All" },
