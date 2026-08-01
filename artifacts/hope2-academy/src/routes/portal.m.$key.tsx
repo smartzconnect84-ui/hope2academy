@@ -28,6 +28,9 @@ import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
 import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
+import { SubmissionsModule } from "@/components/portal/Submissions";
+import { AssessmentsModule } from "@/components/portal/Assessments";
+import { GradeSheetModule, ReportCardModule } from "@/components/portal/ReportCards";
 import { ck12Store } from "@/lib/ck12-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -121,6 +124,22 @@ const MODULES: Record<string, ModuleDef> = {
   assignments: {
     title: "Assignments", subtitle: "Track open and graded work", icon: ClipboardList,
     render: () => <AssignmentsModule/>,
+  },
+  submissions: {
+    title: "Assignment Submissions", subtitle: "Upload, submit, review and grade student work", icon: Upload,
+    render: () => <SubmissionsModule/>,
+  },
+  assessments: {
+    title: "Quizzes, Tests & Exams", subtitle: "Auto-graded assessments posted straight to the grade sheet", icon: CheckCircle2,
+    render: () => <AssessmentsModule/>,
+  },
+  gradesheet: {
+    title: "Grade Sheet", subtitle: "1st–6th periods, semester exams and averages", icon: FileSpreadsheet,
+    render: () => <GradeSheetModule/>,
+  },
+  reportcard: {
+    title: "Report Card", subtitle: "Printable term and yearly report card", icon: Award,
+    render: () => <ReportCardModule/>,
   },
   grades: {
     title: "Grades", subtitle: "Scores by student and subject", icon: Award,
@@ -498,7 +517,7 @@ Object.assign(MODULES, {
         fields={[
           { name: "applicant", label: "Applicant name", type: "text", required: true },
           { name: "grade", label: "Applying for grade", type: "select", required: true,
-            options: ["ABC","Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
+            options: ["Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
           { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
           { name: "phone", label: "Phone", type: "text" },
           { name: "submitted", label: "Submitted", type: "date", required: true },

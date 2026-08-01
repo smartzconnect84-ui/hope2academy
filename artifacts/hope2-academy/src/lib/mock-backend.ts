@@ -306,10 +306,10 @@ function ensureSeedData() {
       d.__migrated_v2 = [true];
       writeData(d);
     }
-    // v3 migration: expand classes from ABC through Grade 12.
+    // v3 migration: expand classes from Nursery through Grade 12.
     if (!d.__migrated_v3) {
       const classLevels = [
-        "ABC", "Nursery", "KG-1", "KG-2",
+        "Nursery", "KG-1", "KG-2",
         "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
         "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
       ];
@@ -331,12 +331,20 @@ function ensureSeedData() {
       d.__migrated_v4 = [true];
       writeData(d);
     }
+    // v5 migration: retire the legacy "ABC" level — the roster now runs Nursery → Grade 12.
+    if (!d.__migrated_v5) {
+      d.classes = (d.classes ?? []).map((c: any) =>
+        c?.name === "ABC" ? { ...c, name: "Nursery" } : c,
+      ).filter((c: any, i: number, arr: any[]) => arr.findIndex((x) => x.name === c.name) === i);
+      d.__migrated_v5 = [true];
+      writeData(d);
+    }
     return;
   }
 
-  // Full class roster from ABC (pre-nursery) through 12th grade.
+  // Full class roster from Nursery through 12th grade.
   const classLevels = [
-    "ABC", "Nursery", "KG-1", "KG-2",
+    "Nursery", "KG-1", "KG-2",
     "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6",
     "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12",
   ];
