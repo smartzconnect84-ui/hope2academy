@@ -11,6 +11,7 @@ export const APP_ROLES = [
   "registrar",
   "admissions_officer",
   "teacher",
+  "nurse",
   "student",
   "parent",
   "alumni",
@@ -24,6 +25,7 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   registrar: "Registrar",
   admissions_officer: "Admission Officer",
   teacher: "Teacher",
+  nurse: "School Nurse",
   student: "Student",
   parent: "Parent",
   alumni: "Alumni",
@@ -57,7 +59,7 @@ const KEY_RESET = "h2l.resetTokens";
 const KEY_REMEMBER = "h2l.rememberEmail";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
-const USERS_VERSION = "3";
+const USERS_VERSION = "4";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
@@ -66,6 +68,7 @@ export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: s
   { role: "registrar",          email: "registrar@hope2.demo", password: "demo1234", name: "Emmanuel Gbaba" },
   { role: "admissions_officer", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi" },
   { role: "teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman" },
+  { role: "nurse",      email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor" },
   { role: "student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe" },
   { role: "parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe" },
   { role: "alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie" },
@@ -82,6 +85,7 @@ const ROLE_SEED_PROFILE: Partial<Record<AppRole, Partial<MockUser>>> = {
   registrar: { department: "Registry", bio: "Custodian of student records, enrolment, transcripts and grade books." },
   admissions_officer: { department: "Admissions", bio: "Guides families through applications, interviews and enrolment offers." },
   teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
+  nurse: { department: "Health & Wellness", bio: "School nurse — clinic visits, immunisations, medications and health alerts." },
   student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
   parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
   alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
