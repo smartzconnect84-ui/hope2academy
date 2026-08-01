@@ -85,7 +85,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser({ $id: apiUser.id, email: apiUser.email, name: apiUser.name });
       setProfile(fromApiUser(apiUser));
     } catch (e) {
-      if (!isNetworkError(e)) throw e;
+      if (!isNetworkError(e)) {
+        // The API rejected the credentials. The account may only exist in the
+        // local demo store (e.g. a role added after the server was seeded),
+        // so try there before surfacing the failure.
+        try {
+          await mockAuth.signIn(email, password);
+        } catch {
+          throw e;
+        }
+        await hydrate();
+        return;
+      }
       await mockAuth.signIn(email, password);
       await hydrate();
     }
