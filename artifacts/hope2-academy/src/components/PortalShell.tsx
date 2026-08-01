@@ -317,7 +317,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("immunizations"), label: "Immunisation Register", icon: Heart },
       { to: m("medications"), label: "Medication Administration", icon: Heart },
       { to: m("medicalscreenings"), label: "Health Screenings", icon: Heart },
-      { to: m("students"), label: "Student Directory", icon: Users },
+      { to: m("directory"), label: "Student Directory", icon: Users },
       { to: m("approvals"), label: "Submit for Approval", icon: CheckCircle2 },
     ]},
     { group: "Communications", items: [

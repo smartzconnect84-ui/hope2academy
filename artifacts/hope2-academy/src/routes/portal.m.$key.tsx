@@ -1126,7 +1126,7 @@ const STAFF_ROLE_MODULES: Partial<Record<AppRole, string[]>> = {
   ],
   nurse: [
     "clinic", "immunizations", "medications", "healthalerts", "medicalscreenings",
-    "students", "messages", "announcements", "calendar", "approvals", "resources",
+    "directory", "messages", "announcements", "calendar", "approvals", "resources",
   ],
 };
 
