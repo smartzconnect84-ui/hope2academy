@@ -2,7 +2,17 @@ import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const APP_ROLES = ["superadmin", "admin", "teacher", "student", "parent", "alumni"] as const;
+export const APP_ROLES = [
+  "superadmin",
+  "admin",
+  "admin_assistant",
+  "registrar",
+  "admissions_officer",
+  "teacher",
+  "student",
+  "parent",
+  "alumni",
+] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 export const usersTable = pgTable("users", {
