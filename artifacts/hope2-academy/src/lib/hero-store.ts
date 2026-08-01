@@ -36,7 +36,7 @@ export const DEFAULT_SLIDES: HeroSlide[] = [
     kicker: "Faith · Character · Scholarship",
     title: "Raising leaders",
     titleAccent: "rooted in purpose",
-    body: "At HOPE2 ACADEMY, every learner is formed in faith, discipline, and the joy of discovery — ABC through 12th grade.",
+    body: "At HOPE2 ACADEMY, every learner is formed in faith, discipline, and the joy of discovery — Nursery through 12th grade.",
     primaryLabel: "Sponsor a Student", primaryTo: "/get-involved",
     secondaryLabel: "Our Mission", secondaryTo: "/about",
     enabled: true,

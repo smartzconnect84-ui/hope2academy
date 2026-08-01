@@ -92,17 +92,17 @@ export const DEFAULT_CONTENT: SiteContent = {
     {
       id: "academy", roman: "II", pillar: "Division II — Learning that lasts a lifetime",
       title: "HOPE2 ACADEMY", tag: "Every child, a future.",
-      est: "ABC through 12th Grade", area: "Marshall Road, Lower Margibi County, Liberia",
+      est: "Nursery through 12th Grade", area: "Marshall Road, Lower Margibi County, Liberia",
       image: academyAsset.url, published: true,
       body: [
         "HOPE2 ACADEMY — affectionately known as The Lizard Kingdom — is the K-12 Christian school that anchors the movement. Our motto: \"Learning To Serve For God's Purpose.\"",
-        "Our program runs from ABC through 12th Grade — rigorous academics paired with character formation, sports, music and service learning.",
+        "Our program runs from Nursery through 12th Grade — rigorous academics paired with character formation, sports, music and service learning.",
         "Every scholarship comes with a mentor and a six-month progress check. We measure success by attendance, literacy growth, and graduation.",
       ].join("\n\n"),
       bullets: [
         "Tuition & uniform support for enrolled students",
         "Solar-powered library and computer lab",
-        "ABC-to-12th-Grade STEM, civics and Bible curriculum",
+        "Nursery-to-12th-Grade STEM, civics and Bible curriculum",
         "Annual scholarships for top secondary-school entrants",
         "Teacher development in early literacy & STEM",
       ].join("\n"),
@@ -147,7 +147,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   home: {
     ribbon: [
       { id: "r1", k: "01", label: "Margibi, Liberia" },
-      { id: "r2", k: "02", label: "ABC – Grade 12" },
+      { id: "r2", k: "02", label: "Nursery – Grade 12" },
       { id: "r3", k: "03", label: "Learning · Faith · Service" },
       { id: "r4", k: "04", label: "USD & LRD tuition" },
     ],
@@ -160,8 +160,8 @@ export const DEFAULT_CONTENT: SiteContent = {
       {
         id: "c1", tag: "Chapter 01 — Academy",
         title: "A classroom that raises leaders, not just students.",
-        body: "From ABC through Grade 12, HOPE2 ACADEMY blends a rigorous Liberian curriculum with character formation, mentorship, and creative expression — so every child leaves prepared to serve their country.",
-        statValue: "ABC–12", statUnit: "grades", href: "/departments", cta: "Explore the academy",
+        body: "From Nursery through Grade 12, HOPE2 ACADEMY blends a rigorous Liberian curriculum with character formation, mentorship, and creative expression — so every child leaves prepared to serve their country.",
+        statValue: "Nursery–12", statUnit: "grades", href: "/departments", cta: "Explore the academy",
         image: academyAsset.url, alt: "HOPE2 Academy students in class",
       },
       {
@@ -190,7 +190,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     quoteAuthor: "HOPE2 ACADEMY",
     quoteSub: "Learning To Serve For God's Purpose",
     impactStats: [
-      { id: "s1", v: "ABC–12", label: "Grades taught at the Marshall Road campus" },
+      { id: "s1", v: "Nursery–12", label: "Grades taught at the Marshall Road campus" },
       { id: "s2", v: "4", label: "Divisions: Mission, Academy, Church, Media" },
       { id: "s3", v: "Mon–Fri", label: "Office hours 7:00 AM – 4:00 PM" },
       { id: "s4", v: "USD + LRD", label: "Every fee, gift & scholarship in both" },
