@@ -744,7 +744,7 @@ Object.assign(MODULES, {
   },
   clinic: {
     title: "Clinic & Health Records", subtitle: "Health log and immunisations",
-    icon: Heart, allow: ["superadmin", "admin"],
+    icon: Heart, allow: ["superadmin", "admin", "nurse", "parent", "student"],
     render: () => (
       <SimpleCrud
         collection="clinic"
@@ -763,6 +763,112 @@ Object.assign(MODULES, {
           { key: "visitDate", label: "Date" },
           { key: "reason", label: "Reason" },
           { key: "nurse", label: "Nurse" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  immunizations: {
+    title: "Immunisation Register", subtitle: "Vaccine doses, due dates and coverage",
+    icon: Heart, allow: ["superadmin", "admin", "nurse", "parent", "student"],
+    render: () => (
+      <SimpleCrud
+        collection="immunizations"
+        itemLabel="immunisation"
+        createLabel="Add immunisation"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "vaccine", label: "Vaccine", type: "text", required: true, placeholder: "Measles (MR)" },
+          { name: "doseDate", label: "Dose date", type: "date", required: true },
+          { name: "nextDue", label: "Next dose due", type: "date" },
+          { name: "administeredBy", label: "Administered by", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Complete", "Due", "Overdue", "Exempt"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "vaccine", label: "Vaccine" },
+          { key: "doseDate", label: "Dose date" },
+          { key: "nextDue", label: "Next due" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  medications: {
+    title: "Medication Administration", subtitle: "Prescribed medicines given during school hours",
+    icon: Heart, allow: ["superadmin", "admin", "nurse", "parent"],
+    render: () => (
+      <SimpleCrud
+        collection="medications"
+        itemLabel="medication"
+        createLabel="Add medication"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "medication", label: "Medication", type: "text", required: true },
+          { name: "dosage", label: "Dosage", type: "text", required: true },
+          { name: "schedule", label: "Schedule", type: "text", placeholder: "Twice daily · 12:00, 16:00" },
+          { name: "startDate", label: "Start date", type: "date", required: true },
+          { name: "endDate", label: "End date", type: "date" },
+          { name: "consent", label: "Parent consent", type: "textarea" },
+          { name: "status", label: "Status", type: "select", options: ["Active", "Completed", "Discontinued"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "medication", label: "Medication" },
+          { key: "dosage", label: "Dosage" },
+          { key: "schedule", label: "Schedule" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  healthalerts: {
+    title: "Health Alerts & Conditions", subtitle: "Allergies, chronic conditions and emergency instructions",
+    icon: Heart, allow: ["superadmin", "admin", "nurse", "parent"],
+    render: () => (
+      <SimpleCrud
+        collection="healthalerts"
+        itemLabel="health alert"
+        createLabel="Add alert"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "condition", label: "Condition / allergy", type: "text", required: true },
+          { name: "severity", label: "Severity", type: "select", options: ["Mild", "Moderate", "Severe"], required: true },
+          { name: "instructions", label: "Emergency instructions", type: "textarea" },
+          { name: "emergencyContact", label: "Emergency contact", type: "text" },
+          { name: "status", label: "Status", type: "select", options: ["Active", "Resolved"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "condition", label: "Condition" },
+          { key: "severity", label: "Severity", render: (v) => statusBadge(v) },
+          { key: "emergencyContact", label: "Contact" },
+          { key: "status", label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+  medicalscreenings: {
+    title: "Health Screenings", subtitle: "Vision, hearing, dental and growth checks",
+    icon: Heart, allow: ["superadmin", "admin", "nurse", "parent", "student"],
+    render: () => (
+      <SimpleCrud
+        collection="medicalscreenings"
+        itemLabel="screening"
+        createLabel="Add screening"
+        fields={[
+          { name: "student", label: "Student", type: "text", required: true },
+          { name: "screening", label: "Screening type", type: "select", options: ["Vision", "Hearing", "Dental", "Growth / BMI", "General"], required: true },
+          { name: "date", label: "Date", type: "date", required: true },
+          { name: "result", label: "Result", type: "text" },
+          { name: "followUp", label: "Follow-up", type: "textarea" },
+          { name: "status", label: "Status", type: "select", options: ["Cleared", "Follow-up needed", "Referred"], required: true },
+        ]}
+        columns={[
+          { key: "student", label: "Student", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "screening", label: "Type" },
+          { key: "date", label: "Date" },
+          { key: "result", label: "Result" },
           { key: "status", label: "Status", render: (v) => statusBadge(v) },
         ]}
       />
