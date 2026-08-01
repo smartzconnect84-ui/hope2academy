@@ -331,6 +331,14 @@ function ensureSeedData() {
       d.__migrated_v4 = [true];
       writeData(d);
     }
+    // v5 migration: retire the legacy "ABC" level — the roster now runs Nursery → Grade 12.
+    if (!d.__migrated_v5) {
+      d.classes = (d.classes ?? []).map((c: any) =>
+        c?.name === "ABC" ? { ...c, name: "Nursery" } : c,
+      ).filter((c: any, i: number, arr: any[]) => arr.findIndex((x) => x.name === c.name) === i);
+      d.__migrated_v5 = [true];
+      writeData(d);
+    }
     return;
   }
 
