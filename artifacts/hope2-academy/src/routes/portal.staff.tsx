@@ -9,7 +9,7 @@ import { Reveal, StaggerGroup } from "@/components/Motion";
 import { useAuth, ROLE_LABEL, type AppRole } from "@/hooks/use-auth";
 import { mockDb } from "@/lib/mock-backend";
 
-type StaffRole = "admin_assistant" | "registrar" | "admissions_officer";
+type StaffRole = "admin_assistant" | "registrar" | "admissions_officer" | "nurse";
 
 const CONFIG: Record<StaffRole, {
   subtitle: string;
@@ -61,6 +61,21 @@ const CONFIG: Record<StaffRole, {
       { to: "/portal/m/events", label: "Open Days & Events", icon: Calendar },
     ],
   },
+  nurse: {
+    subtitle: "Clinic visits, immunisations, medications and student health alerts",
+    duties: [
+      "Log clinic visits and treatments given during school hours",
+      "Maintain the immunisation register and flag doses that are due",
+      "Administer and record prescribed medications with parent consent",
+      "Keep health alerts, allergies and emergency instructions current",
+    ],
+    quick: [
+      { to: "/portal/m/clinic", label: "Clinic Visit Log", icon: ClipboardList },
+      { to: "/portal/m/immunizations", label: "Immunisation Register", icon: Award },
+      { to: "/portal/m/medications", label: "Medications", icon: FileText },
+      { to: "/portal/m/healthalerts", label: "Health Alerts", icon: Inbox },
+    ],
+  },
 };
 
 function StaffDashboard({ role }: { role: StaffRole }) {
@@ -77,6 +92,13 @@ function StaffDashboard({ role }: { role: StaffRole }) {
         { icon: ClipboardList, label: "Records on File", value: mockDb.list<any>("grades").length },
         { icon: Inbox, label: "Admissions", value: admissions.length },
         { icon: Award, label: "Scholarships", value: mockDb.list<any>("scholarships").length },
+      ]
+    : role === "nurse"
+    ? [
+        { icon: ClipboardList, label: "Clinic Visits", value: mockDb.list<any>("clinic").length },
+        { icon: Award, label: "Immunisation Records", value: mockDb.list<any>("immunizations").length },
+        { icon: FileText, label: "Active Medications", value: mockDb.list<any>("medications").filter((m) => (m.status ?? "") === "Active").length },
+        { icon: Inbox, label: "Health Alerts", value: mockDb.list<any>("healthalerts").filter((h) => (h.status ?? "") === "Active").length },
       ]
     : role === "admissions_officer"
     ? [
@@ -155,6 +177,14 @@ export function AdmissionsOfficerRoute() {
   return (
     <RequireAuth allow={["admissions_officer", "admin", "superadmin"]}>
       <StaffDashboard role="admissions_officer" />
+    </RequireAuth>
+  );
+}
+
+export function NurseRoute() {
+  return (
+    <RequireAuth allow={["nurse", "admin", "superadmin"]}>
+      <StaffDashboard role="nurse" />
     </RequireAuth>
   );
 }

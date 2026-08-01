@@ -307,6 +307,25 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
   ],
+  nurse: [
+    { group: "Clinic", items: [
+      { to: "/portal/nurse", label: "Dashboard", icon: LayoutDashboard },
+      { to: m("clinic"), label: "Clinic Visit Log", icon: Heart },
+      { to: m("healthalerts"), label: "Health Alerts & Conditions", icon: Heart },
+    ]},
+    { group: "Health Records", items: [
+      { to: m("immunizations"), label: "Immunisation Register", icon: Heart },
+      { to: m("medications"), label: "Medication Administration", icon: Heart },
+      { to: m("medicalscreenings"), label: "Health Screenings", icon: Heart },
+      { to: m("students"), label: "Student Directory", icon: Users },
+      { to: m("approvals"), label: "Submit for Approval", icon: CheckCircle2 },
+    ]},
+    { group: "Communications", items: [
+      { to: m("announcements"), label: "Announcements", icon: Megaphone },
+      { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("calendar"), label: "School Calendar", icon: Calendar },
+    ]},
+  ],
   parent: [
     { group: "My Family", items: [
       { to: "/portal/parent", label: "Dashboard", icon: LayoutDashboard },
@@ -325,6 +344,12 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("fees"), label: "Fees & Donations", icon: DollarSign },
       { to: m("scholarships"), label: "Scholarships", icon: Award },
       { to: m("transport"), label: "Transport", icon: FolderTree },
+    ]},
+    { group: "Health", items: [
+      { to: m("clinic"), label: "Clinic Visits", icon: Heart },
+      { to: m("immunizations"), label: "Immunisations", icon: Heart },
+      { to: m("medications"), label: "Medications", icon: Heart },
+      { to: m("healthalerts"), label: "Health Alerts", icon: Heart },
     ]},
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
