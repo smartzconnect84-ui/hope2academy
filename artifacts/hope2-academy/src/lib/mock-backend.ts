@@ -11,6 +11,7 @@ export const APP_ROLES = [
   "registrar",
   "admissions_officer",
   "teacher",
+  "nurse",
   "student",
   "parent",
   "alumni",
@@ -24,6 +25,7 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   registrar: "Registrar",
   admissions_officer: "Admission Officer",
   teacher: "Teacher",
+  nurse: "School Nurse",
   student: "Student",
   parent: "Parent",
   alumni: "Alumni",
@@ -57,7 +59,7 @@ const KEY_RESET = "h2l.resetTokens";
 const KEY_REMEMBER = "h2l.rememberEmail";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
-const USERS_VERSION = "3";
+const USERS_VERSION = "4";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
@@ -66,6 +68,7 @@ export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: s
   { role: "registrar",          email: "registrar@hope2.demo", password: "demo1234", name: "Emmanuel Gbaba" },
   { role: "admissions_officer", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi" },
   { role: "teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman" },
+  { role: "nurse",      email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor" },
   { role: "student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe" },
   { role: "parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe" },
   { role: "alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie" },
@@ -82,6 +85,7 @@ const ROLE_SEED_PROFILE: Partial<Record<AppRole, Partial<MockUser>>> = {
   registrar: { department: "Registry", bio: "Custodian of student records, enrolment, transcripts and grade books." },
   admissions_officer: { department: "Admissions", bio: "Guides families through applications, interviews and enrolment offers." },
   teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
+  nurse: { department: "Health & Wellness", bio: "School nurse — clinic visits, immunisations, medications and health alerts." },
   student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
   parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
   alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
@@ -509,6 +513,19 @@ function seedNewModules(d: DataShape) {
     { id: "cl1", student: "Mariama Doe", visitDate: "2026-05-19", reason: "Mild headache", action: "Paracetamol, rest 30 min", nurse: "Nurse Helen", status: "Treated" },
     { id: "cl2", student: "Ezekiel Doe", visitDate: "2026-05-17", reason: "Scraped knee",  action: "Cleaned & bandaged", nurse: "Nurse Helen", status: "Treated" },
     { id: "cl3", student: "Fatu Kanneh", visitDate: "2026-05-16", reason: "Fever",          action: "Referred to clinic", nurse: "Nurse Helen", status: "Referred" },
+  ];
+  d.immunizations = d.immunizations ?? [
+    { id: "im1", student: "Mariama Doe", vaccine: "Measles (MR)", doseDate: "2026-03-12", nextDue: "2027-03-12", administeredBy: "Helen Wortor", status: "Complete" },
+    { id: "im2", student: "Ezekiel Doe", vaccine: "Polio (OPV)",  doseDate: "2026-02-08", nextDue: "2026-08-08", administeredBy: "Helen Wortor", status: "Due" },
+  ];
+  d.medications = d.medications ?? [
+    { id: "md1", student: "Fatu Kanneh", medication: "Amoxicillin 250mg", dosage: "1 tablet", schedule: "Twice daily · 12:00, 16:00", startDate: "2026-05-16", endDate: "2026-05-23", consent: "Parent consent on file", status: "Active" },
+  ];
+  d.healthalerts = d.healthalerts ?? [
+    { id: "ha1", student: "Mariama Doe", condition: "Asthma", severity: "Moderate", instructions: "Inhaler kept in clinic. Avoid strenuous outdoor drills on dusty days.", emergencyContact: "+231 775 975 544", status: "Active" },
+  ];
+  d.medicalscreenings = d.medicalscreenings ?? [
+    { id: "ms1", student: "Ezekiel Doe", screening: "Vision", date: "2026-04-10", result: "Normal", followUp: "None", status: "Cleared" },
   ];
   d.calendar = d.calendar ?? [
     { id: "ca1", title: "Period 2 Mid-period Exams", type: "Exam",    startDate: "2026-05-28", endDate: "2026-06-05", audience: "Students" },

@@ -62,15 +62,19 @@ function LoginPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden">
-      <div
-        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${loginBg.url})` }}
+      {/* Campus photograph — stays visible on phones, tablets and desktop */}
+      <img
+        src={loginBg.url}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 h-full w-full object-cover object-center"
       />
+      {/* Readability scrim: light enough that the photo shows through everywhere */}
       <div
-        className="absolute inset-0 -z-10 opacity-90"
-        style={{ background: "var(--gradient-hero)", mixBlendMode: "multiply" }}
+        className="absolute inset-0 -z-10 opacity-45"
+        style={{ background: "var(--gradient-hero)" }}
       />
-      <div className="absolute inset-0 -z-10 bg-background/20 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-foreground/40 via-foreground/20 to-foreground/50" />
       <div className="container mx-auto px-6 py-12 md:py-16 grid lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] xl:grid-cols-2 gap-10 lg:gap-14 items-center">
         <motion.div
           initial={{ opacity: 0, x: -40 }}

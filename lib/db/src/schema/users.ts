@@ -9,6 +9,7 @@ export const APP_ROLES = [
   "registrar",
   "admissions_officer",
   "teacher",
+  "nurse",
   "student",
   "parent",
   "alumni",

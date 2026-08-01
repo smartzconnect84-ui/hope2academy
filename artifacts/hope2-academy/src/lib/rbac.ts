@@ -42,7 +42,13 @@ const READ_ONLY_FOR: Partial<Record<AppRole, string[]>> = {
   teacher: ["fees", "scholarships", "staff", "admissions", "transport", "inventory", "clinic", "payroll", "expenses", "campaigns", "forms"],
   admin_assistant: ["payroll", "expenses"],
   admissions_officer: ["payroll", "expenses"],
+  nurse: ["grades", "transcripts", "exams", "assignments", "fees", "scholarships", "payroll", "expenses", "staff", "admissions", "classes", "timetable", "announcements", "calendar", "inventory", "transport", "campaigns", "forms"],
 };
+
+/** Medical / health collections owned by the School Nurse. */
+export const MEDICAL_COLLECTIONS = [
+  "clinic", "immunizations", "medications", "healthalerts", "medicalscreenings",
+];
 
 /** Payroll/salary data is confidential to Super Admin and Registrar only. */
 export const CONFIDENTIAL_COLLECTIONS = ["payroll"];
@@ -65,6 +71,7 @@ export function canDownload(collection: string, role: AppRole | null): boolean {
     return role === "superadmin" || role === "registrar";
   }
   if (isStaff(role) || role === "teacher") return true;
+  if (role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) return true;
   return DOWNLOAD_ROLES.includes(role) && VIEW_DOWNLOAD_COLLECTIONS.includes(collection);
 }
 
@@ -79,6 +86,10 @@ export function canWrite(
     return role === "superadmin" || role === "registrar";
   }
   if (role === "superadmin" || role === "admin") return true;
+  // The nurse owns medical records outright (unless frozen for approval).
+  if (role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) {
+    return !lockedCollections.includes(collection);
+  }
   if (ADMIN_MANAGED_COLLECTIONS.includes(collection)) return false;
   // Records already submitted upward are frozen until returned for revision.
   if (lockedCollections.includes(collection)) return false;
@@ -123,6 +134,9 @@ export function scopeRows<T extends Record<string, any>>(
   // Broadcast collections everyone may read in full.
   const PUBLIC_TO_ALL = ["announcements", "calendar", "events", "library", "resources", "jobs", "directory", "posts", "departments", "team"];
   if (PUBLIC_TO_ALL.includes(collection)) return rows;
+
+  // The nurse sees every medical record school-wide.
+  if (p.role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) return rows;
 
   if (p.role === "teacher") {
     // Teachers see what they authored, teach, or supervise; otherwise class-level rows.
