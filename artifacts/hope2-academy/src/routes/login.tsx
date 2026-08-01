@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, Lock, Loader2, Copy, Sparkles, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_CREDENTIALS, ROLE_LABEL, mockAuth } from "@/lib/mock-backend";
+import { apiClient, isNetworkError } from "@/lib/api-client";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
