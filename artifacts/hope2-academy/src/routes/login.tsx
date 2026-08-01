@@ -219,7 +219,13 @@ function ForgotPasswordDialog({
   const request = async () => {
     setBusy(true);
     try {
-      const token = await mockAuth.requestPasswordReset(email);
+      let token: string;
+      try {
+        token = await apiClient.requestPasswordReset(email);
+      } catch (err) {
+        if (!isNetworkError(err)) throw err;
+        token = await mockAuth.requestPasswordReset(email);
+      }
       setCode(token);
       setStep("reset");
       toast.success("Reset code generated", { description: `Demo mode — your code is ${token}` });
@@ -231,7 +237,17 @@ function ForgotPasswordDialog({
   const reset = async () => {
     setBusy(true);
     try {
-      await mockAuth.resetPassword(email, code, newPassword);
+      try {
+        await apiClient.resetPassword(email, code, newPassword);
+        // Mirror into the local demo store so offline sign-in matches.
+        try {
+          const local = await mockAuth.requestPasswordReset(email);
+          await mockAuth.resetPassword(email, local, newPassword);
+        } catch { /* account not in local store */ }
+      } catch (err) {
+        if (!isNetworkError(err)) throw err;
+        await mockAuth.resetPassword(email, code, newPassword);
+      }
       toast.success("Password updated — you can sign in now");
       onOpenChange(false);
     } catch (e: any) {
