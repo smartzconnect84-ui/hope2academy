@@ -19,7 +19,7 @@ import PortalStudent from "@/routes/portal.student";
 import PortalSuperadmin from "@/routes/portal.superadmin";
 import PortalTeacher from "@/routes/portal.teacher";
 import PortalModule from "@/routes/portal.m.$key";
-import { AdminAssistantRoute, RegistrarRoute, AdmissionsOfficerRoute } from "@/routes/portal.staff";
+import { AdminAssistantRoute, RegistrarRoute, AdmissionsOfficerRoute, NurseRoute } from "@/routes/portal.staff";
 
 function NotFound() {
   return (
@@ -54,6 +54,7 @@ export default function App() {
           <Route path="admin_assistant" element={<AdminAssistantRoute />} />
           <Route path="registrar" element={<RegistrarRoute />} />
           <Route path="admissions_officer" element={<AdmissionsOfficerRoute />} />
+          <Route path="nurse" element={<NurseRoute />} />
           <Route path="alumni" element={<PortalAlumni />} />
           <Route path="parent" element={<PortalParent />} />
           <Route path="profile" element={<PortalProfile />} />
