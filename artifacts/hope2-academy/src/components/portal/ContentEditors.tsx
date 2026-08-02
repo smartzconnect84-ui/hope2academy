@@ -164,7 +164,7 @@ export function ProjectsContentModule() {
         </div>
         <div><Label>Lead</Label><Textarea rows={2} value={c.projectsLead} onChange={(e) => siteContent.patch({ projectsLead: e.target.value })} /></div>
       </PageCopy>
-      <ListEditor<ProjectItem>
+      <ListEditor
         items={c.projects}
         collection="projects"
         label="project"
@@ -198,7 +198,7 @@ export function StoriesContentModule() {
         </div>
         <div><Label>Lead</Label><Textarea rows={2} value={c.storiesLead} onChange={(e) => siteContent.patch({ storiesLead: e.target.value })} /></div>
       </PageCopy>
-      <ListEditor<StoryItem>
+      <ListEditor
         items={c.stories}
         collection="stories"
         label="story"
@@ -238,7 +238,7 @@ export function DivisionsContentModule() {
         </div>
         <div><Label>Lead</Label><Textarea rows={2} value={c.divisionsLead} onChange={(e) => siteContent.patch({ divisionsLead: e.target.value })} /></div>
       </PageCopy>
-      <ListEditor<DivisionItem>
+      <ListEditor
         items={c.divisions}
         collection="divisions"
         label="division"
