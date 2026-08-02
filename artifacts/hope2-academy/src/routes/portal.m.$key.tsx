@@ -116,6 +116,143 @@ function statusBadge(s: string) {
   return <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${cls}`}>{s}</span>;
 }
 
+/** Staff roles that appear in the HR module (ordered for display). */
+const HR_STAFF_ROLES: AppRole[] = [
+  "superadmin", "admin", "admin_assistant", "registrar", "admissions_officer", "teacher", "nurse",
+];
+
+const HR_ROLE_GROUPS: { label: string; roles: AppRole[] }[] = [
+  { label: "Administration", roles: ["superadmin", "admin", "admin_assistant", "registrar", "admissions_officer"] },
+  { label: "Academic & Health", roles: ["teacher", "nurse"] },
+];
+
+function StaffModule() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filterRole, setFilterRole] = useState<AppRole | "all">("all");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await apiClient.listUsers();
+        setUsers(list);
+      } catch {
+        const list = await mockAuth.listUsers();
+        setUsers(list as any[]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const staffUsers = users.filter(u => HR_STAFF_ROLES.includes(u.role as AppRole));
+
+  const visible = filterRole === "all"
+    ? staffUsers
+    : staffUsers.filter(u => u.role === filterRole);
+
+  const countByRole = Object.fromEntries(
+    HR_STAFF_ROLES.map(r => [r, staffUsers.filter(u => u.role === r).length])
+  );
+
+  if (loading) {
+    return <div className="p-10 grid place-items-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Group filter chips */}
+      <div className="space-y-3">
+        {HR_ROLE_GROUPS.map(group => (
+          <div key={group.label}>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{group.label}</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilterRole("all")}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  filterRole === "all"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border hover:bg-muted"
+                }`}
+              >All Staff <span className="opacity-60 ml-1">{staffUsers.length}</span></button>
+              {group.roles.filter(r => countByRole[r] > 0).map(r => (
+                <button
+                  key={r}
+                  onClick={() => setFilterRole(filterRole === r ? "all" : r)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                    filterRole === r
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-border hover:bg-muted"
+                  }`}
+                >
+                  {ROLE_LABEL[r]}
+                  <span className="opacity-60 ml-1">{countByRole[r]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Staff list */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-left">
+              <tr>
+                {["Name", "Role", "Email", "Department", "Status"].map(h => (
+                  <th key={h} className="px-5 py-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {visible.map((u, i) => (
+                <motion.tr
+                  key={u.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.025 }}
+                  className="hover:bg-muted/30"
+                >
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground grid place-items-center text-xs font-bold shrink-0">
+                        {(u.name ?? u.email ?? "?").slice(0,1).toUpperCase()}
+                      </div>
+                      <span className="font-medium">{u.name ?? "—"}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                      u.role === "superadmin" ? "bg-destructive/10 text-destructive"
+                      : u.role === "admin" || u.role === "admin_assistant" ? "bg-primary/10 text-primary"
+                      : u.role === "teacher" ? "bg-accent/30 text-accent-foreground"
+                      : u.role === "nurse" ? "bg-green-100 text-green-700"
+                      : "bg-purple-100 text-purple-700"
+                    }`}>
+                      {ROLE_LABEL[u.role as AppRole] ?? u.role}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-muted-foreground text-xs">{u.email}</td>
+                  <td className="px-5 py-3.5 text-muted-foreground">{u.department ?? "—"}</td>
+                  <td className="px-5 py-3.5">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary">Active</span>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+          {visible.length === 0 && (
+            <p className="p-8 text-center text-muted-foreground">
+              {filterRole === "all" ? "No staff accounts yet." : `No ${ROLE_LABEL[filterRole as AppRole]} accounts yet.`}
+            </p>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 const MODULES: Record<string, ModuleDef> = {
   classes: {
     title: "Classes", subtitle: "All active classes across campuses", icon: GraduationCap,
@@ -900,29 +1037,9 @@ Object.assign(MODULES, {
     ),
   },
   staff: {
-    title: "Human Resources", subtitle: "Employees, departments and employment contracts",
-    icon: Users, allow: ["superadmin", "admin"],
-    render: () => (
-      <SimpleCrud
-        collection="staff"
-        itemLabel="staff member"
-        createLabel="Add staff"
-        fields={[
-          { name: "name", label: "Full name", type: "text", required: true },
-          { name: "role", label: "Role", type: "text", required: true, placeholder: "Teacher, Bursar…" },
-          { name: "department", label: "Department", type: "select",
-            options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
-          { name: "phone", label: "Phone", type: "text" },
-          { name: "status", label: "Status", type: "select", options: ["Active","On Leave","Terminated"], required: true },
-        ]}
-        columns={[
-          { key: "name", label: "Name", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "role", label: "Role" },
-          { key: "department", label: "Department" },
-          { key: "status", label: "Status", render: (v) => statusBadge(v) },
-        ]}
-      />
-    ),
+    title: "HR & Staff", subtitle: "Staff accounts, roles and employment records",
+    icon: Users, allow: ["superadmin", "admin", "admin_assistant", "registrar"],
+    render: () => <StaffModule />,
   },
   payroll: {
     title: "Payroll & Salaries",

@@ -59,7 +59,7 @@ const KEY_RESET = "h2l.resetTokens";
 const KEY_REMEMBER = "h2l.rememberEmail";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
-const USERS_VERSION = "5";
+const USERS_VERSION = "6";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
@@ -107,12 +107,17 @@ function seedIfEmpty() {
   const existing = readUsers();
   const version = localStorage.getItem(KEY_USERS_VERSION);
   if (existing.length > 0) {
-    // Non-destructive upgrade: add any demo accounts (e.g. new staff roles) that are missing.
+    // Upgrade: keep only DEMO_CREDENTIALS accounts + any real (non-@hope2.demo) accounts.
     if (version !== USERS_VERSION) {
       const now = new Date().toISOString();
-      const missing = DEMO_CREDENTIALS.filter(
-        (c) => !existing.some((u) => u.email.toLowerCase() === c.email.toLowerCase())
-      ).map((c) => ({
+      const demoEmails = new Set(DEMO_CREDENTIALS.map(c => c.email.toLowerCase()));
+      // Retain real (non-demo) accounts and the canonical demo accounts; drop filler @hope2.demo extras.
+      const retained = existing.filter(
+        u => demoEmails.has(u.email.toLowerCase()) || !u.email.toLowerCase().endsWith("@hope2.demo")
+      );
+      // Ensure every DEMO_CREDENTIALS entry exists (in case a new role was added).
+      const retainedEmails = new Set(retained.map(u => u.email.toLowerCase()));
+      const toAdd = DEMO_CREDENTIALS.filter(c => !retainedEmails.has(c.email.toLowerCase())).map((c) => ({
         id: `usr_${c.role}`,
         email: c.email,
         password: c.password,
@@ -123,7 +128,7 @@ function seedIfEmpty() {
         createdAt: now,
         ...(ROLE_SEED_PROFILE[c.role] ?? {}),
       })) as MockUser[];
-      if (missing.length) writeUsers([...existing, ...missing]);
+      writeUsers([...retained, ...toAdd]);
       localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
     }
     return;
@@ -133,7 +138,7 @@ function seedIfEmpty() {
   const now = new Date().toISOString();
   const base = ROLE_SEED_PROFILE;
 
-  const seed: MockUser[] = DEMO_CREDENTIALS.map((c, i) => ({
+  const seed: MockUser[] = DEMO_CREDENTIALS.map((c) => ({
     id: `usr_${c.role}`,
     email: c.email,
     password: c.password,
@@ -146,17 +151,7 @@ function seedIfEmpty() {
     ...(base[c.role] ?? {}),
   }));
 
-  // Add a few extra realistic users so admin list isn't bare
-  const extras: MockUser[] = [
-    { id: "usr_2", email: "ruth.gonpu@hope2.demo", password: "demo1234", name: "Ruth Gonpu", role: "teacher", department: "Science", subjects: ["Biology","Chemistry"], createdAt: now },
-    { id: "usr_3", email: "kollie.boima@hope2.demo", password: "demo1234", name: "Kollie Boima", role: "student", grade: "11", class_name: "Grade 11 — Gold", createdAt: now },
-    { id: "usr_4", email: "fatu.kanneh@hope2.demo", password: "demo1234", name: "Fatu Kanneh", role: "student", grade: "7", class_name: "Grade 7 — Red", createdAt: now },
-    { id: "usr_5", email: "moses.weah@hope2.demo", password: "demo1234", name: "Moses Weah", role: "alumni", graduation_year: 2016, createdAt: now },
-    { id: "usr_6", email: "elizabeth.tarr@hope2.demo", password: "demo1234", name: "Elizabeth Tarr", role: "parent", linked_children: ["Kollie Boima"], createdAt: now },
-    { id: "usr_7", email: "amos.flomo@hope2.demo", password: "demo1234", name: "Amos Flomo", role: "teacher", department: "Literature", subjects: ["Literature","History"], createdAt: now },
-    { id: "usr_8", email: "john.kollie@hope2.demo", password: "demo1234", name: "John Kollie", role: "teacher", department: "Sciences", subjects: ["Physics","Geography"], bio: "Physics & Geography teacher, Marshall Road Campus.", phone: "+231 770 901 234", address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia", createdAt: now },
-  ];
-  writeUsers([...seed, ...extras]);
+  writeUsers(seed);
 }
 
 // ---------- Auth ----------
@@ -344,6 +339,23 @@ function ensureSeedData() {
       d.__migrated_v5 = [true];
       writeData(d);
     }
+    // v7 migration: clear all demo/sample transactional data.
+    // Structural reference data (classes, departments, settings, pages) is kept.
+    // User accounts (login credentials) are stored separately and are not touched.
+    if (!d.__migrated_v7) {
+      const CLEAR = [
+        "assignments","grades","attendance","timetable","lessonplans","exams",
+        "announcements","messages","events","jobs","posts","media","donations",
+        "fees","children","admissions","behavior","transport","audit","resources",
+        "library","inventory","staff","scholarships","directory","calendar",
+        "clinic","immunizations","medications","healthalerts","medicalscreenings",
+        "leaverequests","ptmeetings","counselling","bookstock","approvals","payroll",
+        "expenses","campaigns","forms",
+      ];
+      for (const col of CLEAR) d[col] = [];
+      d.__migrated_v7 = [true];
+      writeData(d);
+    }
     // v6 migration: stamp teacher ownership on all operational records so per-teacher
     // data isolation works correctly in RBAC.
     if (!d.__migrated_v6) {
@@ -463,96 +475,46 @@ function ensureSeedData() {
     { id: "tt_j4", day: "Thursday",  teacher: "John Kollie",  slots: [{ t: "09:00", s: "Grade 10 — Geography" }, { t: "11:00", s: "Grade 12 — Physics" }] },
     { id: "tt_j5", day: "Friday",    teacher: "John Kollie",  slots: [{ t: "08:00", s: "Grade 12 — Physics" }, { t: "15:00", s: "Assembly" }] },
   ];
-  d.announcements = [
-    { id: "an1", title: "Parent-Teacher meeting Friday 4pm", body: "All parents invited to Marshall Road auditorium.", audience: "All", date: "2026-05-22" },
-    { id: "an2", title: "Library now open until 7pm", body: "Extended hours for exam season.", audience: "Students", date: "2026-05-20" },
-    { id: "an3", title: "Vaccination drive complete", body: "All participants reported healthy.", audience: "Parents", date: "2026-05-19" },
-    { id: "an4", title: "Donor visit on Tuesday", body: "Staff please prepare classroom showcases.", audience: "Staff", date: "2026-05-18" },
-  ];
-  d.messages = [
-    { id: "m1", from: "Grace Tubman", to: "Samuel Doe", subject: "Mariama's mid-period progress", preview: "I wanted to share some great news…", date: "2026-05-21", unread: true },
-    { id: "m2", from: "Admin Office", to: "All Staff", subject: "Payroll cycle update", preview: "Please confirm bank details by Friday.", date: "2026-05-20", unread: true },
-    { id: "m3", from: "Patience Kollie", to: "Alumni Network", subject: "Mentor sign-up open", preview: "We have 12 spots remaining.", date: "2026-05-18", unread: false },
-  ];
-  d.fees = [
-    { id: "f1", student: "Mariama Doe", item: "Period 2 Tuition", amount: 320, due: "2026-06-01", status: "Outstanding" },
-    { id: "f2", student: "Ezekiel Doe", item: "Period 2 Tuition", amount: 280, due: "2026-06-01", status: "Outstanding" },
-    { id: "f3", student: "Mariama Doe", item: "Lab fee", amount: 45, due: "2026-05-15", status: "Paid" },
-  ];
-  d.children = [
-    { id: "ch1", name: "Mariama Doe", grade: "Grade 9 — Blue", attendance: "96%", gpa: 3.7 },
-    { id: "ch2", name: "Ezekiel Doe", grade: "Grade 6 — Red", attendance: "92%", gpa: 3.4 },
-  ];
-  d.events = [
-    { id: "e1", title: "Monrovia Alumni Mixer", date: "2026-08-12", location: "Royal Hotel" },
-    { id: "e2", title: "Annual Reunion", date: "2026-12-21", location: "Marshall Road Campus" },
-    { id: "e3", title: "Career Fair", date: "2027-01-14", location: "Marshall Road Campus" },
-  ];
-  d.jobs = [
-    { id: "j1", title: "Junior Software Engineer", company: "Liberia Telecoms", location: "Monrovia", posted: "2026-05-12" },
-    { id: "j2", title: "Project Coordinator", company: "Liberia Water Trust", location: "Buchanan", posted: "2026-05-10" },
-    { id: "j3", title: "Field Nurse", company: "HOPE2 Health", location: "Gbarnga", posted: "2026-05-08" },
-  ];
-  d.directory = [
-    { id: "dir1", name: "Patience Kollie", year: 2019, role: "Software Engineer", city: "Monrovia" },
-    { id: "dir2", name: "Moses Weah", year: 2016, role: "Civil Engineer", city: "Buchanan" },
-    { id: "dir3", name: "Bendu Sirleaf", year: 2020, role: "Teacher", city: "Gbarnga" },
-    { id: "dir4", name: "Prince Karpeh", year: 2018, role: "Public Health Officer", city: "Monrovia" },
-  ];
-  d.donations = [
-    { id: "d1", donor: "Patience Kollie", amount: 250, fund: "Scholarship", date: "2026-05-12" },
-    { id: "d2", donor: "Anonymous", amount: 1000, fund: "Capital", date: "2026-05-09" },
-    { id: "d3", donor: "Moses Weah", amount: 75, fund: "Library", date: "2026-05-02" },
-  ];
+  // Transactional collections start empty — real data is entered by staff.
+  d.announcements = [];
+  d.messages      = [];
+  d.fees          = [];
+  d.children      = [];
+  d.events        = [];
+  d.jobs          = [];
+  d.directory     = [];
+  d.donations     = [];
+  d.posts         = [];
+  d.media         = [];
+  d.audit         = [];
+  d.resources     = [];
+  d.library       = [];
+
+  // Structural / configuration data — always seeded.
   d.pages = [
-    { id: "p1", title: "Home", slug: "/", status: "Published", updated: "2026-05-15" },
-    { id: "p2", title: "About", slug: "/about", status: "Published", updated: "2026-05-15" },
+    { id: "p1", title: "Home",     slug: "/",            status: "Published", updated: "2026-05-15" },
+    { id: "p2", title: "About",    slug: "/about",       status: "Published", updated: "2026-05-15" },
     { id: "p3", title: "Programs", slug: "/departments", status: "Published", updated: "2026-05-14" },
-    { id: "p4", title: "Contact", slug: "/contact", status: "Published", updated: "2026-05-10" },
-  ];
-  d.posts = [
-    { id: "po1", title: "How clean water changed Gbarnga", author: "Editorial", status: "Published", date: "2026-05-10" },
-    { id: "po2", title: "Top of class — meet Mariama", author: "Editorial", status: "Draft", date: "2026-05-18" },
-    { id: "po3", title: "Volunteer week recap", author: "Editorial", status: "Published", date: "2026-05-04" },
-  ];
-  d.media = [
-    { id: "md1", name: "campus-hero.jpg", type: "image/jpeg", size: "1.2 MB", folder: "Hero" },
-    { id: "md2", name: "classroom-7.jpg", type: "image/jpeg", size: "880 KB", folder: "Classrooms" },
-    { id: "md3", name: "graduation-2024.mp4", type: "video/mp4", size: "12.4 MB", folder: "Events" },
-    { id: "md4", name: "annual-report.pdf", type: "application/pdf", size: "3.1 MB", folder: "Reports" },
-    { id: "md5", name: "logo.svg", type: "image/svg+xml", size: "8 KB", folder: "Brand" },
-    { id: "md6", name: "water-project.jpg", type: "image/jpeg", size: "1.0 MB", folder: "Projects" },
+    { id: "p4", title: "Contact",  slug: "/contact",     status: "Published", updated: "2026-05-10" },
   ];
   d.departments = [
-    { id: "dp1", name: "HOPE2 MISSION",  lead: "Esther Pewee",  staff: 18 },
-    { id: "dp2", name: "HOPE2 ACADEMY",  lead: "Grace Kollie",  staff: 42 },
-    { id: "dp3", name: "HOPE2 CHURCH",   lead: "Joseph Wreh",   staff: 12 },
-    { id: "dp4", name: "HOPE2 MEDIA",    lead: "Patience Kollie", staff: 7  },
-  ];
-  d.audit = [
-    { id: "au1", actor: "superadmin@hope2.demo", action: "Updated role for Kollie Boima → student", at: "2026-05-22 09:14" },
-    { id: "au2", actor: "admin@hope2.demo",      action: "Published page /departments",            at: "2026-05-21 17:02" },
-    { id: "au3", actor: "teacher@hope2.demo",    action: "Submitted grades for Grade 9 Math",      at: "2026-05-21 11:48" },
-  ];
-  d.resources = [
-    { id: "r1", title: "Curriculum Framework 2026", type: "PDF", size: "2.4 MB" },
-    { id: "r2", title: "Lesson plan template", type: "DOCX", size: "120 KB" },
-    { id: "r3", title: "Classroom management guide", type: "PDF", size: "1.1 MB" },
-  ];
-  d.library = [
-    { id: "lb1", title: "Things Fall Apart", author: "Chinua Achebe", available: 4 },
-    { id: "lb2", title: "Half of a Yellow Sun", author: "C. N. Adichie", available: 2 },
-    { id: "lb3", title: "A Long Way Gone", author: "Ishmael Beah", available: 6 },
+    { id: "dp1", name: "HOPE2 MISSION",  lead: "", staff: 0 },
+    { id: "dp2", name: "HOPE2 ACADEMY",  lead: "", staff: 0 },
+    { id: "dp3", name: "HOPE2 CHURCH",   lead: "", staff: 0 },
+    { id: "dp4", name: "HOPE2 MEDIA",    lead: "", staff: 0 },
   ];
   d.settings = [
-    { id: "s1", key: "Site name", value: "HOPE2 ACADEMY" },
-    { id: "s2", key: "Contact email", value: "info@hope2academy.org" },
-    { id: "s3", key: "Primary color", value: "Crimson 600" },
-    { id: "s4", key: "Timezone", value: "Africa/Monrovia" },
+    { id: "s1", key: "Site name",      value: "HOPE2 ACADEMY" },
+    { id: "s2", key: "Contact email",  value: "info@hope2academy.org" },
+    { id: "s3", key: "Primary color",  value: "Crimson 600" },
+    { id: "s4", key: "Timezone",       value: "Africa/Monrovia" },
   ];
   d.__seeded = [true];
   seedNewModules(d);
   d.__migrated_v4 = [true];
+  d.__migrated_v5 = [true];
+  d.__migrated_v6 = [true];
+  d.__migrated_v7 = [true];
   writeData(d);
 }
 
