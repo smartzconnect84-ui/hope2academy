@@ -1079,6 +1079,213 @@ Object.assign(MODULES, {
     title: "Approvals", subtitle: "Submit, review and sign off school records", icon: CheckCircle2,
     render: () => <ApprovalsModule/>,
   },
+
+  // ── New modules ───────────────────────────────────────────────────────────
+
+  visitorlog: {
+    title: "Visitor Log", subtitle: "Record every visitor entering school premises with time in/out", icon: ClipboardList,
+    allow: ["superadmin", "admin", "admin_assistant"],
+    render: () => (
+      <SimpleCrud
+        collection="visitorlog"
+        itemLabel="visitor"
+        createLabel="Log visitor"
+        fields={[
+          { name: "fullName",  label: "Full name",           type: "text",     required: true },
+          { name: "purpose",   label: "Purpose of visit",    type: "select",   options: ["Meeting with staff","Student pickup","Delivery","Interview","Official business","Other"], required: true },
+          { name: "host",      label: "Host (staff member)", type: "text",     required: true },
+          { name: "idType",    label: "ID type",             type: "select",   options: ["National ID","Passport","Driver's licence","Other"] },
+          { name: "timeIn",    label: "Time in",             type: "text",     placeholder: "HH:MM", required: true },
+          { name: "timeOut",   label: "Time out",            type: "text",     placeholder: "HH:MM" },
+          { name: "notes",     label: "Notes",               type: "textarea" },
+          { name: "status",    label: "Status",              type: "select",   options: ["On premises","Departed","Expected"], required: true },
+        ]}
+        columns={[
+          { key: "fullName", label: "Visitor",  render: (v) => <span className="font-medium">{v}</span> },
+          { key: "purpose",  label: "Purpose" },
+          { key: "host",     label: "Host" },
+          { key: "timeIn",   label: "Time in" },
+          { key: "timeOut",  label: "Time out" },
+          { key: "status",   label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+
+  academicyear: {
+    title: "Academic Year & Term Setup", subtitle: "Define academic years, terms and school holiday periods", icon: Calendar,
+    allow: ["superadmin", "admin"],
+    render: () => (
+      <SimpleCrud
+        collection="academicyear"
+        itemLabel="term"
+        createLabel="Add term"
+        fields={[
+          { name: "year",      label: "Academic year", type: "text",     placeholder: "2025–2026", required: true },
+          { name: "term",      label: "Term",          type: "select",   options: ["1st Term","2nd Term","3rd Term","Full Year"], required: true },
+          { name: "startDate", label: "Start date",    type: "text",     placeholder: "YYYY-MM-DD", required: true },
+          { name: "endDate",   label: "End date",      type: "text",     placeholder: "YYYY-MM-DD", required: true },
+          { name: "holidays",  label: "Key holidays / breaks", type: "textarea", placeholder: "List holiday periods within this term" },
+          { name: "status",    label: "Status",        type: "select",   options: ["Upcoming","Active","Completed"], required: true },
+        ]}
+        columns={[
+          { key: "year",      label: "Year",  render: (v) => <span className="font-medium">{v}</span> },
+          { key: "term",      label: "Term" },
+          { key: "startDate", label: "Start" },
+          { key: "endDate",   label: "End" },
+          { key: "status",    label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+
+  counselling: {
+    title: "Counselling Records", subtitle: "Log academic and pastoral counselling sessions for students", icon: Heart,
+    allow: ["superadmin", "admin", "teacher", "nurse"],
+    render: () => (
+      <SimpleCrud
+        collection="counselling"
+        itemLabel="session"
+        createLabel="Log session"
+        fields={[
+          { name: "student",      label: "Student name",      type: "text",     required: true },
+          { name: "grade",        label: "Grade / class",     type: "text" },
+          { name: "counsellor",   label: "Counsellor",        type: "text",     required: true },
+          { name: "date",         label: "Date",              type: "text",     placeholder: "YYYY-MM-DD", required: true },
+          { name: "type",         label: "Session type",      type: "select",   options: ["Academic","Pastoral","Behavioural","Career","Bereavement","Other"], required: true },
+          { name: "summary",      label: "Session summary",   type: "textarea", required: true },
+          { name: "followUp",     label: "Follow-up action",  type: "textarea" },
+          { name: "followUpDate", label: "Follow-up date",    type: "text",     placeholder: "YYYY-MM-DD" },
+          { name: "status",       label: "Status",            type: "select",   options: ["Open","Follow-up scheduled","Closed"], required: true },
+        ]}
+        columns={[
+          { key: "student",    label: "Student",    render: (v) => <span className="font-medium">{v}</span> },
+          { key: "counsellor", label: "Counsellor" },
+          { key: "date",       label: "Date" },
+          { key: "type",       label: "Type" },
+          { key: "status",     label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+
+  bookstock: {
+    title: "Library Catalogue", subtitle: "Physical book inventory, borrowing records and overdue notices", icon: Library,
+    allow: ["superadmin", "admin", "teacher", "registrar"],
+    render: () => (
+      <>
+        <SimpleCrud
+          collection="bookstock"
+          itemLabel="book"
+          createLabel="Add book"
+          fields={[
+            { name: "title",           label: "Title",            type: "text",   required: true },
+            { name: "author",          label: "Author",           type: "text",   required: true },
+            { name: "isbn",            label: "ISBN",             type: "text" },
+            { name: "category",        label: "Category",         type: "select", options: ["Fiction","Non-fiction","Textbook","Reference","Science","History","Arts","Other"], required: true },
+            { name: "copiesTotal",     label: "Total copies",     type: "number", required: true },
+            { name: "copiesAvailable", label: "Available copies", type: "number", required: true },
+            { name: "status",          label: "Status",           type: "select", options: ["Available","Low stock","Out of stock"], required: true },
+          ]}
+          columns={[
+            { key: "title",           label: "Title",     render: (v) => <span className="font-medium">{v}</span> },
+            { key: "author",          label: "Author" },
+            { key: "category",        label: "Category" },
+            { key: "copiesTotal",     label: "Total" },
+            { key: "copiesAvailable", label: "Available" },
+            { key: "status",          label: "Status", render: (v) => statusBadge(v) },
+          ]}
+        />
+        <div className="mt-8">
+          <h3 className="text-base font-semibold text-foreground mb-4">Borrowing Records</h3>
+          <SimpleCrud
+            collection="borrowings"
+            itemLabel="borrowing record"
+            createLabel="Record borrowing"
+            fields={[
+              { name: "bookTitle",    label: "Book title",    type: "text",   required: true },
+              { name: "borrower",     label: "Borrower name", type: "text",   required: true },
+              { name: "borrowerType", label: "Borrower type", type: "select", options: ["Student","Teacher","Staff"], required: true },
+              { name: "borrowedDate", label: "Date borrowed", type: "text",   placeholder: "YYYY-MM-DD", required: true },
+              { name: "dueDate",      label: "Due date",      type: "text",   placeholder: "YYYY-MM-DD", required: true },
+              { name: "returnedDate", label: "Date returned", type: "text",   placeholder: "YYYY-MM-DD" },
+              { name: "status",       label: "Status",        type: "select", options: ["Borrowed","Returned","Overdue","Lost"], required: true },
+            ]}
+            columns={[
+              { key: "bookTitle",    label: "Book",     render: (v) => <span className="font-medium">{v}</span> },
+              { key: "borrower",     label: "Borrower" },
+              { key: "borrowerType", label: "Type" },
+              { key: "borrowedDate", label: "Borrowed" },
+              { key: "dueDate",      label: "Due" },
+              { key: "status",       label: "Status", render: (v) => statusBadge(v) },
+            ]}
+          />
+        </div>
+      </>
+    ),
+  },
+
+  ptmeetings: {
+    title: "PTM Scheduler", subtitle: "Parent-teacher meeting slots — schedule, confirm and track attendance", icon: Users,
+    allow: ["superadmin", "admin", "teacher", "parent"],
+    render: () => (
+      <SimpleCrud
+        collection="ptmeetings"
+        itemLabel="meeting slot"
+        createLabel="Schedule meeting"
+        fields={[
+          { name: "teacher",  label: "Teacher",           type: "text",   required: true },
+          { name: "parent",   label: "Parent / guardian", type: "text",   required: true },
+          { name: "student",  label: "Student",           type: "text",   required: true },
+          { name: "date",     label: "Date",              type: "text",   placeholder: "YYYY-MM-DD", required: true },
+          { name: "time",     label: "Time",              type: "text",   placeholder: "HH:MM",      required: true },
+          { name: "duration", label: "Duration (mins)",   type: "number" },
+          { name: "mode",     label: "Mode",              type: "select", options: ["In-person","Video call","Phone call"], required: true },
+          { name: "agenda",   label: "Agenda / notes",    type: "textarea" },
+          { name: "status",   label: "Status",            type: "select", options: ["Scheduled","Confirmed","Completed","Cancelled","No-show"], required: true },
+        ]}
+        columns={[
+          { key: "teacher",  label: "Teacher", render: (v) => <span className="font-medium">{v}</span> },
+          { key: "parent",   label: "Parent" },
+          { key: "student",  label: "Student" },
+          { key: "date",     label: "Date" },
+          { key: "time",     label: "Time" },
+          { key: "status",   label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
+
+  leaverequests: {
+    title: "Staff Leave Management", subtitle: "Staff leave requests — submit, review and approve time off", icon: Inbox,
+    allow: ["superadmin", "admin", "teacher", "registrar"],
+    render: () => (
+      <SimpleCrud
+        collection="leaverequests"
+        itemLabel="leave request"
+        createLabel="Submit leave request"
+        fields={[
+          { name: "staffName",        label: "Staff name",        type: "text",     required: true },
+          { name: "department",       label: "Department",        type: "text" },
+          { name: "leaveType",        label: "Leave type",        type: "select",   options: ["Annual leave","Sick leave","Maternity / Paternity leave","Emergency leave","Study leave","Compassionate leave","Unpaid leave"], required: true },
+          { name: "startDate",        label: "Start date",        type: "text",     placeholder: "YYYY-MM-DD", required: true },
+          { name: "endDate",          label: "End date",          type: "text",     placeholder: "YYYY-MM-DD", required: true },
+          { name: "days",             label: "Number of days",    type: "number",   required: true },
+          { name: "reason",           label: "Reason / details",  type: "textarea", required: true },
+          { name: "coverArrangement", label: "Cover arrangement", type: "textarea" },
+          { name: "status",           label: "Status",            type: "select",   options: ["Pending","Approved","Rejected","Cancelled"], required: true },
+        ]}
+        columns={[
+          { key: "staffName",  label: "Staff",      render: (v) => <span className="font-medium">{v}</span> },
+          { key: "leaveType",  label: "Leave type" },
+          { key: "startDate",  label: "From" },
+          { key: "endDate",    label: "To" },
+          { key: "days",       label: "Days" },
+          { key: "status",     label: "Status", render: (v) => statusBadge(v) },
+        ]}
+      />
+    ),
+  },
 } satisfies Record<string, ModuleDef>);
 
 // =========================================================================

@@ -44,6 +44,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/admin", label: "User Management", icon: Users },
       { to: m("departments"), label: "Departments", icon: Building2 },
       { to: m("staff"), label: "Human Resources", icon: UserCog },
+      { to: m("leaverequests"), label: "Staff Leave Management", icon: Inbox },
     ]},
     { group: "Admissions", items: [
       { to: m("admissions"), label: "Admissions Register", icon: ClipboardList },
@@ -62,12 +63,17 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
       { to: m("library"), label: "Digital Library", icon: Library },
       { to: m("exams"), label: "Examinations", icon: FileText },
+      { to: m("academicyear"), label: "Academic Year Setup", icon: Settings },
+      { to: m("counselling"), label: "Counselling Records", icon: Heart },
+      { to: m("bookstock"), label: "Library Catalogue", icon: Library },
+      { to: m("ptmeetings"), label: "PTM Scheduler", icon: Users },
       { to: m("calendar"), label: "Academic Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
       { to: m("transport"), label: "Transport", icon: FolderTree },
       { to: m("inventory"), label: "Asset Management", icon: FolderTree },
       { to: m("fees"), label: "Tuition & Fees", icon: DollarSign },
+      { to: m("visitorlog"), label: "Visitor Log", icon: ClipboardList },
     ]},
     { group: "Health Services", items: [
       { to: m("clinic"), label: "Health Services", icon: Heart },
@@ -122,6 +128,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: "/portal/admin", label: "User Management", icon: Users },
       { to: m("departments"), label: "Departments", icon: Building2 },
       { to: m("staff"), label: "Human Resources", icon: UserCog },
+      { to: m("leaverequests"), label: "Staff Leave Management", icon: Inbox },
     ]},
     { group: "Admissions", items: [
       { to: m("admissions"), label: "Admissions Register", icon: ClipboardList },
@@ -140,12 +147,17 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("lessonplans"), label: "Lesson Plans", icon: BookOpen },
       { to: m("library"), label: "Digital Library", icon: Library },
       { to: m("exams"), label: "Examinations", icon: FileText },
+      { to: m("academicyear"), label: "Academic Year Setup", icon: Settings },
+      { to: m("counselling"), label: "Counselling Records", icon: Heart },
+      { to: m("bookstock"), label: "Library Catalogue", icon: Library },
+      { to: m("ptmeetings"), label: "PTM Scheduler", icon: Users },
       { to: m("calendar"), label: "Academic Calendar", icon: Calendar },
     ]},
     { group: "Operations", items: [
       { to: m("transport"), label: "Transport", icon: FolderTree },
       { to: m("clinic"), label: "Health Services", icon: Heart },
       { to: m("inventory"), label: "Asset Management", icon: FolderTree },
+      { to: m("visitorlog"), label: "Visitor Log", icon: ClipboardList },
     ]},
     { group: "Health Records", items: [
       { to: m("immunizations"), label: "Immunisation Records", icon: Heart },
@@ -211,6 +223,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("transport"), label: "Transport", icon: FolderTree },
       { to: m("clinic"), label: "Health Services", icon: Heart },
       { to: m("events"), label: "Events", icon: Calendar },
+      { to: m("visitorlog"), label: "Visitor Log", icon: ClipboardList },
     ]},
   ],
   registrar: [
@@ -225,6 +238,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("exams"), label: "Examinations", icon: FileText },
       { to: m("attendance"), label: "Attendance Register", icon: ClipboardList },
       { to: m("behavior"), label: "Conduct Records", icon: Award },
+      { to: m("bookstock"), label: "Library Catalogue", icon: Library },
       { to: m("directory"), label: "School Directory", icon: Users },
       { to: m("approvals"), label: "My Requests", icon: CheckCircle2 },
     ]},
@@ -239,6 +253,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("pledges"), label: "Pledges", icon: Heart },
       { to: m("payroll"), label: "Payroll & Salaries", icon: Wallet },
       { to: m("expenses"), label: "Expenses & Payables", icon: Receipt },
+    ]},
+    { group: "HR & Staff", items: [
+      { to: m("leaverequests"), label: "Staff Leave Management", icon: Inbox },
     ]},
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
@@ -286,6 +303,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("gradesheet"), label: "Academic Transcripts", icon: FileSpreadsheet },
       { to: m("reportcard"), label: "Progress Reports", icon: Award },
       { to: m("behavior"), label: "Conduct Records", icon: Award },
+      { to: m("counselling"), label: "Counselling Records", icon: Heart },
+      { to: m("bookstock"), label: "Library Catalogue", icon: Library },
+      { to: m("ptmeetings"), label: "PTM Scheduler", icon: Users },
       { to: m("resources"), label: "Resources", icon: Library },
       { to: m("library"), label: "Digital Library", icon: Library },
     ]},
@@ -293,6 +313,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
       { to: m("calendar"), label: "Academic Calendar", icon: Calendar },
+      { to: m("leaverequests"), label: "My Leave Requests", icon: Inbox },
       { to: m("approvals"), label: "Submit Request", icon: CheckCircle2 },
     ]},
   ],
@@ -328,6 +349,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("immunizations"), label: "Immunisation Records", icon: Heart },
       { to: m("medications"), label: "Medication Administration", icon: Heart },
       { to: m("medicalscreenings"), label: "Health Screenings", icon: Heart },
+      { to: m("counselling"), label: "Counselling Records", icon: Heart },
       { to: m("directory"), label: "Student Directory", icon: Users },
       { to: m("approvals"), label: "Submit Request", icon: CheckCircle2 },
     ]},
@@ -365,6 +387,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     { group: "Communications", items: [
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
+      { to: m("ptmeetings"), label: "PTM Scheduler", icon: Users },
     ]},
   ],
   alumni: [
