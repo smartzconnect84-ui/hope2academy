@@ -126,23 +126,23 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => <AssignmentsModule/>,
   },
   submissions: {
-    title: "Assignment Submissions", subtitle: "Upload, submit, review and grade student work", icon: Upload,
+    title: "Submissions Register", subtitle: "Upload, submit, review and grade student work", icon: Upload,
     render: () => <SubmissionsModule/>,
   },
   assessments: {
-    title: "Quizzes, Tests & Exams", subtitle: "Auto-graded assessments posted straight to the grade sheet", icon: CheckCircle2,
+    title: "Assessments", subtitle: "Quizzes, tests and exams — auto-graded and posted straight to the grade sheet", icon: CheckCircle2,
     render: () => <AssessmentsModule/>,
   },
   gradesheet: {
-    title: "Grade Sheet", subtitle: "1st–6th periods, semester exams and averages", icon: FileSpreadsheet,
+    title: "Academic Transcripts", subtitle: "Period grades, semester exams and cumulative averages", icon: FileSpreadsheet,
     render: () => <GradeSheetModule/>,
   },
   reportcard: {
-    title: "Report Card", subtitle: "Printable term and yearly report card", icon: Award,
+    title: "Progress Reports", subtitle: "Printable term and end-of-year progress reports", icon: Award,
     render: () => <ReportCardModule/>,
   },
   grades: {
-    title: "Grades", subtitle: "Scores by student and subject", icon: Award,
+    title: "Grade Book", subtitle: "Scores by student and subject", icon: Award,
     render: () => (
       <>
         <GradesStats/>
@@ -168,7 +168,7 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   attendance: {
-    title: "Attendance", subtitle: "Daily roll-call across classes", icon: Calendar,
+    title: "Attendance Register", subtitle: "Daily roll-call records across all classes", icon: Calendar,
     render: () => (
       <SimpleCrud
         collection="attendance"
@@ -219,7 +219,7 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => <MessagesModule/>,
   },
   fees: {
-    title: "Fees & Donations", subtitle: "Track tuition and contributions", icon: DollarSign,
+    title: "Tuition & Fees", subtitle: "Track tuition payments and outstanding balances", icon: DollarSign,
     render: () => (
       <>
         <FeesStats/>
@@ -268,7 +268,7 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   jobs: {
-    title: "Job Board", subtitle: "Opportunities shared with our network", icon: Briefcase,
+    title: "Career Board", subtitle: "Opportunities shared with our alumni network", icon: Briefcase,
     render: () => (
       <SimpleCrud
         collection="jobs"
@@ -290,7 +290,7 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   directory: {
-    title: "Alumni Directory", subtitle: "Reconnect with classmates", icon: Users,
+    title: "School Directory", subtitle: "Find alumni, students and staff", icon: Users,
     render: () => (
       <SimpleCrud
         collection="directory"
@@ -312,7 +312,7 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   mentorship: {
-    title: "Mentorship", subtitle: "Guide a current student", icon: Heart,
+    title: "Mentorship Programme", subtitle: "Guide a current student through their final years", icon: Heart,
     render: () => (
       <Card className="p-8 text-center">
         <Heart className="h-10 w-10 text-primary mx-auto"/>
@@ -348,7 +348,7 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   library: {
-    title: "CK-12 Digital Library",
+    title: "Digital Library",
     subtitle: "Free CK-12 FlexBooks by subject and grade — read, bookmark and track progress",
     icon: Library,
     render: () => <DigitalLibraryModule/>,
@@ -375,12 +375,12 @@ const MODULES: Record<string, ModuleDef> = {
   },
   // ----- CMS / Super-admin
   pages: {
-    title: "Pages (CMS)", subtitle: "Manage public website pages", icon: FileText,
+    title: "Custom Pages", subtitle: "Manage public website pages", icon: FileText,
     allow: ["superadmin", "admin"],
     render: () => <PagesModule/>,
   },
   posts: {
-    title: "Posts & Stories", subtitle: "Editorial content for the website", icon: Newspaper,
+    title: "News & Stories", subtitle: "Editorial content for the public website", icon: Newspaper,
     render: () => (
       <SimpleCrud
         collection="posts"
@@ -407,14 +407,14 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => <MediaModule/>,
   },
   navigation: {
-    title: "Navigation",
-    subtitle: "Manage the public website menu",
+    title: "Site Navigation",
+    subtitle: "Manage the public website menu and link structure",
     icon: ListTree,
     allow: ["superadmin"],
     render: () => <NavigationModule/>,
   },
   settings: {
-    title: "Site Settings", subtitle: "Branding, contact, logo & system text — Super Admin / Admin only", icon: Settings,
+    title: "System Settings", subtitle: "Branding, contact details, logo and system configuration", icon: Settings,
     allow: ["superadmin", "admin"],
     render: () => <SiteSettingsModule />,
   },
@@ -439,12 +439,12 @@ const MODULES: Record<string, ModuleDef> = {
     ),
   },
   audit: {
-    title: "Audit Logs", subtitle: "Recent administrator activity", icon: ClipboardList,
+    title: "System Audit Log", subtitle: "Full trail of administrator and staff activity", icon: ClipboardList,
     allow: ["superadmin"],
     render: () => <AuditModule/>,
   },
   analytics: {
-    title: "Analytics", subtitle: "Real-time platform health", icon: BarChart3,
+    title: "School Analytics", subtitle: "Enrolment trends, academic outcomes and platform health", icon: BarChart3,
     render: () => <AnalyticsModule />,
   },
 };
@@ -452,7 +452,7 @@ const MODULES: Record<string, ModuleDef> = {
 // Append additional modules (hero editor + new school modules)
 Object.assign(MODULES, {
   hero: {
-    title: "Hero Slider", subtitle: "Manage homepage carousel images, captions and CTAs",
+    title: "Hero Banner", subtitle: "Manage homepage carousel images, captions and CTAs",
     icon: ImageIcon, allow: ["superadmin", "admin"],
     render: () => <HeroSliderModule/>,
   },
@@ -462,27 +462,27 @@ Object.assign(MODULES, {
     render: () => <TeamPageModule/>,
   },
   homepage: {
-    title: "Homepage Sections", subtitle: "Edit the ribbon, manifesto, chapters, quote, facts and featured cards",
+    title: "Homepage Content", subtitle: "Edit the ribbon, manifesto, chapters, quote, facts and featured cards",
     icon: LayoutTemplate, allow: ["superadmin", "admin"],
     render: () => <HomepageContentModule/>,
   },
   projectspage: {
-    title: "Projects Page", subtitle: "Create, edit and publish public project reports",
+    title: "Projects Content", subtitle: "Create, edit and publish public project reports",
     icon: FolderTree, allow: ["superadmin", "admin"],
     render: () => <ProjectsContentModule/>,
   },
   storiespage: {
-    title: "Stories Page", subtitle: "Create, edit and publish public field stories & news",
+    title: "Stories Content", subtitle: "Create, edit and publish public field stories and news",
     icon: Newspaper, allow: ["superadmin", "admin"],
     render: () => <StoriesContentModule/>,
   },
   divisionspage: {
-    title: "Divisions Page", subtitle: "Edit the four HOPE2 divisions shown on the public Departments page",
+    title: "Departments Content", subtitle: "Edit the four HOPE2 divisions shown on the public Departments page",
     icon: FolderTree, allow: ["superadmin", "admin"],
     render: () => <DivisionsContentModule/>,
   },
   admissions: {
-    title: "Admissions", subtitle: "Application pipeline & enrolment", icon: Inbox,
+    title: "Admissions Register", subtitle: "Application pipeline and enrolment management", icon: Inbox,
     allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
@@ -510,7 +510,7 @@ Object.assign(MODULES, {
     ),
   },
   inquiries: {
-    title: "Website Inquiries", subtitle: "Messages sent from the public contact form", icon: Mail,
+    title: "Enquiries", subtitle: "Messages sent from the public contact form", icon: Mail,
     allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
     render: () => (
       <SimpleCrud
@@ -536,7 +536,7 @@ Object.assign(MODULES, {
     ),
   },
   volunteers: {
-    title: "Volunteer Applications", subtitle: "Applications from the Get Involved page", icon: Users,
+    title: "Volunteer Sign-ups", subtitle: "Applications submitted from the Get Involved page", icon: Users,
     allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
     render: () => (
       <SimpleCrud
@@ -565,7 +565,7 @@ Object.assign(MODULES, {
     ),
   },
   subscribers: {
-    title: "Newsletter Subscribers", subtitle: "People subscribed from the Stories page", icon: Send,
+    title: "Subscribers", subtitle: "People who subscribed from the public Stories page", icon: Send,
     allow: ["superadmin", "admin", "admin_assistant", "admissions_officer"],
     render: () => (
       <SimpleCrud
@@ -586,7 +586,7 @@ Object.assign(MODULES, {
     ),
   },
   pledges: {
-    title: "Donation Pledges", subtitle: "Gifts pledged from the public Give page", icon: Heart,
+    title: "Pledges", subtitle: "Gifts pledged from the public Give page", icon: Heart,
     allow: ["superadmin", "admin", "registrar"],
     render: () => (
       <SimpleCrud
@@ -613,7 +613,7 @@ Object.assign(MODULES, {
     ),
   },
   exams: {
-    title: "Exams & Report Cards", subtitle: "Schedule period exams and publish report cards",
+    title: "Examinations", subtitle: "Schedule period exams and publish report cards",
     icon: Award,
     render: () => (
       <SimpleCrud
@@ -640,7 +640,7 @@ Object.assign(MODULES, {
     ),
   },
   behavior: {
-    title: "Behavior & Discipline", subtitle: "Log incidents and commendations", icon: CheckCircle2,
+    title: "Conduct Records", subtitle: "Log disciplinary incidents and commendations", icon: CheckCircle2,
     allow: ["superadmin", "admin", "teacher"],
     render: () => (
       <SimpleCrud
@@ -691,7 +691,7 @@ Object.assign(MODULES, {
     ),
   },
   transport: {
-    title: "Transport & Bus Routes", subtitle: "School bus routes and rider rosters",
+    title: "Transport", subtitle: "School bus routes and student rider rosters",
     icon: FolderTree, allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
@@ -718,7 +718,7 @@ Object.assign(MODULES, {
     ),
   },
   clinic: {
-    title: "Clinic & Health Records", subtitle: "Health log and immunisations",
+    title: "Health Services", subtitle: "Clinic visit log and student health records",
     icon: Heart, allow: ["superadmin", "admin", "nurse", "parent", "student"],
     render: () => (
       <SimpleCrud
@@ -744,7 +744,7 @@ Object.assign(MODULES, {
     ),
   },
   immunizations: {
-    title: "Immunisation Register", subtitle: "Vaccine doses, due dates and coverage",
+    title: "Immunisation Records", subtitle: "Vaccine doses, due dates and school-wide coverage",
     icon: Heart, allow: ["superadmin", "admin", "nurse", "parent", "student"],
     render: () => (
       <SimpleCrud
@@ -798,7 +798,7 @@ Object.assign(MODULES, {
     ),
   },
   healthalerts: {
-    title: "Health Alerts & Conditions", subtitle: "Allergies, chronic conditions and emergency instructions",
+    title: "Health Alerts", subtitle: "Allergies, chronic conditions and emergency instructions",
     icon: Heart, allow: ["superadmin", "admin", "nurse", "parent"],
     render: () => (
       <SimpleCrud
@@ -850,7 +850,7 @@ Object.assign(MODULES, {
     ),
   },
   calendar: {
-    title: "School Calendar", subtitle: "Holidays, exam weeks and school events",
+    title: "Academic Calendar", subtitle: "Holidays, exam weeks and school events",
     icon: Calendar,
     render: () => (
       <SimpleCrud
@@ -875,7 +875,7 @@ Object.assign(MODULES, {
     ),
   },
   inventory: {
-    title: "Assets & Inventory", subtitle: "School equipment, supplies and stock",
+    title: "Asset Management", subtitle: "School equipment, supplies and stock levels",
     icon: FolderTree, allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
@@ -900,7 +900,7 @@ Object.assign(MODULES, {
     ),
   },
   staff: {
-    title: "Staff & HR", subtitle: "Employees, departments and contracts",
+    title: "Human Resources", subtitle: "Employees, departments and employment contracts",
     icon: Users, allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
@@ -925,7 +925,7 @@ Object.assign(MODULES, {
     ),
   },
   payroll: {
-    title: "Staff Salary & Payroll",
+    title: "Payroll & Salaries",
     subtitle: "Confidential — Super Admin and Registrar only",
     icon: Wallet, allow: ["superadmin", "registrar"],
     render: () => (
@@ -989,7 +989,7 @@ Object.assign(MODULES, {
     render: () => <FinanceOverview/>,
   },
   campaigns: {
-    title: "Bulk Email Campaigns", subtitle: "Compose, schedule and track bulk mailings to school audiences",
+    title: "Email Campaigns", subtitle: "Compose, schedule and track bulk mailings to school audiences",
     icon: Mail, allow: ["superadmin", "admin", "admissions_officer", "admin_assistant"],
     render: () => (
       <SimpleCrud
@@ -1046,12 +1046,12 @@ Object.assign(MODULES, {
     ),
   },
   broadcast: {
-    title: "In-App Messaging", subtitle: "Send private messages or bulk broadcasts to any account",
+    title: "Internal Broadcast", subtitle: "Send targeted messages or bulk broadcasts to any user group",
     icon: Send, allow: ["superadmin", "admin", "admissions_officer", "admin_assistant", "registrar"],
     render: () => <BroadcastModule/>,
   },
   scholarships: {
-    title: "Scholarships & Sponsorships", subtitle: "Sponsored students and award tracking",
+    title: "Scholarships & Financial Aid", subtitle: "Sponsored students, bursaries and award tracking",
     icon: Award, allow: ["superadmin", "admin"],
     render: () => (
       <SimpleCrud
