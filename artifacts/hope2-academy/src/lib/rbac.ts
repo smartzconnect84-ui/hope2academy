@@ -116,9 +116,32 @@ const SUBJECT_FIELDS = ["student", "student_name", "name", "child", "applicant"]
 const OWNER_FIELDS = ["teacher", "teacher_name", "reporter", "createdBy", "created_by", "author", "submittedBy", "owner", "nurse", "driver"];
 
 /**
+ * Institutional reference tables that teachers may read in full.
+ * These do not carry personal ownership stamps so they fall outside
+ * the strict ownership filter applied to operational records.
+ */
+const TEACHER_GLOBAL_READ = [
+  "staff", "directory", "scholarships", "admissions", "transport",
+  "inventory", "fees", "bookstock", "departments", "team",
+  "counselling", "ptmeetings",
+];
+
+/**
+ * Broadcast collections visible to every authenticated role.
+ * Teachers are checked BEFORE this list so their timetable records
+ * remain ownership-scoped while all other roles see the full schedule.
+ */
+const PUBLIC_TO_ALL = [
+  "announcements", "calendar", "events", "library", "resources",
+  "jobs", "directory", "posts", "departments", "team", "timetable",
+];
+
+/**
  * Filter a collection's rows down to what this principal may see.
- * Staff roles get everything; teachers get their own + their classes;
- * students/parents/alumni get only their own records.
+ *
+ * Teachers are checked first (before PUBLIC_TO_ALL) so their operational
+ * data — timetable, assignments, grades, etc. — is scoped by ownership.
+ * All other non-staff roles use PUBLIC_TO_ALL followed by personal isolation.
  */
 export function scopeRows<T extends Record<string, any>>(
   collection: string,
@@ -128,37 +151,87 @@ export function scopeRows<T extends Record<string, any>>(
   if (!p || !p.role) return [];
   if (isStaff(p.role)) return rows;
 
+  // ── Teacher: strict per-teacher isolation for operational data ──────────
+  if (p.role === "teacher") {
+    // Broadcast collections teachers can read in full.
+    const TEACHER_PUBLIC = [
+      "announcements", "calendar", "events", "library", "resources",
+      "jobs", "posts",
+    ];
+    if (TEACHER_PUBLIC.includes(collection)) return rows;
+    // Reference / lookup tables teachers may read in full (no ownership stamp).
+    if (TEACHER_GLOBAL_READ.includes(collection)) return rows;
+    // Messages and broadcasts: scoped by participant.
+    if ("from" in (rows[0] ?? {}) || "to" in (rows[0] ?? {})) {
+      return rows.filter((r) =>
+        matchesAny(r.from, [p.name]) ||
+        matchesAny(r.to, [p.name]) ||
+        eq(r.to, "All Staff") ||
+        eq(r.to, "All") ||
+        eq(r.to, "All Teachers"),
+      );
+    }
+    // All other collections (assignments, grades, attendance, timetable,
+    // lessonplans, exams, behavior, classes, leaverequests, approvals…):
+    // show only records this teacher owns / authored / reported.
+    return rows.filter((r) =>
+      OWNER_FIELDS.some((f) => f in r && matchesAny(r[f], [p.name])),
+    );
+  }
+
+  // ── Broadcast collections visible to every other role ───────────────────
+  if (PUBLIC_TO_ALL.includes(collection)) return rows;
+
+  // ── Nurse: full access to all health / medical records ──────────────────
+  if (p.role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) return rows;
+
   const names = ownedNames(p);
   const klass = p.class_name ?? undefined;
 
-  // Broadcast collections everyone may read in full.
-  const PUBLIC_TO_ALL = ["announcements", "calendar", "events", "library", "resources", "jobs", "directory", "posts", "departments", "team"];
-  if (PUBLIC_TO_ALL.includes(collection)) return rows;
-
-  // The nurse sees every medical record school-wide.
-  if (p.role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) return rows;
-
-  if (p.role === "teacher") {
-    // Teachers see what they authored, teach, or supervise; otherwise class-level rows.
-    return rows.filter((r) => {
-      const owned = OWNER_FIELDS.some((f) => f in r && matchesAny(r[f], [p.name]));
-      const hasOwner = OWNER_FIELDS.some((f) => f in r && r[f]);
-      return owned || !hasOwner;
-    });
-  }
-
+  // ── Alumni: own academic history only ───────────────────────────────────
   if (p.role === "alumni") {
-    return rows.filter((r) => SUBJECT_FIELDS.every((f) => !(f in r)) || matchesAny(r[SUBJECT_FIELDS.find((f) => f in r)!], names));
+    return rows.filter((r) =>
+      SUBJECT_FIELDS.every((f) => !(f in r)) ||
+      matchesAny(r[SUBJECT_FIELDS.find((f) => f in r)!], names),
+    );
   }
 
-  // Student / parent — strict personal isolation.
+  // ── Student / Parent: strict personal isolation ─────────────────────────
   return rows.filter((r) => {
+    // Records with a subject field (grades, behavior, fees, clinic…)
     const subjectField = SUBJECT_FIELDS.find((f) => f in r && r[f]);
     if (subjectField) return matchesAny(r[subjectField], names);
-    // Messaging is scoped by participants.
-    if ("from" in r || "to" in r) return matchesAny(r.from, names) || matchesAny(r.to, names) || eq(r.to, "All");
-    // Class-level rows (timetable, attendance summaries) match the learner's class.
-    if (klass && ("class" in r || "class_name" in r)) return eq(r.class ?? r.class_name, klass);
+
+    // Messaging: scoped by sender/recipient
+    if ("from" in r || "to" in r) {
+      return (
+        matchesAny(r.from, names) ||
+        matchesAny(r.to, names) ||
+        eq(r.to, "All")
+      );
+    }
+
+    // Class-level records (assignments, exams, attendance summaries)
+    // match the learner's class name or grade prefix.
+    if ("class" in r || "class_name" in r) {
+      const rClass = String(r.class ?? r.class_name ?? "").toLowerCase().trim();
+      // Direct class_name match (e.g. "Grade 9 — Blue" === "Grade 9 — Blue")
+      if (klass && rClass === klass.toLowerCase().trim()) return true;
+      // Grade-prefix match: student in "Grade 9 — Blue" sees "Grade 9",
+      // "Grade 9 — Mathematics", "Grade 9 — Blue" records.
+      if (p.grade) {
+        const gradePrefix = `grade ${p.grade}`.toLowerCase();
+        if (rClass === gradePrefix || rClass.startsWith(`${gradePrefix} `) || rClass.startsWith(`${gradePrefix}—`) || rClass.startsWith(`${gradePrefix} —`)) {
+          return true;
+        }
+      }
+      // Parents: see class records for any of their children.
+      // Since we don't store children's grades in the parent profile,
+      // show all class-level records so parents can track school activity.
+      if (p.role === "parent") return true;
+      return false;
+    }
+
     return false;
   });
 }

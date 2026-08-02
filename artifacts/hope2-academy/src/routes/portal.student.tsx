@@ -34,16 +34,23 @@ function StudentPage() {
         setGrades(stats.grades ?? []);
         setUpcomingTests(stats.upcomingTests ?? 0);
       } catch {
-        const name = profile?.name ?? profile?.full_name ?? "";
+        const name = profile?.name ?? (profile as any)?.full_name ?? "";
+        const grade = (profile as any)?.grade ?? profile?.grade ?? "";
+        // Show only this student's own grades — never leak other students' data
         const allGrades = mockDb.list<Grade>("grades");
         const mine = allGrades.filter((g) => g.student === name);
-        setGrades(mine.length > 0 ? mine : allGrades.slice(0, 4));
+        setGrades(mine);
 
+        // Upcoming exams scoped to this student's grade level
         const allExams = mockDb.list<{ status: string; class: string }>("exams");
-        const grade = profile?.grade ?? "";
-        const scheduledInGrade = allExams.filter((e) => e.status === "Scheduled" && e.class.includes(grade)).length;
-        const scheduledAll = allExams.filter((e) => e.status === "Scheduled").length;
-        setUpcomingTests(scheduledInGrade > 0 ? scheduledInGrade : scheduledAll);
+        const scheduled = allExams.filter(
+          (e) =>
+            e.status === "Scheduled" &&
+            grade &&
+            (e.class === `Grade ${grade}` ||
+              e.class.toLowerCase().startsWith(`grade ${String(grade).toLowerCase()}`)),
+        );
+        setUpcomingTests(scheduled.length);
       }
 
       try {
@@ -51,8 +58,18 @@ function StudentPage() {
         const open = assignments.filter((a) => a.status === "Open");
         setNextAssignment(open[0] ?? null);
       } catch {
-        const allAssignments = mockDb.list<Assignment>("assignments");
-        const open = allAssignments.filter((a) => a.status === "Open");
+        const grade = (profile as any)?.grade ?? profile?.grade ?? "";
+        const allAssignments = mockDb.list<Assignment & { class?: string }>("assignments");
+        // Show only assignments for this student's grade level
+        const mine = grade
+          ? allAssignments.filter(
+              (a) =>
+                !a.class ||
+                a.class === `Grade ${grade}` ||
+                a.class.toLowerCase().startsWith(`grade ${String(grade).toLowerCase()}`),
+            )
+          : allAssignments;
+        const open = mine.filter((a) => a.status === "Open");
         setNextAssignment(open[0] ?? null);
       }
     })();

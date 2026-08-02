@@ -1946,21 +1946,55 @@ function NavigationModule() {
 // Extracted async modules: Timetable, Children, Audit
 // =========================================================================
 function TimetableModule() {
-  const [data, setData] = useState<any[]>([]);
+  const principal = usePrincipal();
+  const [rawData, setRawData] = useState<any[]>([]);
+
   useEffect(() => {
-    apiClient.list("timetable").then(d => setData(d as any[])).catch(e => {
-      if (isNetworkError(e)) setData(mockDb.list<any>("timetable"));
-    });
-  }, []);
+    apiClient
+      .list("timetable")
+      .then((d) => setRawData(scopeRows("timetable", d as any[], principal)))
+      .catch((e) => {
+        if (isNetworkError(e))
+          setRawData(scopeRows("timetable", mockDb.list<any>("timetable"), principal));
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [principal?.id]);
+
+  // Merge records that share the same day so we always show one card per day.
+  // This handles both the legacy single-record-per-day format and the new
+  // per-teacher format (where each teacher has their own day records).
+  const orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const dayMap = new Map<string, any[]>();
+  for (const r of rawData) {
+    if (!r.day) continue;
+    const existing = dayMap.get(r.day) ?? [];
+    existing.push(...(r.slots ?? []));
+    dayMap.set(r.day, existing);
+  }
+  const merged = orderedDays
+    .filter((d) => dayMap.has(d))
+    .map((d) => ({
+      day: d,
+      slots: (dayMap.get(d) ?? []).sort((a: any, b: any) => a.t.localeCompare(b.t)),
+    }));
+
+  if (merged.length === 0) {
+    return (
+      <div className="rounded-2xl bg-card border border-border p-10 text-center text-muted-foreground text-sm">
+        No timetable entries found for your account.
+      </div>
+    );
+  }
+
   return (
     <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {data.map((d: any, i) => (
-        <Reveal key={d.day ?? i} delay={i * 0.05}>
+      {merged.map((d, i) => (
+        <Reveal key={d.day} delay={i * 0.05}>
           <Card className="p-5">
             <h3 className="font-display text-lg font-semibold">{d.day}</h3>
             <ul className="mt-3 space-y-2">
-              {(d.slots ?? []).map((s: any) => (
-                <li key={s.t + s.s} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2">
+              {d.slots.map((s: any, si: number) => (
+                <li key={`${s.t}-${s.s}-${si}`} className="flex items-center gap-3 rounded-xl bg-muted/40 px-3 py-2">
                   <span className="font-display font-semibold text-primary tabular-nums w-14">{s.t}</span>
                   <span className="text-sm">{s.s}</span>
                 </li>

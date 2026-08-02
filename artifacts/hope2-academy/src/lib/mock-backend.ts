@@ -59,7 +59,7 @@ const KEY_RESET = "h2l.resetTokens";
 const KEY_REMEMBER = "h2l.rememberEmail";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
-const USERS_VERSION = "4";
+const USERS_VERSION = "5";
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
@@ -154,6 +154,7 @@ function seedIfEmpty() {
     { id: "usr_5", email: "moses.weah@hope2.demo", password: "demo1234", name: "Moses Weah", role: "alumni", graduation_year: 2016, createdAt: now },
     { id: "usr_6", email: "elizabeth.tarr@hope2.demo", password: "demo1234", name: "Elizabeth Tarr", role: "parent", linked_children: ["Kollie Boima"], createdAt: now },
     { id: "usr_7", email: "amos.flomo@hope2.demo", password: "demo1234", name: "Amos Flomo", role: "teacher", department: "Literature", subjects: ["Literature","History"], createdAt: now },
+    { id: "usr_8", email: "john.kollie@hope2.demo", password: "demo1234", name: "John Kollie", role: "teacher", department: "Sciences", subjects: ["Physics","Geography"], bio: "Physics & Geography teacher, Marshall Road Campus.", phone: "+231 770 901 234", address: "Barber's Joe Town, Marshall Road, Lower Margibi County, Liberia", createdAt: now },
   ];
   writeUsers([...seed, ...extras]);
 }
@@ -343,6 +344,51 @@ function ensureSeedData() {
       d.__migrated_v5 = [true];
       writeData(d);
     }
+    // v6 migration: stamp teacher ownership on all operational records so per-teacher
+    // data isolation works correctly in RBAC.
+    if (!d.__migrated_v6) {
+      // assignments
+      const aMap: Record<string,string> = { a1:"Grace Tubman",a2:"Amos Flomo",a3:"Ruth Gonpu",a4:"Grace Tubman" };
+      d.assignments = (d.assignments ?? []).map((a: any) => ({ ...a, teacher: a.teacher ?? aMap[a.id] ?? "Grace Tubman",
+        class: a.class ? (a.class.includes("—") ? a.class.split("—")[0].trim() : a.class) : a.class }));
+      // grades
+      const gMap: Record<string,string> = { g1:"Grace Tubman",g2:"Amos Flomo",g3:"Ruth Gonpu",g4:"Amos Flomo",g5:"Grace Tubman",g6:"Grace Tubman" };
+      d.grades = (d.grades ?? []).map((g: any) => ({ ...g, teacher: g.teacher ?? gMap[g.id] ?? "Grace Tubman" }));
+      // attendance
+      const atMap: Record<string,string> = { at1:"Grace Tubman",at2:"Amos Flomo",at3:"Ruth Gonpu",at4:"Grace Tubman" };
+      d.attendance = (d.attendance ?? []).map((a: any) => ({ ...a, teacher: a.teacher ?? atMap[a.id] ?? "Grace Tubman" }));
+      // timetable: replace with per-teacher records
+      d.timetable = [
+        { id:"tt_g1",day:"Monday",    teacher:"Grace Tubman",slots:[{t:"08:00",s:"Grade 9 — Mathematics"},{t:"10:30",s:"Grade 7 — Civic Education"},{t:"14:00",s:"Staff Briefing"}]},
+        { id:"tt_g2",day:"Tuesday",   teacher:"Grace Tubman",slots:[{t:"09:00",s:"Grade 12 — Mathematics"},{t:"11:00",s:"Office Hours"}]},
+        { id:"tt_g3",day:"Wednesday", teacher:"Grace Tubman",slots:[{t:"08:00",s:"Grade 9 — Mathematics"},{t:"12:30",s:"Grade 7 — Civic Education"}]},
+        { id:"tt_g4",day:"Thursday",  teacher:"Grace Tubman",slots:[{t:"09:00",s:"Grade 12 — Mathematics"}]},
+        { id:"tt_g5",day:"Friday",    teacher:"Grace Tubman",slots:[{t:"08:00",s:"Grade 9 — Mathematics"},{t:"15:00",s:"Assembly"}]},
+        { id:"tt_r1",day:"Monday",    teacher:"Ruth Gonpu",  slots:[{t:"08:30",s:"Grade 10 — Biology"},{t:"11:00",s:"Grade 11 — Chemistry"}]},
+        { id:"tt_r2",day:"Tuesday",   teacher:"Ruth Gonpu",  slots:[{t:"09:00",s:"Grade 10 — Biology"},{t:"13:00",s:"Lab Prep"}]},
+        { id:"tt_r3",day:"Wednesday", teacher:"Ruth Gonpu",  slots:[{t:"08:30",s:"Grade 11 — Chemistry"},{t:"11:00",s:"Grade 10 — Biology"}]},
+        { id:"tt_r4",day:"Thursday",  teacher:"Ruth Gonpu",  slots:[{t:"10:00",s:"Grade 10 — Biology"}]},
+        { id:"tt_r5",day:"Friday",    teacher:"Ruth Gonpu",  slots:[{t:"08:30",s:"Grade 11 — Chemistry"},{t:"15:00",s:"Assembly"}]},
+        { id:"tt_a1",day:"Monday",    teacher:"Amos Flomo",  slots:[{t:"09:00",s:"Grade 11 — Literature"},{t:"12:00",s:"Grade 8 — History"}]},
+        { id:"tt_a2",day:"Tuesday",   teacher:"Amos Flomo",  slots:[{t:"08:00",s:"Grade 8 — History"},{t:"10:30",s:"Grade 11 — Literature"}]},
+        { id:"tt_a3",day:"Wednesday", teacher:"Amos Flomo",  slots:[{t:"09:00",s:"Grade 11 — Literature"}]},
+        { id:"tt_a4",day:"Thursday",  teacher:"Amos Flomo",  slots:[{t:"08:00",s:"Grade 8 — History"},{t:"10:30",s:"Grade 11 — Literature"}]},
+        { id:"tt_a5",day:"Friday",    teacher:"Amos Flomo",  slots:[{t:"09:00",s:"Grade 8 — History"},{t:"15:00",s:"Assembly"}]},
+        { id:"tt_j1",day:"Monday",    teacher:"John Kollie", slots:[{t:"08:00",s:"Grade 12 — Physics"},{t:"11:00",s:"Grade 10 — Geography"}]},
+        { id:"tt_j2",day:"Tuesday",   teacher:"John Kollie", slots:[{t:"09:00",s:"Grade 10 — Geography"},{t:"12:00",s:"Grade 12 — Physics"}]},
+        { id:"tt_j3",day:"Wednesday", teacher:"John Kollie", slots:[{t:"08:00",s:"Grade 12 — Physics"}]},
+        { id:"tt_j4",day:"Thursday",  teacher:"John Kollie", slots:[{t:"09:00",s:"Grade 10 — Geography"},{t:"11:00",s:"Grade 12 — Physics"}]},
+        { id:"tt_j5",day:"Friday",    teacher:"John Kollie", slots:[{t:"08:00",s:"Grade 12 — Physics"},{t:"15:00",s:"Assembly"}]},
+      ];
+      // lessonplans
+      const lpMap: Record<string,string> = { lp1:"Grace Tubman",lp2:"Amos Flomo",lp3:"Ruth Gonpu" };
+      d.lessonplans = (d.lessonplans ?? []).map((l: any) => ({ ...l, teacher: l.teacher ?? lpMap[l.id] ?? "Grace Tubman" }));
+      // exams
+      const exMap: Record<string,string> = { ex1:"Grace Tubman",ex2:"Amos Flomo",ex3:"Ruth Gonpu",ex4:"Grace Tubman" };
+      d.exams = (d.exams ?? []).map((e: any) => ({ ...e, teacher: e.teacher ?? exMap[e.id] ?? "Grace Tubman" }));
+      d.__migrated_v6 = [true];
+      writeData(d);
+    }
     return;
   }
 
@@ -362,31 +408,60 @@ function ensureSeedData() {
     schedule: i % 2 === 0 ? "Mon/Wed/Fri 08:00" : "Tue/Thu 10:30",
   }));
   d.assignments = [
-    { id: "a1", title: "Quadratic Equations — Set 4", class: "Grade 9 — Mathematics", due: "2026-05-27", status: "Open", submissions: 12 },
-    { id: "a2", title: "Essay: The Things They Carried", class: "Grade 11 — Literature", due: "2026-05-29", status: "Open", submissions: 8 },
-    { id: "a3", title: "Photosynthesis Lab Report", class: "Grade 10 — Biology", due: "2026-05-24", status: "Grading", submissions: 26 },
-    { id: "a4", title: "Civic Duty Reflection", class: "Grade 7 — Civic Education", due: "2026-06-02", status: "Open", submissions: 0 },
+    { id: "a1", title: "Quadratic Equations — Set 4",        class: "Grade 9",  due: "2026-05-27", status: "Open",    submissions: 12, teacher: "Grace Tubman" },
+    { id: "a2", title: "Essay: The Things They Carried",     class: "Grade 11", due: "2026-05-29", status: "Open",    submissions: 8,  teacher: "Amos Flomo" },
+    { id: "a3", title: "Photosynthesis Lab Report",          class: "Grade 10", due: "2026-05-24", status: "Grading", submissions: 26, teacher: "Ruth Gonpu" },
+    { id: "a4", title: "Civic Duty Reflection",              class: "Grade 7",  due: "2026-06-02", status: "Open",    submissions: 0,  teacher: "Grace Tubman" },
+    { id: "a5", title: "Newton's Laws — Problem Set 3",      class: "Grade 12", due: "2026-06-05", status: "Open",    submissions: 3,  teacher: "John Kollie" },
+    { id: "a6", title: "World War II — Causes & Effects",    class: "Grade 8",  due: "2026-06-03", status: "Open",    submissions: 5,  teacher: "Amos Flomo" },
+    { id: "a7", title: "Map Reading & Coordinates",          class: "Grade 10", due: "2026-06-07", status: "Open",    submissions: 9,  teacher: "John Kollie" },
+    { id: "a8", title: "Chemical Bonding Quiz",              class: "Grade 11", due: "2026-05-30", status: "Grading", submissions: 18, teacher: "Ruth Gonpu" },
+    { id: "a9", title: "Algebra Mid-Period Test",            class: "Grade 12", due: "2026-05-28", status: "Grading", submissions: 14, teacher: "Grace Tubman" },
   ];
   d.grades = [
-    { id: "g1", student: "Mariama Doe", subject: "Mathematics", grade: "A-", score: 91, term: "Period 2" },
-    { id: "g2", student: "Mariama Doe", subject: "English", grade: "B+", score: 87, term: "Period 2" },
-    { id: "g3", student: "Mariama Doe", subject: "Biology", grade: "A", score: 95, term: "Period 2" },
-    { id: "g4", student: "Kollie Boima", subject: "Literature", grade: "A", score: 94, term: "Period 2" },
-    { id: "g5", student: "Kollie Boima", subject: "Mathematics", grade: "B", score: 82, term: "Period 2" },
-    { id: "g6", student: "Fatu Kanneh", subject: "Civics", grade: "A+", score: 98, term: "Period 2" },
+    { id: "g1", student: "Mariama Doe",  subject: "Mathematics",  grade: "A-", score: 91, term: "Period 2", teacher: "Grace Tubman" },
+    { id: "g2", student: "Mariama Doe",  subject: "Literature",   grade: "B+", score: 87, term: "Period 2", teacher: "Amos Flomo" },
+    { id: "g3", student: "Mariama Doe",  subject: "Biology",      grade: "A",  score: 95, term: "Period 2", teacher: "Ruth Gonpu" },
+    { id: "g4", student: "Kollie Boima", subject: "Literature",   grade: "A",  score: 94, term: "Period 2", teacher: "Amos Flomo" },
+    { id: "g5", student: "Kollie Boima", subject: "Mathematics",  grade: "B",  score: 82, term: "Period 2", teacher: "Grace Tubman" },
+    { id: "g6", student: "Fatu Kanneh",  subject: "Civics",       grade: "A+", score: 98, term: "Period 2", teacher: "Grace Tubman" },
+    { id: "g7", student: "Mariama Doe",  subject: "Civics",       grade: "A",  score: 92, term: "Period 2", teacher: "Grace Tubman" },
+    { id: "g8", student: "Kollie Boima", subject: "History",      grade: "B+", score: 88, term: "Period 2", teacher: "Amos Flomo" },
+    { id: "g9", student: "Fatu Kanneh",  subject: "Biology",      grade: "B",  score: 83, term: "Period 2", teacher: "Ruth Gonpu" },
   ];
   d.attendance = [
-    { id: "at1", date: "2026-05-21", class: "Grade 9 — Mathematics", present: 26, absent: 2, late: 0 },
-    { id: "at2", date: "2026-05-21", class: "Grade 11 — Literature", present: 20, absent: 1, late: 1 },
-    { id: "at3", date: "2026-05-20", class: "Grade 10 — Biology", present: 25, absent: 0, late: 1 },
-    { id: "at4", date: "2026-05-20", class: "Grade 7 — Civic Education", present: 29, absent: 2, late: 0 },
+    { id: "at1", date: "2026-05-21", class: "Grade 9",  subject: "Mathematics",    present: 26, absent: 2, late: 0, teacher: "Grace Tubman" },
+    { id: "at2", date: "2026-05-21", class: "Grade 11", subject: "Literature",     present: 20, absent: 1, late: 1, teacher: "Amos Flomo" },
+    { id: "at3", date: "2026-05-20", class: "Grade 10", subject: "Biology",        present: 25, absent: 0, late: 1, teacher: "Ruth Gonpu" },
+    { id: "at4", date: "2026-05-20", class: "Grade 7",  subject: "Civic Education",present: 29, absent: 2, late: 0, teacher: "Grace Tubman" },
+    { id: "at5", date: "2026-05-22", class: "Grade 12", subject: "Physics",        present: 16, absent: 1, late: 0, teacher: "John Kollie" },
+    { id: "at6", date: "2026-05-22", class: "Grade 8",  subject: "History",        present: 28, absent: 3, late: 1, teacher: "Amos Flomo" },
+    { id: "at7", date: "2026-05-22", class: "Grade 11", subject: "Chemistry",      present: 22, absent: 0, late: 0, teacher: "Ruth Gonpu" },
   ];
+  /* Per-teacher timetable — each record belongs to one teacher.
+     scopeRows filters these so each teacher sees only their own schedule.
+     Students/parents/others see the merged school-wide schedule. */
   d.timetable = [
-    { day: "Monday",    slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "10:30", s: "Grade 11 — Literature" }, { t: "12:30", s: "Grade 7 — Civic Education" }] },
-    { day: "Tuesday",   slots: [{ t: "09:00", s: "Grade 10 — Biology" }, { t: "11:00", s: "Staff briefing" }] },
-    { day: "Wednesday", slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "12:30", s: "Grade 7 — Civic Education" }] },
-    { day: "Thursday",  slots: [{ t: "10:30", s: "Grade 11 — Literature" }, { t: "09:00", s: "Grade 10 — Biology" }] },
-    { day: "Friday",    slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "09:00", s: "Grade 10 — Biology" }, { t: "15:00", s: "Assembly" }] },
+    { id: "tt_g1", day: "Monday",    teacher: "Grace Tubman", slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "10:30", s: "Grade 7 — Civic Education" }, { t: "14:00", s: "Staff Briefing" }] },
+    { id: "tt_g2", day: "Tuesday",   teacher: "Grace Tubman", slots: [{ t: "09:00", s: "Grade 12 — Mathematics" }, { t: "11:00", s: "Office Hours" }] },
+    { id: "tt_g3", day: "Wednesday", teacher: "Grace Tubman", slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "12:30", s: "Grade 7 — Civic Education" }] },
+    { id: "tt_g4", day: "Thursday",  teacher: "Grace Tubman", slots: [{ t: "09:00", s: "Grade 12 — Mathematics" }] },
+    { id: "tt_g5", day: "Friday",    teacher: "Grace Tubman", slots: [{ t: "08:00", s: "Grade 9 — Mathematics" }, { t: "15:00", s: "Assembly" }] },
+    { id: "tt_r1", day: "Monday",    teacher: "Ruth Gonpu",   slots: [{ t: "08:30", s: "Grade 10 — Biology" }, { t: "11:00", s: "Grade 11 — Chemistry" }] },
+    { id: "tt_r2", day: "Tuesday",   teacher: "Ruth Gonpu",   slots: [{ t: "09:00", s: "Grade 10 — Biology" }, { t: "13:00", s: "Lab Prep" }] },
+    { id: "tt_r3", day: "Wednesday", teacher: "Ruth Gonpu",   slots: [{ t: "08:30", s: "Grade 11 — Chemistry" }, { t: "11:00", s: "Grade 10 — Biology" }] },
+    { id: "tt_r4", day: "Thursday",  teacher: "Ruth Gonpu",   slots: [{ t: "10:00", s: "Grade 10 — Biology" }] },
+    { id: "tt_r5", day: "Friday",    teacher: "Ruth Gonpu",   slots: [{ t: "08:30", s: "Grade 11 — Chemistry" }, { t: "15:00", s: "Assembly" }] },
+    { id: "tt_a1", day: "Monday",    teacher: "Amos Flomo",   slots: [{ t: "09:00", s: "Grade 11 — Literature" }, { t: "12:00", s: "Grade 8 — History" }] },
+    { id: "tt_a2", day: "Tuesday",   teacher: "Amos Flomo",   slots: [{ t: "08:00", s: "Grade 8 — History" }, { t: "10:30", s: "Grade 11 — Literature" }] },
+    { id: "tt_a3", day: "Wednesday", teacher: "Amos Flomo",   slots: [{ t: "09:00", s: "Grade 11 — Literature" }] },
+    { id: "tt_a4", day: "Thursday",  teacher: "Amos Flomo",   slots: [{ t: "08:00", s: "Grade 8 — History" }, { t: "10:30", s: "Grade 11 — Literature" }] },
+    { id: "tt_a5", day: "Friday",    teacher: "Amos Flomo",   slots: [{ t: "09:00", s: "Grade 8 — History" }, { t: "15:00", s: "Assembly" }] },
+    { id: "tt_j1", day: "Monday",    teacher: "John Kollie",  slots: [{ t: "08:00", s: "Grade 12 — Physics" }, { t: "11:00", s: "Grade 10 — Geography" }] },
+    { id: "tt_j2", day: "Tuesday",   teacher: "John Kollie",  slots: [{ t: "09:00", s: "Grade 10 — Geography" }, { t: "12:00", s: "Grade 12 — Physics" }] },
+    { id: "tt_j3", day: "Wednesday", teacher: "John Kollie",  slots: [{ t: "08:00", s: "Grade 12 — Physics" }] },
+    { id: "tt_j4", day: "Thursday",  teacher: "John Kollie",  slots: [{ t: "09:00", s: "Grade 10 — Geography" }, { t: "11:00", s: "Grade 12 — Physics" }] },
+    { id: "tt_j5", day: "Friday",    teacher: "John Kollie",  slots: [{ t: "08:00", s: "Grade 12 — Physics" }, { t: "15:00", s: "Assembly" }] },
   ];
   d.announcements = [
     { id: "an1", title: "Parent-Teacher meeting Friday 4pm", body: "All parents invited to Marshall Road auditorium.", audience: "All", date: "2026-05-22" },
@@ -489,20 +564,28 @@ function seedNewModules(d: DataShape) {
     { id: "ad4", applicant: "Joseph Karpeh", grade: "Grade 10", guardian: "Prince Karpeh",phone: "+231 770 777 888", submitted: "2026-05-20", status: "Waitlist" },
   ];
   d.exams = d.exams ?? [
-    { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Period 2", date: "2026-06-04", room: "R-108", status: "Scheduled" },
-    { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Period 2", date: "2026-06-05", room: "R-110", status: "Scheduled" },
-    { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Period", date: "2026-05-28", room: "Lab-1", status: "Completed" },
-    { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Period 2", date: "2026-06-02", room: "R-105", status: "Scheduled" },
+    { id: "ex1", subject: "Mathematics", class: "Grade 9",  term: "Period 2",    date: "2026-06-04", room: "R-108", status: "Scheduled",  teacher: "Grace Tubman" },
+    { id: "ex2", subject: "Literature",  class: "Grade 11", term: "Period 2",    date: "2026-06-05", room: "R-110", status: "Scheduled",  teacher: "Amos Flomo" },
+    { id: "ex3", subject: "Biology",     class: "Grade 10", term: "Mid-Period",  date: "2026-05-28", room: "Lab-1", status: "Completed",  teacher: "Ruth Gonpu" },
+    { id: "ex4", subject: "Civics",      class: "Grade 7",  term: "Period 2",    date: "2026-06-02", room: "R-105", status: "Scheduled",  teacher: "Grace Tubman" },
+    { id: "ex5", subject: "Physics",     class: "Grade 12", term: "Period 2",    date: "2026-06-06", room: "Lab-2", status: "Scheduled",  teacher: "John Kollie" },
+    { id: "ex6", subject: "Chemistry",   class: "Grade 11", term: "Period 2",    date: "2026-06-07", room: "Lab-1", status: "Scheduled",  teacher: "Ruth Gonpu" },
+    { id: "ex7", subject: "Mathematics", class: "Grade 12", term: "Period 2",    date: "2026-06-04", room: "R-112", status: "Scheduled",  teacher: "Grace Tubman" },
   ];
   d.behavior = d.behavior ?? [
-    { id: "bh1", student: "Mariama Doe",  class: "Grade 9",  type: "Commendation", description: "Top score in Math quiz", date: "2026-05-19", reporter: "Grace Tubman" },
-    { id: "bh2", student: "Kollie Boima", class: "Grade 11", type: "Warning",      description: "Late submission of essay", date: "2026-05-18", reporter: "Amos Flomo" },
-    { id: "bh3", student: "Fatu Kanneh",  class: "Grade 7",  type: "Commendation", description: "Helped classmate", date: "2026-05-17", reporter: "Ruth Gonpu" },
+    { id: "bh1", student: "Mariama Doe",  class: "Grade 9",  type: "Commendation", description: "Top score in Math quiz",       date: "2026-05-19", reporter: "Grace Tubman" },
+    { id: "bh2", student: "Kollie Boima", class: "Grade 11", type: "Warning",      description: "Late submission of essay",     date: "2026-05-18", reporter: "Amos Flomo" },
+    { id: "bh3", student: "Fatu Kanneh",  class: "Grade 7",  type: "Commendation", description: "Helped classmate",             date: "2026-05-17", reporter: "Grace Tubman" },
+    { id: "bh4", student: "Kollie Boima", class: "Grade 10", type: "Commendation", description: "Excellent lab technique",      date: "2026-05-20", reporter: "Ruth Gonpu" },
+    { id: "bh5", student: "Mariama Doe",  class: "Grade 8",  type: "Warning",      description: "Incomplete history homework",  date: "2026-05-21", reporter: "Amos Flomo" },
   ];
   d.lessonplans = d.lessonplans ?? [
-    { id: "lp1", title: "Quadratic Equations", subject: "Mathematics", class: "Grade 9",  week: "Week 8", objectives: "Solve quadratics by factoring and the quadratic formula.", status: "Approved" },
-    { id: "lp2", title: "Romeo & Juliet Act 2", subject: "Literature",  class: "Grade 11", week: "Week 8", objectives: "Analyse character motivations in Act 2.", status: "Submitted" },
-    { id: "lp3", title: "Cell Division",         subject: "Biology",     class: "Grade 10", week: "Week 8", objectives: "Compare mitosis and meiosis.", status: "Draft" },
+    { id: "lp1", title: "Quadratic Equations",    subject: "Mathematics", class: "Grade 9",  week: "Week 8", objectives: "Solve quadratics by factoring and the quadratic formula.", status: "Approved",  teacher: "Grace Tubman" },
+    { id: "lp2", title: "Romeo & Juliet Act 2",   subject: "Literature",  class: "Grade 11", week: "Week 8", objectives: "Analyse character motivations in Act 2.",                 status: "Submitted", teacher: "Amos Flomo" },
+    { id: "lp3", title: "Cell Division",           subject: "Biology",     class: "Grade 10", week: "Week 8", objectives: "Compare mitosis and meiosis.",                           status: "Draft",     teacher: "Ruth Gonpu" },
+    { id: "lp4", title: "Newton's Laws of Motion", subject: "Physics",     class: "Grade 12", week: "Week 8", objectives: "Apply Newton's three laws to real-world problems.",      status: "Approved",  teacher: "John Kollie" },
+    { id: "lp5", title: "World War II Overview",   subject: "History",     class: "Grade 8",  week: "Week 8", objectives: "Identify causes, events, and consequences of WWII.",    status: "Submitted", teacher: "Amos Flomo" },
+    { id: "lp6", title: "Mid-period Revision",     subject: "Mathematics", class: "Grade 12", week: "Week 9", objectives: "Review algebra and calculus for mid-period exam.",       status: "Draft",     teacher: "Grace Tubman" },
   ];
   d.transport = d.transport ?? [
     { id: "tr1", route: "Marshall Road Loop",   driver: "James Roberts", vehicle: "LR-2210", departure: "06:30", riders: 32, feeUsd: 20 },

@@ -4,3 +4,4 @@
 - [Pre-existing TS error](preexisting-ts-error.md) — resizable.tsx shadcn component has a non-breaking TS error; ignore it in CI checks
 - [Vercel build config](vercel-deploy.md) — PORT must not be required at vite config top-level (crashes build); VITE_API_BASE_URL needed for Vercel→Replit API routing
 - [Mobile write operations](mobile-attendance.md) — useMutation + apiClient.createItem() is the correct pattern for teacher POST operations on mobile
+- [Teacher data isolation](teacher-data-isolation.md) — all operational records need `teacher` field; scopeRows uses strict ownership for teachers; TEACHER_GLOBAL_READ for reference tables; grade-prefix matching for students
