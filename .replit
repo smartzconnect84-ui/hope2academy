@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "artifacts/hope2-academy-mobile: Expo"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "artifacts/hope2-academy: web"
+
 [[workflows.workflow]]
 name = "artifacts/hope2-academy-mobile: Expo"
 author = "agent"
@@ -27,6 +31,18 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm --filter @workspace/hope2-academy-mobile run dev"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "artifacts/hope2-academy: web"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "PORT=20805 BASE_PATH=/ pnpm --filter @workspace/hope2-academy run dev"
+waitForPort = 20805
 
 [workflows.workflow.metadata]
 outputType = "webview"

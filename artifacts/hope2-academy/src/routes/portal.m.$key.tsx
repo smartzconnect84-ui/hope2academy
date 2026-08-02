@@ -445,32 +445,7 @@ const MODULES: Record<string, ModuleDef> = {
   },
   analytics: {
     title: "Analytics", subtitle: "Real-time platform health", icon: BarChart3,
-    render: () => (
-      <>
-        <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-          <StatCard icon={Users} label="Active users (7d)" value={184} delta="+12%"/>
-          <StatCard icon={BookOpen} label="Classes" value={42} accent="accent"/>
-          <StatCard icon={ClipboardList} label="Assignments" value={89} accent="secondary"/>
-          <StatCard icon={Heart} label="Donations (mo)" value="$3,240"/>
-        </StaggerGroup>
-        <Card className="p-6">
-          <h3 className="font-display text-lg font-semibold mb-4">Engagement by role</h3>
-          <div className="space-y-3">
-            {[
-              { r: "Students", v: 92 }, { r: "Teachers", v: 78 }, { r: "Parents", v: 64 },
-              { r: "Alumni", v: 41 }, { r: "Admin", v: 96 },
-            ].map(b => (
-              <div key={b.r}>
-                <div className="flex justify-between text-sm"><span>{b.r}</span><span className="font-semibold">{b.v}%</span></div>
-                <div className="mt-1 h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${b.v}%` }} transition={{ duration: 0.8, ease: [0.22,1,0.36,1] }} className="h-full bg-gradient-to-r from-primary to-accent"/>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </>
-    ),
+    render: () => <AnalyticsModule />,
   },
 };
 
@@ -1826,6 +1801,73 @@ function ChildrenModule() {
         </Reveal>
       ))}
     </div>
+  );
+}
+
+function AnalyticsModule() {
+  const [stats, setStats] = useState<{
+    classes: number; assignments: number; donations: number; users: number;
+    byRole: Record<string, number>;
+  } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [classes, assignments, donations, users, fees] = await Promise.all([
+          apiClient.list<any>("classes"),
+          apiClient.list<any>("assignments"),
+          apiClient.list<any>("donations"),
+          apiClient.listUsers(),
+          apiClient.list<any>("fees"),
+        ]);
+        const totalDonations = donations.reduce((s: number, d: any) => s + Number(d.amount ?? 0), 0);
+        const byRole: Record<string, number> = {};
+        for (const u of users) byRole[u.role] = (byRole[u.role] ?? 0) + 1;
+        setStats({ classes: classes.length, assignments: assignments.length, donations: totalDonations, users: users.length, byRole });
+      } catch {
+        const classes    = mockDb.list<any>("classes");
+        const assignments = mockDb.list<any>("assignments");
+        const donations  = mockDb.list<any>("donations");
+        const users      = await mockAuth.listUsers();
+        const totalDonations = donations.reduce((s: number, d: any) => s + Number(d.amount ?? 0), 0);
+        const byRole: Record<string, number> = {};
+        for (const u of users) byRole[u.role] = (byRole[u.role] ?? 0) + 1;
+        setStats({ classes: classes.length, assignments: assignments.length, donations: totalDonations, users: users.length, byRole });
+      }
+    })();
+  }, []);
+
+  const roleBars = stats
+    ? Object.entries(stats.byRole).map(([r, count]) => ({
+        r: ROLE_LABEL[r as keyof typeof ROLE_LABEL] ?? r,
+        v: Math.round((count / (stats.users || 1)) * 100),
+      }))
+    : [];
+
+  return (
+    <>
+      <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        <StatCard icon={Users}         label="Total Users"     value={stats?.users ?? "—"} />
+        <StatCard icon={BookOpen}      label="Classes"         value={stats?.classes ?? "—"}        accent="accent"/>
+        <StatCard icon={ClipboardList} label="Assignments"     value={stats?.assignments ?? "—"}    accent="secondary"/>
+        <StatCard icon={Heart}         label="Total Donations" value={stats ? `$${stats.donations.toLocaleString()}` : "—"}/>
+      </StaggerGroup>
+      <Card className="p-6">
+        <h3 className="font-display text-lg font-semibold mb-4">Users by role</h3>
+        <div className="space-y-3">
+          {roleBars.length > 0 ? roleBars.map(b => (
+            <div key={b.r}>
+              <div className="flex justify-between text-sm"><span>{b.r}</span><span className="font-semibold">{b.v}%</span></div>
+              <div className="mt-1 h-2 rounded-full bg-muted overflow-hidden">
+                <motion.div initial={{ width: 0 }} animate={{ width: `${b.v}%` }} transition={{ duration: 0.8, ease: [0.22,1,0.36,1] }} className="h-full bg-gradient-to-r from-primary to-accent"/>
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          )}
+        </div>
+      </Card>
+    </>
   );
 }
 

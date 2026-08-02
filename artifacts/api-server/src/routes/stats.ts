@@ -82,11 +82,18 @@ router.get("/stats", requireAuth, async (req, res) => {
         ? Math.round(myGrades.reduce((s: number, g: any) => s + (g.score ?? 0), 0) / myGrades.length)
         : 0;
       const upcomingExams = exams.filter((e: any) => e.status === "Scheduled" && (e.class ?? "").includes(user.grade ?? "")).length;
+
+      // Calculate attendance from real records (present / total sessions)
+      const myAttendance = attendance.filter((a: any) => a.student === name || a.name === name);
+      const attendancePct = myAttendance.length
+        ? Math.round((myAttendance.filter((a: any) => a.status === "Present").length / myAttendance.length) * 100)
+        : null;
+
       res.json({
         activeSubjects: user.subjects?.length ?? 6,
         gpa: avgScore >= 90 ? "A" : avgScore >= 80 ? "B+" : avgScore >= 70 ? "B" : "C+",
         upcomingTests: upcomingExams,
-        attendance: "96%",
+        attendance: attendancePct !== null ? `${attendancePct}%` : null,
         grades: myGrades,
         className: user.class_name ?? null,
       });

@@ -79,7 +79,7 @@ function StudentPage() {
         <StatCard icon={BookOpen}      label="Active Subjects"  value={apiStats?.activeSubjects ?? (profile?.subjects?.length ?? grades.length ?? 6)} />
         <StatCard icon={Award}         label="GPA"             value={gpaLabel || "B+"} accent="accent" />
         <StatCard icon={Calendar}      label="Upcoming Tests"  value={upcomingTests}    accent="secondary" />
-        <StatCard icon={GraduationCap} label="Attendance"      value={apiStats?.attendance ?? "96%"} />
+        <StatCard icon={GraduationCap} label="Attendance"      value={apiStats?.attendance ?? (apiStats ? "—" : "96%")} />
       </StaggerGroup>
 
       <Reveal className="mt-8 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground p-8">
