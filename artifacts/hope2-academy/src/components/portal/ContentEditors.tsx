@@ -376,7 +376,7 @@ export function HomepageContentModule() {
       </Card>
 
       {chapter && (
-        <ItemDialog<HomeChapter>
+        <ItemDialog
           title={h.chapters.some((x) => x.id === chapter.id) ? "Edit chapter" : "New chapter"}
           item={chapter}
           fields={[
