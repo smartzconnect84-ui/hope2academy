@@ -248,6 +248,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Finance", items: [
       { to: m("finance"), label: "Finance Overview", icon: PieChart },
+      { to: m("receipts"), label: "Payment Receipts", icon: Receipt },
       { to: m("fees"), label: "Tuition & Fees", icon: DollarSign },
       { to: m("donations"), label: "Donations", icon: Heart },
       { to: m("pledges"), label: "Pledges", icon: Heart },

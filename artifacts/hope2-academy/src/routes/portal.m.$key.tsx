@@ -31,6 +31,9 @@ import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
 import { SubmissionsModule } from "@/components/portal/Submissions";
 import { AssessmentsModule } from "@/components/portal/Assessments";
 import { GradeSheetModule, ReportCardModule } from "@/components/portal/ReportCards";
+import {
+  FeesModule, ExpensesModule, PayrollModule, DonationsModule,
+} from "@/components/portal/ReceiptGenerator";
 import { ck12Store } from "@/lib/ck12-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -360,24 +363,7 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => (
       <>
         <FeesStats/>
-        <SimpleCrud
-          collection="fees"
-          itemLabel="fee"
-          fields={[
-            { name: "student", label: "Student", type: "text", required: true },
-            { name: "item", label: "Item", type: "text", required: true, placeholder: "Period tuition, Lab fee…" },
-            { name: "amount", label: "Amount (USD)", type: "number", required: true },
-            { name: "due", label: "Due date", type: "date", required: true },
-            { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
-          ]}
-          columns={[
-            { key: "student", label: "Student" },
-            { key: "item", label: "Item" },
-            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
-            { key: "due", label: "Due" },
-            { key: "status", label: "Status", render: (v) => statusBadge(v) },
-          ]}
-        />
+        <FeesModule/>
       </>
     ),
   },
@@ -464,23 +450,7 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => (
       <>
         <DonationsStats/>
-        <SimpleCrud
-          collection="donations"
-          itemLabel="donation"
-          createLabel="Record donation"
-          fields={[
-            { name: "donor", label: "Donor", type: "text", required: true },
-            { name: "fund", label: "Fund", type: "select", options: ["Scholarship","Capital","Library","General"], required: true },
-            { name: "amount", label: "Amount (USD)", type: "number", required: true },
-            { name: "date", label: "Date", type: "date", required: true },
-          ]}
-          columns={[
-            { key: "donor", label: "Donor" },
-            { key: "fund", label: "Fund" },
-            { key: "amount", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
-            { key: "date", label: "Date" },
-          ]}
-        />
+        <DonationsModule/>
       </>
     ),
   },
@@ -1045,60 +1015,12 @@ Object.assign(MODULES, {
     title: "Payroll & Salaries",
     subtitle: "Confidential — Super Admin and Registrar only",
     icon: Wallet, allow: ["superadmin", "registrar"],
-    render: () => (
-      <SimpleCrud
-        collection="payroll"
-        itemLabel="salary record"
-        createLabel="Add salary record"
-        fields={[
-          { name: "staff", label: "Staff member", type: "text", required: true },
-          { name: "role", label: "Position", type: "text", required: true },
-          { name: "department", label: "Department", type: "select",
-            options: ["HOPE2 MISSION","HOPE2 ACADEMY","HOPE2 CHURCH","HOPE2 MEDIA"], required: true },
-          { name: "salaryUsd", label: "Monthly salary (USD)", type: "number", required: true },
-          { name: "allowanceUsd", label: "Allowances (USD)", type: "number" },
-          { name: "period", label: "Pay period", type: "text", required: true, placeholder: "July 2026" },
-          { name: "status", label: "Status", type: "select", options: ["Pending","Paid","On Hold"], required: true },
-        ]}
-        columns={[
-          { key: "staff", label: "Staff", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "role", label: "Position" },
-          { key: "department", label: "Department" },
-          { key: "salaryUsd", label: "Salary (USD · LRD)", render: (v) => fmtMoney(v) },
-          { key: "allowanceUsd", label: "Allowances", render: (v) => fmtMoney(v) },
-          { key: "period", label: "Period" },
-          { key: "status", label: "Status", render: (v) => statusBadge(v) },
-        ]}
-      />
-    ),
+    render: () => <PayrollModule/>,
   },
   expenses: {
     title: "Expenses & Payables", subtitle: "Operating costs, vendors and payment status",
     icon: Receipt, allow: ["superadmin", "admin", "registrar"],
-    render: () => (
-      <SimpleCrud
-        collection="expenses"
-        itemLabel="expense"
-        createLabel="Record expense"
-        fields={[
-          { name: "item", label: "Expense", type: "text", required: true },
-          { name: "category", label: "Category", type: "select",
-            options: ["Utilities","Supplies","Maintenance","Transport","Salaries","Events","Other"], required: true },
-          { name: "vendor", label: "Vendor / payee", type: "text" },
-          { name: "amountUsd", label: "Amount (USD)", type: "number", required: true },
-          { name: "date", label: "Date", type: "date", required: true },
-          { name: "status", label: "Status", type: "select", options: ["Outstanding","Paid"], required: true },
-        ]}
-        columns={[
-          { key: "item", label: "Expense", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "category", label: "Category", render: (v) => <Badge variant="secondary">{v}</Badge> },
-          { key: "vendor", label: "Vendor" },
-          { key: "amountUsd", label: "Amount (USD · LRD)", render: (v) => fmtMoney(v) },
-          { key: "date", label: "Date" },
-          { key: "status", label: "Status", render: (v) => statusBadge(v) },
-        ]}
-      />
-    ),
+    render: () => <ExpensesModule/>,
   },
   finance: {
     title: "Finance Overview", subtitle: "Income, payroll and expense position in USD and LRD",
@@ -1195,6 +1117,11 @@ Object.assign(MODULES, {
   approvals: {
     title: "Approvals", subtitle: "Submit, review and sign off school records", icon: CheckCircle2,
     render: () => <ApprovalsModule/>,
+  },
+  receipts: {
+    title: "Payment Receipts", subtitle: "Generate and print receipts for fees, expenses, payroll and donations",
+    icon: Receipt, allow: ["superadmin", "admin", "registrar"],
+    render: () => <ReceiptsHub/>,
   },
 
   // ── New modules ───────────────────────────────────────────────────────────
@@ -1952,6 +1879,39 @@ function FinanceOverview() {
         <Row label="Scholarship awards" value={awards} />
         <Row label="Net position" value={net} tone={net >= 0 ? "text-primary" : "text-destructive"} />
       </Card>
+    </div>
+  );
+}
+
+// =========================================================================
+// Receipts Hub — unified receipt centre for all financial documents
+// =========================================================================
+function ReceiptsHub() {
+  const [tab, setTab] = useState<"fees"|"expenses"|"payroll"|"donations">("fees");
+  const tabs: { key: typeof tab; label: string }[] = [
+    { key: "fees",      label: "Tuition & Fees" },
+    { key: "expenses",  label: "Expenses" },
+    { key: "payroll",   label: "Payroll" },
+    { key: "donations", label: "Donations" },
+  ];
+  return (
+    <div className="space-y-6">
+      <Card className="p-4 flex flex-wrap gap-2">
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              tab === t.key
+                ? "bg-primary text-primary-foreground shadow"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </Card>
+      {tab === "fees"      && <FeesModule/>}
+      {tab === "expenses"  && <ExpensesModule/>}
+      {tab === "payroll"   && <PayrollModule/>}
+      {tab === "donations" && <DonationsModule/>}
     </div>
   );
 }
