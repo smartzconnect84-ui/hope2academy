@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Quote } from "lucide-react";
 import { motion } from "framer-motion";
 import { Reveal, StaggerGroup } from "@/components/Motion";
 import HeroSlider from "@/components/HeroSlider";
 import { useSiteContent, type HomeChapter } from "@/lib/site-content";
+import { useAuth } from "@/hooks/use-auth";
 
 // --- COMPONENTS ---------------------------------------------------------
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
@@ -67,9 +68,12 @@ function Chapter({ c, index }: { c: HomeChapter; index: number }) {
 }
 
 function Index() {
+  const { user, loading } = useAuth();
   const content = useSiteContent();
   const { ribbon, chapters, impactStats, cards } = content.home;
   const h = content.home;
+  // If the user is signed in, send them straight to their portal dashboard.
+  if (!loading && user) return <Navigate to="/portal" replace />;
   return (
     <div className="bg-background">
       {/* HERO — untouched */}

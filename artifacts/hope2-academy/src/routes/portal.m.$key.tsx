@@ -30,6 +30,7 @@ import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSet
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
+import { ReportsModule } from "@/components/portal/Reports";
 import { DigitalLibraryModule } from "@/components/portal/DigitalLibrary";
 import { SubmissionsModule } from "@/components/portal/Submissions";
 import { AssessmentsModule } from "@/components/portal/Assessments";
@@ -1305,6 +1306,10 @@ Object.assign(MODULES, {
   approvals: {
     title: "Approvals", subtitle: "Submit, review and sign off school records", icon: CheckCircle2,
     render: () => <ApprovalsModule/>,
+  },
+  reports: {
+    title: "Reports", subtitle: "Submit reports and track them through the approval hierarchy", icon: FileText,
+    render: () => <ReportsModule />,
   },
   receipts: {
     title: "Payment Receipts", subtitle: "Generate and print receipts for fees, expenses, payroll and donations",

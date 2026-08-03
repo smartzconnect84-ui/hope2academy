@@ -8,7 +8,7 @@ import {
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
   ListTree, Search as SearchIcon, CheckCircle2,
   Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet,
-  Building2, Inbox, X,
+  Building2, Inbox, X, FilePen,
 } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -112,6 +112,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("subscribers"), label: "Subscribers", icon: Send },
       { to: m("pledges"), label: "Pledges", icon: Heart },
     ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "Reports Inbox", icon: FilePen },
+    ]},
     { group: "Settings", items: [
       { to: m("settings"), label: "System Settings", icon: Settings },
       { to: m("moduleaccess"), label: "Module Access Control", icon: Shield },
@@ -192,6 +195,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("subscribers"), label: "Subscribers", icon: Send },
       { to: m("pledges"), label: "Pledges", icon: Heart },
     ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "Reports Inbox", icon: FilePen },
+    ]},
     { group: "Settings", items: [
       { to: m("settings"), label: "System Settings", icon: Settings },
       { to: m("moduleaccess"), label: "Module Access Control", icon: Shield },
@@ -226,6 +232,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("clinic"), label: "Health Services", icon: Heart },
       { to: m("events"), label: "Events", icon: Calendar },
       { to: m("visitorlog"), label: "Visitor Log", icon: ClipboardList },
+    ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
     ]},
   ],
   registrar: [
@@ -265,6 +274,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("messages"), label: "Messages", icon: MessageSquare },
       { to: m("broadcast"), label: "Internal Broadcast", icon: Send },
     ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
+    ]},
   ],
   admissions_officer: [
     { group: "Overview", items: [
@@ -287,6 +299,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("inquiries"), label: "Enquiries", icon: Inbox },
       { to: m("volunteers"), label: "Volunteer Sign-ups", icon: Users },
       { to: m("subscribers"), label: "Subscribers", icon: Send },
+    ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
     ]},
   ],
   teacher: [
@@ -319,6 +334,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("leaverequests"), label: "My Leave Requests", icon: Inbox },
       { to: m("approvals"), label: "Submit Request", icon: CheckCircle2 },
     ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
+    ]},
   ],
   student: [
     { group: "Overview", items: [
@@ -341,6 +359,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
     ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
+    ]},
   ],
   nurse: [
     { group: "Overview", items: [
@@ -360,6 +381,9 @@ const navByRole: Record<AppRole, NavGroup[]> = {
       { to: m("announcements"), label: "Announcements", icon: Megaphone },
       { to: m("messages"), label: "Messages", icon: MessageSquare },
       { to: m("calendar"), label: "Academic Calendar", icon: Calendar },
+    ]},
+    { group: "Reports", items: [
+      { to: m("reports"), label: "My Reports", icon: FilePen },
     ]},
   ],
   parent: [

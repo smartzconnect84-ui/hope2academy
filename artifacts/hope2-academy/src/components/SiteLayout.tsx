@@ -25,12 +25,15 @@ export function SiteLayout() {
   const brand = useBrand();
   useCmsVersion(); // re-render when CMS nav changes
   const NAV: NavItem[] = cmsStore.listNav();
-  // Hide public marketing chrome (nav + footer) once user is in the backend portal.
+  // Hide public marketing chrome (nav + footer) once user is in the backend portal,
+  // and also on the /login page so it renders full-screen.
   const inPortal = pathname.startsWith("/portal");
-  const hidePublicChrome = inPortal && !!user;
+  const onLoginPage = pathname === "/login";
+  const hidePublicChrome = (inPortal && !!user) || onLoginPage;
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <motion.header
+      {/* On the login page the page is full-screen — no header or footer. */}
+      {onLoginPage ? null : <motion.header
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: [0.22,1,0.36,1] }}
@@ -173,7 +176,7 @@ export function SiteLayout() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.header>
+      </motion.header>}
       <main className="flex-1">
         <Outlet />
       </main>
