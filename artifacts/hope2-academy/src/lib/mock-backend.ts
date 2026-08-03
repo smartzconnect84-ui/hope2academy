@@ -49,6 +49,10 @@ export interface MockUser {
   subjects?: string[] | null;
   graduation_year?: number | null;
   linked_children?: string[] | null;
+  /** Unique school-issued ID for students: H2A-YYYY-NNNN */
+  student_id?: string | null;
+  /** Admission number assigned on application: ADM-YYYY-NNNN */
+  admission_no?: string | null;
   createdAt: string;
 }
 
@@ -60,6 +64,36 @@ const KEY_REMEMBER = "h2l.rememberEmail";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
 const USERS_VERSION = "6";
+const KEY_SID_COUNTER = "h2l.sid_counter";
+const KEY_ADM_COUNTER = "h2l.adm_counter";
+
+/** Generate the next school-issued Student ID: H2A-YYYY-NNNN */
+export function nextStudentId(): string {
+  if (!isBrowser()) return `H2A-${new Date().getFullYear()}-0001`;
+  // Initialise counter from highest existing student_id to avoid duplicates.
+  const key = KEY_SID_COUNTER;
+  const stored = Number(localStorage.getItem(key) || "0");
+  if (stored === 0) {
+    const all = readUsers();
+    const highest = all.reduce((max, u) => {
+      const m = (u.student_id ?? "").match(/H2A-\d{4}-(\d+)/);
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, 0);
+    localStorage.setItem(key, String(highest));
+  }
+  const n = Number(localStorage.getItem(key) || "0") + 1;
+  localStorage.setItem(key, String(n));
+  return `H2A-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`;
+}
+
+/** Generate the next Admission Number: ADM-YYYY-NNNN */
+export function nextAdmissionNo(): string {
+  if (!isBrowser()) return `ADM-${new Date().getFullYear()}-0001`;
+  const key = KEY_ADM_COUNTER;
+  const n = Number(localStorage.getItem(key) || "0") + 1;
+  localStorage.setItem(key, String(n));
+  return `ADM-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`;
+}
 
 export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
   { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
@@ -86,7 +120,7 @@ const ROLE_SEED_PROFILE: Partial<Record<AppRole, Partial<MockUser>>> = {
   admissions_officer: { department: "Admissions", bio: "Guides families through applications, interviews and enrolment offers." },
   teacher: { department: "Mathematics", subjects: ["Mathematics", "Civics", "Literature"], bio: "Lead teacher, Marshall Road Campus." },
   nurse: { department: "Health & Wellness", bio: "School nurse — clinic visits, immunisations, medications and health alerts." },
-  student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer." },
+  student: { grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", student_id: "H2A-2026-0001" },
   parent: { linked_children: ["Mariama Doe", "Ezekiel Doe"], bio: "Father of two HOPE2 students." },
   alumni: { graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia." },
 };
@@ -214,16 +248,33 @@ export const mockAuth = {
     return this.updateProfile(id, { role });
   },
 
-  async createUser(input: { email: string; name: string; role: AppRole; password?: string }) {
+  async createUser(input: {
+    email: string;
+    name: string;
+    role: AppRole;
+    password?: string;
+    student_id?: string;
+    admission_no?: string;
+    grade?: string;
+    class_name?: string;
+  }) {
     const users = readUsers();
     if (users.some(u => u.email.toLowerCase() === input.email.toLowerCase()))
       throw new Error("Email already exists");
+    // Auto-generate student_id if creating a student and none provided
+    const student_id = input.role === "student"
+      ? (input.student_id || nextStudentId())
+      : undefined;
     const u: MockUser = {
       id: `usr_${Math.random().toString(36).slice(2, 9)}`,
       email: input.email,
       password: input.password || "demo1234",
       name: input.name,
       role: input.role,
+      ...(student_id ? { student_id } : {}),
+      ...(input.admission_no ? { admission_no: input.admission_no } : {}),
+      ...(input.grade ? { grade: input.grade } : {}),
+      ...(input.class_name ? { class_name: input.class_name } : {}),
       createdAt: new Date().toISOString(),
     };
     writeUsers([u, ...users]);

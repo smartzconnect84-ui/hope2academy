@@ -1,4 +1,13 @@
 @import "tailwindcss";
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: inline-block;
+  animation: marquee linear infinite;
+}
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

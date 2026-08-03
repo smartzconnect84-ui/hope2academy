@@ -36,14 +36,14 @@ const CONFIG: Record<StaffRole, {
     duties: [
       "Maintain class rosters and enrolment records",
       "Verify grades, exam results and issue transcripts",
-      "Audit attendance and behavior records",
+      "Generate grade sheets and printable report cards",
       "Confirm admissions records and scholarship placements",
     ],
     quick: [
       { to: "/portal/m/classes", label: "Classes & Enrolment", icon: GraduationCap },
-      { to: "/portal/m/grades", label: "Grades & Transcripts", icon: Award },
-      { to: "/portal/m/exams", label: "Exams & Reports", icon: FileText },
-      { to: "/portal/m/attendance", label: "Attendance", icon: ClipboardList },
+      { to: "/portal/m/gradesheet", label: "Academic Transcripts", icon: Award },
+      { to: "/portal/m/reportcard", label: "Progress Reports / Report Cards", icon: FileText },
+      { to: "/portal/m/attendance", label: "Attendance Register", icon: ClipboardList },
     ],
   },
   admissions_officer: {

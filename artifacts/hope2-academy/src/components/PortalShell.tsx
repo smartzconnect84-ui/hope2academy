@@ -8,9 +8,9 @@ import {
   DollarSign, Briefcase, Library, BarChart3, FolderTree, Megaphone,
   ListTree, Search as SearchIcon, CheckCircle2,
   Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet,
-  Building2, Inbox,
+  Building2, Inbox, X,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   Sidebar, SidebarProvider, SidebarTrigger, SidebarContent, SidebarHeader,
   SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent,
@@ -114,6 +114,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Settings", items: [
       { to: m("settings"), label: "System Settings", icon: Settings },
+      { to: m("moduleaccess"), label: "Module Access Control", icon: Shield },
     ]},
   ],
   admin: [
@@ -193,6 +194,7 @@ const navByRole: Record<AppRole, NavGroup[]> = {
     ]},
     { group: "Settings", items: [
       { to: m("settings"), label: "System Settings", icon: Settings },
+      { to: m("moduleaccess"), label: "Module Access Control", icon: Shield },
     ]},
   ],
   admin_assistant: [
@@ -409,6 +411,56 @@ const navByRole: Record<AppRole, NavGroup[]> = {
   ],
 };
 
+/** Scrolling announcement ticker visible to all authenticated portal users. */
+function AnnouncementBanner() {
+  const { primaryRole } = useAuth();
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [dismissed, setDismissed] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const all = mockDb.list<any>("announcements");
+    // Filter by audience + active status
+    const filtered = all.filter((a) => {
+      if (a.active === "Archived") return false;
+      const aud = (a.audience ?? "All").toLowerCase();
+      if (aud === "all") return true;
+      if (!primaryRole) return false;
+      if (aud === "staff") return ["superadmin","admin","admin_assistant","registrar","admissions_officer","teacher","nurse"].includes(primaryRole);
+      if (aud === "students") return primaryRole === "student";
+      if (aud === "parents") return primaryRole === "parent";
+      if (aud === "alumni") return primaryRole === "alumni";
+      return true;
+    });
+    setAnnouncements(filtered);
+  }, [primaryRole]);
+
+  if (dismissed || announcements.length === 0) return null;
+
+  const text = announcements.map((a) => `📢 ${a.title}${a.body ? " — " + String(a.body).slice(0, 80) : ""}`).join("     ·     ");
+
+  return (
+    <div className="relative flex items-center h-9 bg-primary text-primary-foreground text-sm font-medium overflow-hidden shrink-0">
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          ref={trackRef}
+          className="whitespace-nowrap animate-marquee px-4"
+          style={{ animationDuration: `${Math.max(18, text.length * 0.12)}s` }}
+        >
+          {text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{text}
+        </div>
+      </div>
+      <button
+        onClick={() => setDismissed(true)}
+        aria-label="Dismiss banner"
+        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/30 grid place-items-center shrink-0 z-10"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export function PortalShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
   const { profile, primaryRole, signOut } = useAuth();
   const { pathname } = useLocation();
@@ -493,6 +545,7 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
         </Sidebar>
 
         <div className="flex-1 min-w-0 flex flex-col">
+          <AnnouncementBanner />
           <header className="sticky top-20 z-30 flex h-16 items-center gap-2 border-b border-border bg-background/80 backdrop-blur px-5">
             <SidebarTrigger />
             <div className="h-5 w-px bg-border mx-1" />

@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from "react";
-import { Users, GraduationCap, UserPlus, Activity, Loader2, Trash2, Plus, ShieldCheck, BookOpen, Heart } from "lucide-react";
+import { Users, GraduationCap, UserPlus, Activity, Loader2, Trash2, Plus, ShieldCheck, BookOpen, Heart, RefreshCw } from "lucide-react";
 import { PortalShell, StatCard } from "@/components/PortalShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { apiClient, isNetworkError, type ApiUser } from "@/lib/api-client";
-import { mockAuth, ROLE_LABEL, APP_ROLES } from "@/lib/mock-backend";
+import { mockAuth, ROLE_LABEL, APP_ROLES, nextStudentId } from "@/lib/mock-backend";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { Reveal, StaggerGroup, motion } from "@/components/Motion";
 import { toast } from "sonner";
@@ -13,6 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+
+const CLASS_OPTIONS = [
+  "Nursery","KG-1","KG-2",
+  "Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6",
+  "Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12",
+];
 
 type UserRow = ApiUser & { id: string };
 
@@ -52,7 +58,10 @@ function AdminPage() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<"all" | AppRole>("all");
-  const [newUser, setNewUser] = useState<{ email: string; name: string; role: AppRole }>({ email: "", name: "", role: "student" });
+  const [newUser, setNewUser] = useState<{
+    email: string; name: string; role: AppRole;
+    student_id: string; grade: string; class_name: string;
+  }>({ email: "", name: "", role: "student", student_id: nextStudentId(), grade: "", class_name: "" });
 
   const load = async () => {
     setLoading(true);
@@ -103,18 +112,26 @@ function AdminPage() {
 
   const createUser = async () => {
     if (!newUser.email || !newUser.name) { toast.error("Name and email required"); return; }
+    const payload = {
+      email: newUser.email,
+      name: newUser.name,
+      role: newUser.role,
+      ...(newUser.role === "student" && newUser.student_id ? { student_id: newUser.student_id } : {}),
+      ...(newUser.role === "student" && newUser.grade ? { grade: newUser.grade } : {}),
+      ...(newUser.role === "student" && newUser.class_name ? { class_name: newUser.class_name } : {}),
+    };
     try {
-      await apiClient.createUser(newUser);
+      await apiClient.createUser(payload);
       toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}`);
     } catch (e) {
       if (!isNetworkError(e)) { toast.error((e as Error)?.message ?? "Could not create user"); return; }
       try {
-        await mockAuth.createUser(newUser);
-        toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}`);
+        await mockAuth.createUser(payload);
+        toast.success(`Invited ${newUser.name} as ${ROLE_LABEL[newUser.role]}${newUser.role === "student" && newUser.student_id ? ` · ID: ${newUser.student_id}` : ""}`);
       } catch (e2: any) { toast.error(e2?.message ?? "Could not create user"); return; }
     }
     setOpen(false);
-    setNewUser({ email: "", name: "", role: "student" });
+    setNewUser({ email: "", name: "", role: "student", student_id: nextStudentId(), grade: "", class_name: "" });
     load();
   };
 
@@ -189,14 +206,22 @@ function AdminPage() {
               <DialogTrigger asChild>
                 <Button className="gap-2 shrink-0"><Plus className="h-4 w-4"/> Invite user</Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Invite a new user</DialogTitle></DialogHeader>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle>Add a new user</DialogTitle></DialogHeader>
                 <div className="space-y-3">
                   <div><Label>Full name</Label><Input value={newUser.name} onChange={e=>setNewUser({...newUser, name:e.target.value})} placeholder="Jane Doe"/></div>
                   <div><Label>Email</Label><Input type="email" value={newUser.email} onChange={e=>setNewUser({...newUser, email:e.target.value})} placeholder="jane@hope2.demo"/></div>
                   <div>
                     <Label>Role</Label>
-                    <Select value={newUser.role} onValueChange={(v)=>setNewUser({...newUser, role: v as AppRole})}>
+                    <Select value={newUser.role} onValueChange={(v)=>{
+                      const role = v as AppRole;
+                      setNewUser({...newUser, role,
+                        // Auto-generate a fresh student ID when switching to student role
+                        student_id: role === "student" ? nextStudentId() : "",
+                        grade: role === "student" ? newUser.grade : "",
+                        class_name: role === "student" ? newUser.class_name : "",
+                      });
+                    }}>
                       <SelectTrigger><SelectValue/></SelectTrigger>
                       <SelectContent>
                         <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Learners & Family</div>
@@ -214,11 +239,50 @@ function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Student-specific fields */}
+                  {newUser.role === "student" && (
+                    <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Student Details</p>
+                      <div>
+                        <Label>Student ID (auto-generated)</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={newUser.student_id}
+                            onChange={e=>setNewUser({...newUser, student_id:e.target.value})}
+                            className="font-mono text-sm"
+                            placeholder="H2A-2026-0001"
+                          />
+                          <Button type="button" variant="outline" size="icon" title="Regenerate ID"
+                            onClick={()=>setNewUser({...newUser, student_id: nextStudentId()})}>
+                            <RefreshCw className="h-4 w-4"/>
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">Format: H2A-YYYY-NNNN</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label>Grade level</Label>
+                          <Select value={newUser.grade} onValueChange={v=>setNewUser({...newUser, grade:v, class_name: v})}>
+                            <SelectTrigger><SelectValue placeholder="Select grade"/></SelectTrigger>
+                            <SelectContent>
+                              {CLASS_OPTIONS.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Class section</Label>
+                          <Input value={newUser.class_name} onChange={e=>setNewUser({...newUser, class_name:e.target.value})} placeholder="e.g. Grade 9 — Blue"/>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-xs text-muted-foreground">Default password: <span className="font-mono">demo1234</span></p>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button>
-                  <Button onClick={createUser}>Send invite</Button>
+                  <Button onClick={createUser}>Add user</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -244,6 +308,9 @@ function AdminPage() {
                   <div className="min-w-0">
                     <p className="font-medium truncate">{r.name ?? "—"}</p>
                     <p className="text-xs text-muted-foreground truncate">{r.email}</p>
+                    {(r as any).student_id && (
+                      <p className="text-[11px] font-mono text-primary/70 truncate">ID: {(r as any).student_id}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

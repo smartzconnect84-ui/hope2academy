@@ -22,6 +22,9 @@ import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { scopeRows, canWrite, canDownload, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
 import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
+import { moduleAccessStore, CONTROLLABLE_ROLES, CONTROLLABLE_ROLE_LABELS, ROLE_MODULE_KEYS, MODULE_LABELS } from "@/lib/module-access";
+import { nextAdmissionNo } from "@/lib/mock-backend";
+import { Switch } from "@/components/ui/switch";
 import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
 import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
@@ -256,6 +259,204 @@ function StaffModule() {
   );
 }
 
+// =========================================================================
+// Admissions Module — with auto-generated Admission Numbers
+// =========================================================================
+function AdmissionsModule() {
+  const principal = usePrincipal();
+  const canEdit = canWrite("admissions", principal?.role ?? null);
+  const [rows, setRows] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [q, setQ] = useState("");
+  const [form, setForm] = useState<any>({});
+
+  const load = () => setRows(mockDb.list<any>("admissions"));
+  useEffect(() => { load(); }, []);
+
+  const GRADE_OPTIONS = ["Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"];
+  const STATUS_OPTIONS = ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"];
+
+  const openCreate = () => {
+    setForm({ applicant: "", grade: "Grade 1", guardian: "", phone: "", submitted: new Date().toISOString().slice(0,10), status: "Pending", admission_no: nextAdmissionNo() });
+    setEditing(null);
+    setOpen(true);
+  };
+  const openEdit = (row: any) => { setForm({...row}); setEditing(row); setOpen(true); };
+  const save = () => {
+    if (!form.applicant || !form.guardian) { toast.error("Applicant name and guardian are required"); return; }
+    if (editing) { mockDb.update("admissions", editing.id, form); toast.success("Application updated"); }
+    else { mockDb.create("admissions", form); toast.success(`Application recorded · ${form.admission_no}`); }
+    setOpen(false); load();
+  };
+  const remove = (id: string) => { if (!confirm("Delete this application?")) return; mockDb.remove("admissions", id); toast.success("Deleted"); load(); };
+
+  const visible = rows.filter((r) => !q || [r.applicant, r.guardian, r.admission_no].some((v) => String(v ?? "").toLowerCase().includes(q.toLowerCase())));
+
+  const set = (k: string, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search applicant, guardian, ADM number…" className="pl-9 bg-card" />
+        </div>
+        {canEdit && <Button className="gap-2 shrink-0" onClick={openCreate}><Plus className="h-4 w-4" /> New application</Button>}
+      </div>
+
+      <TableShell
+        head={["ADM No.", "Applicant", "Grade", "Guardian", "Phone", "Submitted", "Status", ...(canEdit ? [""] : [])]}
+        rows={visible.map((r) => [
+          <span className="font-mono text-xs text-muted-foreground">{r.admission_no ?? "—"}</span>,
+          <span className="font-medium">{r.applicant}</span>,
+          r.grade,
+          r.guardian,
+          r.phone ?? "—",
+          r.submitted,
+          statusBadge(r.status),
+          ...(canEdit ? [
+            <div className="flex items-center gap-2 justify-end">
+              <Button size="sm" variant="outline" className="gap-1" onClick={() => openEdit(r)}><Edit3 className="h-3.5 w-3.5" />Edit</Button>
+              <Button size="sm" variant="ghost" onClick={() => remove(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            </div>
+          ] : []),
+        ])}
+      />
+
+      <Dialog open={open} onOpenChange={(o) => !o && setOpen(false)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editing ? "Edit application" : "New admission application"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Admission Number (auto-generated)</Label>
+              <div className="flex gap-2">
+                <Input value={form.admission_no ?? ""} onChange={(e) => set("admission_no", e.target.value)} className="font-mono text-sm" placeholder="ADM-2026-0001" />
+                <Button type="button" variant="outline" size="icon" onClick={() => set("admission_no", nextAdmissionNo())} title="Regenerate"><RotateCcw className="h-4 w-4" /></Button>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label>Applicant name</Label><Input value={form.applicant ?? ""} onChange={(e) => set("applicant", e.target.value)} placeholder="Full name" /></div>
+              <div>
+                <Label>Grade applying for</Label>
+                <Select value={form.grade ?? ""} onValueChange={(v) => set("grade", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{GRADE_OPTIONS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label>Parent / Guardian</Label><Input value={form.guardian ?? ""} onChange={(e) => set("guardian", e.target.value)} placeholder="Guardian name" /></div>
+              <div><Label>Phone</Label><Input value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} placeholder="+231 770 000 000" /></div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label>Submitted</Label><Input type="date" value={form.submitted ?? ""} onChange={(e) => set("submitted", e.target.value)} /></div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status ?? ""} onValueChange={(v) => set("status", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={save}>{editing ? "Save changes" : "Submit application"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+// =========================================================================
+// Module Access Control — Admin/Superadmin toggle modules per staff role
+// =========================================================================
+function ModuleAccessModule() {
+  const [selectedRole, setSelectedRole] = useState<string>(CONTROLLABLE_ROLES[0]);
+  const [, forceUpdate] = useState(0);
+
+  const moduleKeys = ROLE_MODULE_KEYS[selectedRole as keyof typeof ROLE_MODULE_KEYS] ?? [];
+
+  const toggle = (moduleKey: string) => {
+    const current = moduleAccessStore.isEnabled(selectedRole, moduleKey);
+    moduleAccessStore.setEnabled(selectedRole, moduleKey, !current);
+    forceUpdate((n) => n + 1);
+    toast.success(`${MODULE_LABELS[moduleKey] ?? moduleKey}: ${!current ? "enabled" : "disabled"} for ${CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}`);
+  };
+
+  const enableAll = () => {
+    moduleAccessStore.enableAll(selectedRole);
+    forceUpdate((n) => n + 1);
+    toast.success(`All modules enabled for ${CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}`);
+  };
+
+  const enabledCount = moduleKeys.filter((k) => moduleAccessStore.isEnabled(selectedRole, k)).length;
+
+  return (
+    <>
+      <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
+        <p className="text-sm text-muted-foreground mb-3">
+          Use the toggle switches below to grant or remove module access from each staff role.
+          Superadmin and Admin always retain full access regardless of these settings.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {CONTROLLABLE_ROLES.map((role) => (
+            <button
+              key={role}
+              onClick={() => setSelectedRole(role)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
+                selectedRole === role
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border hover:border-primary/60"
+              }`}
+            >
+              {CONTROLLABLE_ROLE_LABELS[role]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div>
+            <h3 className="font-display text-lg font-semibold">{CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}</h3>
+            <p className="text-sm text-muted-foreground">{enabledCount} of {moduleKeys.length} modules enabled</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={enableAll}>Enable all</Button>
+        </div>
+
+        <div className="divide-y divide-border">
+          {moduleKeys.map((moduleKey) => {
+            const enabled = moduleAccessStore.isEnabled(selectedRole, moduleKey);
+            return (
+              <motion.div
+                key={moduleKey}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30"
+              >
+                <div>
+                  <p className={`font-medium text-sm ${!enabled ? "text-muted-foreground line-through" : ""}`}>
+                    {MODULE_LABELS[moduleKey] ?? moduleKey}
+                  </p>
+                  <p className="text-xs text-muted-foreground">/portal/m/{moduleKey}</p>
+                </div>
+                <Switch
+                  checked={enabled}
+                  onCheckedChange={() => toggle(moduleKey)}
+                  aria-label={`Toggle ${moduleKey} for ${selectedRole}`}
+                />
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
 const MODULES: Record<string, ModuleDef> = {
   classes: {
     title: "Classes", subtitle: "All active classes across campuses", icon: GraduationCap,
@@ -335,20 +536,25 @@ const MODULES: Record<string, ModuleDef> = {
     render: () => <TimetableModule/>,
   },
   announcements: {
-    title: "Announcements", subtitle: "School-wide notices", icon: Megaphone,
+    title: "Announcements", subtitle: "School-wide notices visible in the scrolling banner for all accounts", icon: Megaphone,
     render: () => (
       <SimpleCrud
         collection="announcements"
         itemLabel="announcement"
+        createLabel="Post announcement"
         fields={[
           { name: "title", label: "Title", type: "text", required: true },
           { name: "audience", label: "Audience", type: "select", options: ["All","Students","Parents","Staff","Alumni"], required: true },
           { name: "date", label: "Date", type: "date", required: true },
-          { name: "body", label: "Body", type: "textarea", required: true },
+          { name: "body", label: "Body / Message", type: "textarea", required: true },
+          { name: "pinned", label: "Pin to banner", type: "select", options: ["Yes","No"] },
+          { name: "active", label: "Status", type: "select", options: ["Active","Archived"] },
         ]}
         columns={[
           { key: "title", label: "Title", render: (v) => <span className="font-medium">{v}</span> },
           { key: "audience", label: "Audience", render: (v) => <Badge variant="secondary">{v}</Badge> },
+          { key: "pinned", label: "Pinned", render: (v) => v === "Yes" ? <Badge className="bg-primary text-primary-foreground">Pinned</Badge> : <span className="text-muted-foreground text-xs">—</span> },
+          { key: "active", label: "Status", render: (v) => statusBadge(v ?? "Active") },
           { key: "date", label: "Date" },
         ]}
       />
@@ -554,6 +760,11 @@ const MODULES: Record<string, ModuleDef> = {
     title: "School Analytics", subtitle: "Enrolment trends, academic outcomes and platform health", icon: BarChart3,
     render: () => <AnalyticsModule />,
   },
+  moduleaccess: {
+    title: "Module Access Control", subtitle: "Enable or disable portal modules for each staff role", icon: Settings,
+    allow: ["superadmin", "admin"],
+    render: () => <ModuleAccessModule />,
+  },
 };
 
 // Append additional modules (hero editor + new school modules)
@@ -591,30 +802,7 @@ Object.assign(MODULES, {
   admissions: {
     title: "Admissions Register", subtitle: "Application pipeline and enrolment management", icon: Inbox,
     allow: ["superadmin", "admin"],
-    render: () => (
-      <SimpleCrud
-        collection="admissions"
-        itemLabel="application"
-        createLabel="New application"
-        fields={[
-          { name: "applicant", label: "Applicant name", type: "text", required: true },
-          { name: "grade", label: "Applying for grade", type: "select", required: true,
-            options: ["Nursery","KG-1","KG-2","Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8","Grade 9","Grade 10","Grade 11","Grade 12"] },
-          { name: "guardian", label: "Parent/Guardian", type: "text", required: true },
-          { name: "phone", label: "Phone", type: "text" },
-          { name: "submitted", label: "Submitted", type: "date", required: true },
-          { name: "status", label: "Status", type: "select", required: true,
-            options: ["Pending","Interview","Accepted","Enrolled","Rejected","Waitlist"] },
-        ]}
-        columns={[
-          { key: "applicant", label: "Applicant", render: (v) => <span className="font-medium">{v}</span> },
-          { key: "grade", label: "Grade" },
-          { key: "guardian", label: "Guardian" },
-          { key: "submitted", label: "Submitted" },
-          { key: "status", label: "Status", render: (v) => statusBadge(v) },
-        ]}
-      />
-    ),
+    render: () => <AdmissionsModule />,
   },
   inquiries: {
     title: "Enquiries", subtitle: "Messages sent from the public contact form", icon: Mail,
@@ -2204,8 +2392,12 @@ function AuditModule() {
   );
 }
 
+/** Staff roles subject to module access control (admin/superadmin always pass). */
+const CONTROLLED_ROLES = new Set(["admin_assistant","registrar","admissions_officer","teacher","nurse"]);
+
 function ModuleRoute() {
   const { key } = useParams<{ key: string }>();
+  const { primaryRole } = useAuth();
   const def = key ? MODULES[key] : undefined;
 
   if (!def) {
@@ -2215,6 +2407,30 @@ function ModuleRoute() {
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">This module hasn't been wired up yet.</p>
             <Link to="/portal" className="mt-4 inline-flex text-primary font-semibold underline">Back to portal</Link>
+          </Card>
+        </PortalShell>
+      </RequireAuth>
+    );
+  }
+
+  // Check module access for controllable staff roles
+  const isBlocked =
+    key &&
+    primaryRole &&
+    CONTROLLED_ROLES.has(primaryRole) &&
+    !moduleAccessStore.isEnabled(primaryRole, key);
+
+  if (isBlocked) {
+    return (
+      <RequireAuth allow={def.allow}>
+        <PortalShell title={def.title} subtitle="Access restricted">
+          <Card className="p-10 text-center">
+            <Settings className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-display text-xl font-semibold">Module access restricted</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+              Your administrator has disabled access to this module. Contact your school admin if you need access.
+            </p>
+            <Link to="/portal" className="mt-5 inline-flex text-primary font-semibold underline text-sm">Back to dashboard</Link>
           </Card>
         </PortalShell>
       </RequireAuth>

@@ -27,11 +27,21 @@ export const isAdminLevel = (r: AppRole | null | undefined) => r === "admin" || 
 
 /**
  * Collections only Admin / Super Admin may mutate. Everyone else — including
- * teachers, registrar, admissions officer and administrative assistant —
- * has read-only access.
+ * teachers, registrar, and administrative assistant — has read-only access.
+ *
+ * NOTE: announcements is intentionally NOT in this list so that
+ * admin_assistant and admissions_officer can also post announcements.
  */
 export const ADMIN_MANAGED_COLLECTIONS = [
-  "students", "classes", "timetable", "calendar", "announcements",
+  "students", "classes", "timetable", "calendar",
+];
+
+/**
+ * Roles that may create and manage announcements
+ * (in addition to admin / superadmin who can always write everything).
+ */
+export const ANNOUNCEMENT_WRITER_ROLES: AppRole[] = [
+  "admin", "superadmin", "admin_assistant", "admissions_officer", "registrar",
 ];
 
 /** Collections a non-staff role may never mutate, only read (their own slice). */
@@ -86,6 +96,10 @@ export function canWrite(
     return role === "superadmin" || role === "registrar";
   }
   if (role === "superadmin" || role === "admin") return true;
+  // Announcements: wider set of roles can post (admin_assistant, admissions_officer, registrar).
+  if (collection === "announcements") {
+    return ANNOUNCEMENT_WRITER_ROLES.includes(role);
+  }
   // The nurse owns medical records outright (unless frozen for approval).
   if (role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) {
     return !lockedCollections.includes(collection);

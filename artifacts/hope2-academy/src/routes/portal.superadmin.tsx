@@ -9,12 +9,13 @@ import { mockAuth } from "@/lib/mock-backend";
 import { StaggerGroup, Reveal } from "@/components/Motion";
 
 const GOVERNANCE_ITEMS: Array<{ label: string; to?: string; soon?: boolean }> = [
-  { label: "Audit Logs",   to: "/portal/m/audit" },
-  { label: "Org Settings", to: "/portal/m/settings" },
-  { label: "Permissions",  to: "/portal/m/staff" },
-  { label: "Finance",      to: "/portal/m/finance" },
-  { label: "Analytics",    to: "/portal/m/analytics" },
-  { label: "Backups",      soon: true },
+  { label: "Audit Logs",          to: "/portal/m/audit" },
+  { label: "Org Settings",        to: "/portal/m/settings" },
+  { label: "Module Access Control", to: "/portal/m/moduleaccess" },
+  { label: "Human Resources",     to: "/portal/m/staff" },
+  { label: "Finance",             to: "/portal/m/finance" },
+  { label: "Analytics",           to: "/portal/m/analytics" },
+  { label: "Backups",             soon: true },
 ];
 
 function SuperAdminPage() {

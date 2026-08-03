@@ -25,7 +25,7 @@ router.get("/users/:id", requireAuth, async (req, res) => {
 
 /** POST /api/users */
 router.post("/users", requireAuth, requireRole("superadmin", "admin"), async (req, res) => {
-  const { email, name, role, password } = req.body ?? {};
+  const { email, name, role, password, student_id, grade, class_name } = req.body ?? {};
   if (!email || !name || !role) {
     res.status(400).json({ error: "email, name, and role are required" });
     return;
@@ -43,8 +43,11 @@ router.post("/users", requireAuth, requireRole("superadmin", "admin"), async (re
     name,
     role: role as AppRole,
     password: password ?? "demo1234",
+    ...(student_id ? { student_id } : {}),
+    ...(grade ? { grade } : {}),
+    ...(class_name ? { class_name } : {}),
     createdAt: new Date().toISOString(),
-  });
+  } as any);
   res.status(201).json(sanitize(user));
 });
 

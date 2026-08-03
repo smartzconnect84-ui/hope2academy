@@ -148,7 +148,15 @@ export const apiClient = {
   },
 
   /** POST /users — create/invite a new user. */
-  async createUser(data: { email: string; name: string; role: AppRole; password?: string }): Promise<ApiUser> {
+  async createUser(data: {
+    email: string;
+    name: string;
+    role: AppRole;
+    password?: string;
+    student_id?: string;
+    grade?: string;
+    class_name?: string;
+  }): Promise<ApiUser> {
     return apiFetch<ApiUser>("/users", {
       method: "POST",
       body: JSON.stringify({ ...data, password: data.password ?? "demo1234" }),
