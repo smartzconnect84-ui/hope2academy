@@ -33,6 +33,9 @@ export const ROLE_LABEL: Record<AppRole, string> = {
 
 export interface MockUser {
   id: string;
+  /** Portal login handle — format firstname@hope2academy, e.g. aaliyah@hope2academy */
+  username: string;
+  /** Stored for password-reset email only; not used for login */
   email: string;
   password: string;
   name: string;
@@ -60,10 +63,10 @@ const KEY_USERS = "h2l.users";
 const KEY_SESSION = "h2l.session";
 const KEY_DATA = "h2l.data";
 const KEY_RESET = "h2l.resetTokens";
-const KEY_REMEMBER = "h2l.rememberEmail";
+const KEY_REMEMBER = "h2l.rememberUsername";
 /** Bumped when demo accounts change so existing browsers pick up new roles. */
 const KEY_USERS_VERSION = "h2l.users.version";
-const USERS_VERSION = "6";
+const USERS_VERSION = "7";
 const KEY_SID_COUNTER = "h2l.sid_counter";
 const KEY_ADM_COUNTER = "h2l.adm_counter";
 
@@ -95,18 +98,35 @@ export function nextAdmissionNo(): string {
   return `ADM-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`;
 }
 
-export const DEMO_CREDENTIALS: Array<{ role: AppRole; email: string; password: string; name: string }> = [
-  { role: "superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole" },
-  { role: "admin",      email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah" },
-  { role: "admin_assistant",    email: "assistant@hope2.demo", password: "demo1234", name: "Bendu Sirleaf" },
-  { role: "registrar",          email: "registrar@hope2.demo", password: "demo1234", name: "Emmanuel Gbaba" },
-  { role: "admissions_officer", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi" },
-  { role: "teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman" },
-  { role: "nurse",      email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor" },
-  { role: "student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe" },
-  { role: "parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe" },
-  { role: "alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie" },
+export const DEMO_CREDENTIALS: Array<{ role: AppRole; username: string; email: string; password: string; name: string }> = [
+  { role: "superadmin",         username: "aaliyah@hope2academy",    email: "aaliyah@hope2academy.org",    password: "demo1234", name: "Aaliyah Cole" },
+  { role: "admin",              username: "joseph@hope2academy",     email: "joseph@hope2academy.org",     password: "demo1234", name: "Joseph Mensah" },
+  { role: "admin_assistant",    username: "bendu@hope2academy",      email: "bendu@hope2academy.org",      password: "demo1234", name: "Bendu Sirleaf" },
+  { role: "registrar",          username: "emmanuel@hope2academy",   email: "emmanuel@hope2academy.org",   password: "demo1234", name: "Emmanuel Gbaba" },
+  { role: "admissions_officer", username: "korto@hope2academy",      email: "korto@hope2academy.org",      password: "demo1234", name: "Korto Nyanquoi" },
+  { role: "teacher",            username: "grace@hope2academy",      email: "grace@hope2academy.org",      password: "demo1234", name: "Grace Tubman" },
+  { role: "nurse",              username: "helen@hope2academy",      email: "helen@hope2academy.org",      password: "demo1234", name: "Helen Wortor" },
+  { role: "student",            username: "mariama@hope2academy",    email: "mariama@hope2academy.org",    password: "demo1234", name: "Mariama Doe" },
+  { role: "parent",             username: "samuel@hope2academy",     email: "samuel@hope2academy.org",     password: "demo1234", name: "Samuel Doe" },
+  { role: "alumni",             username: "patience@hope2academy",   email: "patience@hope2academy.org",   password: "demo1234", name: "Patience Kollie" },
 ];
+
+/**
+ * Generate a portal username from a full name.
+ * Format: firstname@hope2academy — e.g. "Grace Tubman" → "grace@hope2academy"
+ * If the base username is already taken, a numeric suffix is added.
+ */
+export function generateUsername(name: string, existingUsers?: MockUser[]): string {
+  const base = name.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "");
+  const domain = "hope2academy";
+  const candidate = `${base}@${domain}`;
+  if (!existingUsers || !existingUsers.length) return candidate;
+  const taken = new Set(existingUsers.map(u => (u.username ?? "").toLowerCase()));
+  if (!taken.has(candidate)) return candidate;
+  let n = 2;
+  while (taken.has(`${base}${n}@${domain}`)) n++;
+  return `${base}${n}@${domain}`;
+}
 
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -141,18 +161,28 @@ function seedIfEmpty() {
   const existing = readUsers();
   const version = localStorage.getItem(KEY_USERS_VERSION);
   if (existing.length > 0) {
-    // Upgrade: keep only DEMO_CREDENTIALS accounts + any real (non-@hope2.demo) accounts.
     if (version !== USERS_VERSION) {
       const now = new Date().toISOString();
-      const demoEmails = new Set(DEMO_CREDENTIALS.map(c => c.email.toLowerCase()));
-      // Retain real (non-demo) accounts and the canonical demo accounts; drop filler @hope2.demo extras.
+      const demoUsernames = new Set(DEMO_CREDENTIALS.map(c => c.username.toLowerCase()));
+      const demoEmails    = new Set(DEMO_CREDENTIALS.map(c => c.email.toLowerCase()));
+      // Keep real accounts + canonical demo accounts; drop old @hope2.demo extras.
       const retained = existing.filter(
-        u => demoEmails.has(u.email.toLowerCase()) || !u.email.toLowerCase().endsWith("@hope2.demo")
+        u => demoUsernames.has((u.username ?? "").toLowerCase())
+          || demoEmails.has(u.email.toLowerCase())
+          || (!u.email.toLowerCase().endsWith("@hope2.demo") && !(u.username ?? "").toLowerCase().endsWith("@hope2academy"))
       );
-      // Ensure every DEMO_CREDENTIALS entry exists (in case a new role was added).
-      const retainedEmails = new Set(retained.map(u => u.email.toLowerCase()));
-      const toAdd = DEMO_CREDENTIALS.filter(c => !retainedEmails.has(c.email.toLowerCase())).map((c) => ({
+      // Back-fill username onto any user that doesn't have one yet.
+      const withUsernames = retained.map(u => {
+        if (u.username) return u;
+        const demo = DEMO_CREDENTIALS.find(c => c.email.toLowerCase() === u.email.toLowerCase());
+        const username = demo ? demo.username : generateUsername(u.name, retained);
+        return { ...u, username };
+      });
+      // Ensure every demo credential exists with the new username.
+      const retainedUsernames = new Set(withUsernames.map(u => u.username.toLowerCase()));
+      const toAdd = DEMO_CREDENTIALS.filter(c => !retainedUsernames.has(c.username.toLowerCase())).map((c) => ({
         id: `usr_${c.role}`,
+        username: c.username,
         email: c.email,
         password: c.password,
         name: c.name,
@@ -162,7 +192,7 @@ function seedIfEmpty() {
         createdAt: now,
         ...(ROLE_SEED_PROFILE[c.role] ?? {}),
       })) as MockUser[];
-      writeUsers([...retained, ...toAdd]);
+      writeUsers([...withUsernames, ...toAdd]);
       localStorage.setItem(KEY_USERS_VERSION, USERS_VERSION);
     }
     return;
@@ -174,6 +204,7 @@ function seedIfEmpty() {
 
   const seed: MockUser[] = DEMO_CREDENTIALS.map((c) => ({
     id: `usr_${c.role}`,
+    username: c.username,
     email: c.email,
     password: c.password,
     name: c.name,
@@ -192,10 +223,14 @@ function seedIfEmpty() {
 export const mockAuth = {
   init() { seedIfEmpty(); ensureSeedData(); },
 
-  async signIn(email: string, password: string): Promise<MockUser> {
+  async signIn(username: string, password: string): Promise<MockUser> {
     seedIfEmpty();
-    const u = readUsers().find(x => x.email.toLowerCase() === email.toLowerCase());
-    if (!u || u.password !== password) throw new Error("Invalid email or password");
+    const needle = username.trim().toLowerCase();
+    // Match by username first; fall back to email for backward compatibility.
+    const u = readUsers().find(
+      x => (x.username ?? "").toLowerCase() === needle || x.email.toLowerCase() === needle
+    );
+    if (!u || u.password !== password) throw new Error("Invalid username or password");
     if (isBrowser()) localStorage.setItem(KEY_SESSION, u.id);
     return u;
   },
@@ -252,6 +287,8 @@ export const mockAuth = {
     email: string;
     name: string;
     role: AppRole;
+    /** Provide an explicit username, or leave blank to auto-generate from name */
+    username?: string;
     password?: string;
     student_id?: string;
     admission_no?: string;
@@ -260,13 +297,18 @@ export const mockAuth = {
   }) {
     const users = readUsers();
     if (users.some(u => u.email.toLowerCase() === input.email.toLowerCase()))
-      throw new Error("Email already exists");
-    // Auto-generate student_id if creating a student and none provided
+      throw new Error("Email already registered");
+    // Auto-generate a portal username from the name if not supplied.
+    const username = input.username?.trim() || generateUsername(input.name, users);
+    if (users.some(u => (u.username ?? "").toLowerCase() === username.toLowerCase()))
+      throw new Error(`Username "${username}" is already taken`);
+    // Auto-generate student_id if creating a student and none provided.
     const student_id = input.role === "student"
       ? (input.student_id || nextStudentId())
       : undefined;
     const u: MockUser = {
       id: `usr_${Math.random().toString(36).slice(2, 9)}`,
+      username,
       email: input.email,
       password: input.password || "demo1234",
       name: input.name,
@@ -317,14 +359,14 @@ export const mockAuth = {
     if (isBrowser()) localStorage.setItem(KEY_RESET, JSON.stringify(all));
   },
 
-  // ---------- Remember me ----------
-  getRememberedEmail(): string {
+  // ---------- Remember me (stores username, not email) ----------
+  getRememberedUsername(): string {
     if (!isBrowser()) return "";
     return localStorage.getItem(KEY_REMEMBER) ?? "";
   },
-  setRememberedEmail(email: string | null) {
+  setRememberedUsername(username: string | null) {
     if (!isBrowser()) return;
-    if (email) localStorage.setItem(KEY_REMEMBER, email);
+    if (username) localStorage.setItem(KEY_REMEMBER, username);
     else localStorage.removeItem(KEY_REMEMBER);
   },
 };

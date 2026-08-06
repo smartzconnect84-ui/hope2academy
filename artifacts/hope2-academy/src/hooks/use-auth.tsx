@@ -23,7 +23,7 @@ interface AuthCtx {
   roles: AppRole[];
   primaryRole: AppRole | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -79,25 +79,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { hydrate(); }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (username: string, password: string) => {
     try {
-      const apiUser = await apiClient.signIn(email, password);
+      // Try the live API first (API uses email; pass username and let the server decide).
+      const apiUser = await apiClient.signIn(username, password);
       setUser({ $id: apiUser.id, email: apiUser.email, name: apiUser.name });
       setProfile(fromApiUser(apiUser));
     } catch (e) {
       if (!isNetworkError(e)) {
-        // The API rejected the credentials. The account may only exist in the
-        // local demo store (e.g. a role added after the server was seeded),
-        // so try there before surfacing the failure.
+        // API is up but rejected the credentials — try local mock (username-based).
         try {
-          await mockAuth.signIn(email, password);
+          await mockAuth.signIn(username, password);
         } catch {
           throw e;
         }
         await hydrate();
         return;
       }
-      await mockAuth.signIn(email, password);
+      // API unreachable — fall back to local mock store (username-based).
+      await mockAuth.signIn(username, password);
       await hydrate();
     }
   };

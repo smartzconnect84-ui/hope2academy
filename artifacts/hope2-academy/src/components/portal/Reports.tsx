@@ -83,11 +83,15 @@ export function ReportsModule() {
 
   if (!principal) return null;
 
+  const isSuperadmin = principal.role === "superadmin";
   const isReviewer =
-    principal.role === "superadmin" ||
+    isSuperadmin ||
     principal.role === "admin" ||
     principal.role === "teacher" ||
     principal.role === "admin_assistant";
+
+  // Superadmin only reviews — they do not submit reports.
+  const canSubmit = !isSuperadmin;
 
   const isStudent = principal.role === "student";
   const categories = isStudent ? REPORT_CATEGORIES_STUDENT : REPORT_CATEGORIES_STAFF;
@@ -204,7 +208,9 @@ export function ReportsModule() {
         </div>
       )}
 
-      {/* My submitted reports */}
+      {/* My submitted reports — hidden for Superadmin (receive/approve only) */}
+      {canSubmit && (
+        <>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">My Submitted Reports</h2>
         <Button onClick={() => { setCreating(true); setForm({ title: "", category: categories[0], details: "" }); setFiles([]); }} className="gap-2">
@@ -357,6 +363,8 @@ export function ReportsModule() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+        </>
       )}
 
       {/* View / Review dialog */}

@@ -8,6 +8,8 @@
  *     → submit reports → Superadmin for final approval
  *   student
  *     → submit reports → Teacher AND Admin Assistant for review
+ *
+ *   superadmin — RECEIVE and APPROVE only; cannot submit reports.
  */
 import { mockDb, type AppRole } from "@/lib/mock-backend";
 
@@ -78,8 +80,9 @@ const COL = "reports";
 const NOTIF = "notifications";
 const AUDIT = "audit";
 
-/** Which roles can submit to whom */
+/** Which roles can submit to whom. Returns "" for roles that cannot submit. */
 export function recipientRolesForSubmitter(role: AppRole | string | null): string {
+  if (role === "superadmin") return ""; // Superadmin only receives; never submits.
   if (role === "admin") return "superadmin";
   if (role === "student") return "teacher,admin_assistant";
   // admin_assistant | registrar | admissions_officer | teacher | nurse

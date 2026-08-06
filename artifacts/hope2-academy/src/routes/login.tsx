@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, Loader2, Eye, EyeOff, KeyRound, Sparkles, ChevronRight } from "lucide-react";
+import { AtSign, Lock, Loader2, Eye, EyeOff, KeyRound, Sparkles, ChevronRight, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { DEMO_CREDENTIALS, ROLE_LABEL, mockAuth } from "@/lib/mock-backend";
 import { apiClient, isNetworkError } from "@/lib/api-client";
@@ -17,17 +17,17 @@ import { Logo, BrandWordmark } from "@/components/Logo";
 import { useBrand } from "@/lib/brand";
 import loginBg from "@/assets/login-bg.jpg.asset.json";
 
-/* ── Forgot-password dialog (unchanged) ─────────────────────────────────── */
+/* ── Forgot-password dialog — uses account EMAIL for reset ───────────────── */
 function ForgotPasswordDialog({
-  open, onOpenChange, defaultEmail,
-}: { open: boolean; onOpenChange: (v: boolean) => void; defaultEmail: string }) {
+  open, onOpenChange,
+}: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const [step, setStep] = useState<"request" | "reset">("request");
-  const [email, setEmail] = useState(defaultEmail);
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (open) { setStep("request"); setEmail(defaultEmail); setCode(""); setNewPassword(""); } }, [open, defaultEmail]);
+  useEffect(() => { if (open) { setStep("request"); setEmail(""); setCode(""); setNewPassword(""); } }, [open]);
 
   const request = async () => {
     setBusy(true);
@@ -48,7 +48,7 @@ function ForgotPasswordDialog({
         await apiClient.resetPassword(email, code, newPassword);
         try { const local = await mockAuth.requestPasswordReset(email); await mockAuth.resetPassword(email, local, newPassword); } catch { /* not in local store */ }
       } catch (err) { if (!isNetworkError(err)) throw err; await mockAuth.resetPassword(email, code, newPassword); }
-      toast.success("Password updated — you can sign in now"); onOpenChange(false);
+      toast.success("Password updated — you can sign in with your username now"); onOpenChange(false);
     } catch (e: any) { toast.error(e?.message ?? "Could not reset password"); }
     finally { setBusy(false); }
   };
@@ -58,12 +58,20 @@ function ForgotPasswordDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-primary" /> Reset your password</DialogTitle>
-          <DialogDescription>{step === "request" ? "Enter your account email and we'll issue a reset code." : "Enter the reset code and choose a new password."}</DialogDescription>
+          <DialogDescription>
+            {step === "request"
+              ? "Enter the email address linked to your account and we'll issue a reset code."
+              : "Enter the reset code and choose a new password."}
+          </DialogDescription>
         </DialogHeader>
         {step === "request" ? (
           <div className="space-y-3">
-            <Label htmlFor="reset-email">Email</Label>
-            <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@hope2academy.org" />
+            <Label htmlFor="reset-email">Account email address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input id="reset-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@hope2academy.org" className="pl-10" />
+            </div>
+            <p className="text-xs text-muted-foreground">Your login username is separate from your email. Email is only used for resetting your password.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -87,10 +95,10 @@ function LoginPage() {
   const { user, loading, refresh, signIn } = useAuth();
   const navigate = useNavigate();
   const brand = useBrand();
-  const [email, setEmail] = useState(() => mockAuth.getRememberedEmail());
+  const [username, setUsername] = useState(() => mockAuth.getRememberedUsername());
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(() => Boolean(mockAuth.getRememberedEmail()));
+  const [remember, setRemember] = useState(() => Boolean(mockAuth.getRememberedUsername()));
   const [forgotOpen, setForgotOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [activeDemo, setActiveDemo] = useState<string | null>(null);
@@ -101,8 +109,8 @@ function LoginPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await signIn(email, password);
-      mockAuth.setRememberedEmail(remember ? email : null);
+      await signIn(username, password);
+      mockAuth.setRememberedUsername(remember ? username : null);
       toast.success("Welcome back");
       navigate("/portal");
     } catch (err: any) {
@@ -110,12 +118,12 @@ function LoginPage() {
     } finally { setSubmitting(false); }
   };
 
-  const fillDemo = (e: string, p: string) => { setEmail(e); setPassword(p); };
+  const fillDemo = (u: string, p: string) => { setUsername(u); setPassword(p); };
 
-  const quickSignIn = async (role: string, e: string, p: string) => {
-    setActiveDemo(role); setEmail(e); setPassword(p); setSubmitting(true);
+  const quickSignIn = async (role: string, u: string, p: string) => {
+    setActiveDemo(role); setUsername(u); setPassword(p); setSubmitting(true);
     try {
-      await signIn(e, p);
+      await signIn(u, p);
       toast.success("Signed in as demo user");
       navigate("/portal");
     } catch (err: any) {
@@ -203,12 +211,12 @@ function LoginPage() {
                   key={c.role}
                   type="button"
                   disabled={submitting}
-                  onClick={() => quickSignIn(c.role, c.email, c.password)}
+                  onClick={() => quickSignIn(c.role, c.username, c.password)}
                   className="group relative flex items-center justify-between rounded-xl bg-white/8 hover:bg-white/16 active:bg-white/20 border border-white/8 hover:border-white/20 px-3 py-2.5 text-left transition-all disabled:opacity-50"
                 >
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-white leading-none">{ROLE_LABEL[c.role]}</p>
-                    <p className="text-[10px] text-white/50 truncate mt-0.5">{c.email}</p>
+                    <p className="text-[10px] text-white/50 truncate mt-0.5 font-mono">{c.username}</p>
                   </div>
                   {activeDemo === c.role
                     ? <Loader2 className="h-3 w-3 shrink-0 text-white/50 animate-spin ml-1" />
@@ -258,16 +266,17 @@ function LoginPage() {
             {/* Form */}
             <form onSubmit={onSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
+                <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                 <div className="relative mt-1.5">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
-                    id="email"
-                    type="email"
+                    id="username"
+                    type="text"
+                    autoComplete="username"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@hope2academy.org"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="firstname@hope2academy"
                     className="pl-10 h-11"
                   />
                 </div>
@@ -316,7 +325,7 @@ function LoginPage() {
               </Button>
             </form>
 
-            <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={email} />
+            <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} />
 
             {/* Admin-only note */}
             <div className="mt-5 rounded-xl bg-muted/60 p-3.5 text-xs text-muted-foreground leading-relaxed">
@@ -335,11 +344,11 @@ function LoginPage() {
                   <button
                     key={c.role}
                     type="button"
-                    onClick={() => fillDemo(c.email, c.password)}
+                    onClick={() => fillDemo(c.username, c.password)}
                     className="rounded-xl border border-border px-2.5 py-2 text-left text-[11px] hover:border-primary hover:bg-muted transition"
                   >
                     <span className="font-semibold block">{ROLE_LABEL[c.role]}</span>
-                    <span className="text-muted-foreground block truncate">{c.email}</span>
+                    <span className="text-muted-foreground block truncate font-mono">{c.username}</span>
                   </button>
                 ))}
               </div>
