@@ -22,3 +22,10 @@ cd lib/db && pnpm run push
 Then restart the API server workflow. It seeds 12 users + 124 items on first start.
 
 **Why:** The Replit database is provisioned but schema must be pushed manually (`drizzle-kit push`) before the server can seed or serve data.
+
+## Module configuration sessions
+Module registry reads and writes must avoid calling the secured API when the browser is using a local mock session without `h2l.apiToken`; use the local registry in that case.
+
+**Why:** Local demo sign-ins intentionally do not create JWTs, so sending their module-toggle requests to the API produces a misleading `Unauthorized — no token` error.
+
+**How to apply:** Check for the stored API token before module-config API calls; preserve API-first behavior for live JWT sessions and local persistence for mock sessions.

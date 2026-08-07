@@ -58,13 +58,18 @@ export const moduleConfigStore = {
   isEnabled(key: string) { return this.get(key)?.enabled !== false; },
   async load(): Promise<ModuleConfig[]> {
     if (!loadPromise) {
-      loadPromise = apiClient.list<ModuleConfig>("modules")
+      // Demo/local accounts do not have an API JWT. In that mode the local
+      // module registry is the source of truth, rather than making a request
+      // that can only fail with "Unauthorized — no token".
+      loadPromise = (apiClient.getToken()
+        ? apiClient.list<ModuleConfig>("modules")
+        : Promise.reject(new ApiUnavailableForLocalSessionError()))
         .then((configs) => {
           write(configs);
           return configs;
         })
         .catch((error) => {
-          if (!isNetworkError(error)) throw error;
+          if (!isNetworkError(error) && !(error instanceof ApiUnavailableForLocalSessionError)) throw error;
           return read();
         })
         .finally(() => { loadPromise = null; });
@@ -76,17 +81,25 @@ export const moduleConfigStore = {
     const existing = current.find((module) => module.id === id);
     if (!existing) throw new Error("Module not found");
     try {
+      if (!apiClient.getToken()) throw new ApiUnavailableForLocalSessionError();
       const updated = await apiClient.update<ModuleConfig>("modules", id, patch);
       write(current.map((module) => module.id === id ? updated : module));
       return updated;
     } catch (error) {
-      if (!isNetworkError(error)) throw error;
+      if (!isNetworkError(error) && !(error instanceof ApiUnavailableForLocalSessionError)) throw error;
       const updated = { ...existing, ...patch, updatedAt: new Date().toISOString() };
       write(current.map((module) => module.id === id ? updated : module));
       return updated;
     }
   },
 };
+
+class ApiUnavailableForLocalSessionError extends Error {
+  constructor() {
+    super("Live module registry unavailable for local session");
+    this.name = "ApiUnavailableForLocalSessionError";
+  }
+}
 
 export function useModuleConfigs() {
   const [configs, setConfigs] = useState<ModuleConfig[]>(() => read());

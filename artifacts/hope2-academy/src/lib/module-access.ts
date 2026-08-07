@@ -1,12 +1,13 @@
 /**
- * Module Access Control — per-role module enable/disable.
- * Superadmin and Admin can toggle which modules each staff role can access.
- * Stored in localStorage as h2l.module_access.
+ * Module Access Control — per-account module enable/disable.
+ * Role defaults remain supported for backwards compatibility, while account
+ * overrides are stored separately in localStorage as h2l.module_access.users.
  */
 
 const KEY = "h2l.module_access";
 
 export type ModuleAccessMap = Record<string, Record<string, boolean>>;
+type UserModuleAccessMap = Record<string, Record<string, boolean>>;
 
 /** Staff roles that can have module access toggled by Admin/Superadmin. */
 export const CONTROLLABLE_ROLES = [
@@ -18,6 +19,18 @@ export const CONTROLLABLE_ROLES = [
 ] as const;
 
 export type ControllableRole = typeof CONTROLLABLE_ROLES[number];
+
+/** Every account role shown in the Superadmin access panel. */
+export const MODULE_ACCESS_ROLES = [
+  "superadmin",
+  "admin",
+  ...CONTROLLABLE_ROLES,
+  "student",
+  "parent",
+  "alumni",
+] as const;
+
+export type ModuleAccessRole = typeof MODULE_ACCESS_ROLES[number];
 
 /** Roles that always have full access (not subject to module access control). */
 export const ALWAYS_FULL_ACCESS_ROLES = ["superadmin", "admin"] as const;
@@ -31,8 +44,19 @@ export const CONTROLLABLE_ROLE_LABELS: Record<ControllableRole, string> = {
   nurse: "School Nurse",
 };
 
-/** Modules available to each controllable role. */
-export const ROLE_MODULE_KEYS: Record<ControllableRole, string[]> = {
+export const MODULE_ACCESS_ROLE_LABELS: Record<ModuleAccessRole, string> = {
+  superadmin: "Super Admin",
+  admin: "Admin",
+  ...CONTROLLABLE_ROLE_LABELS,
+  student: "Student",
+  parent: "Parent",
+  alumni: "Alumni",
+};
+
+/** Modules available to each account role. */
+export const ROLE_MODULE_KEYS: Record<ModuleAccessRole, string[]> = {
+  superadmin: [],
+  admin: [],
   admin_assistant: [
     "calendar", "announcements", "messages", "broadcast", "campaigns",
     "forms", "inquiries", "volunteers", "subscribers", "staff",
@@ -62,6 +86,18 @@ export const ROLE_MODULE_KEYS: Record<ControllableRole, string[]> = {
     "clinic", "immunizations", "medications", "healthalerts",
     "medicalscreenings", "counselling", "directory", "messages",
     "announcements", "calendar", "resources", "approvals",
+  ],
+  student: [
+    "classes", "assignments", "submissions", "assessments", "grades", "gradesheet",
+    "reportcard", "timetable", "attendance", "announcements", "messages",
+    "calendar", "resources", "library", "directory", "events", "jobs",
+  ],
+  parent: [
+    "children", "grades", "gradesheet", "reportcard", "attendance", "timetable",
+    "fees", "announcements", "messages", "calendar", "directory", "events",
+  ],
+  alumni: [
+    "events", "jobs", "mentorship", "announcements", "messages", "calendar", "directory",
   ],
 };
 
@@ -121,6 +157,14 @@ function read(): ModuleAccessMap {
   if (typeof localStorage === "undefined") return {};
   try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
 }
+function readUsers(): UserModuleAccessMap {
+  if (typeof localStorage === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(`${KEY}.users`) || "{}"); } catch { return {}; }
+}
+function writeUsers(d: UserModuleAccessMap) {
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(`${KEY}.users`, JSON.stringify(d));
+}
 function write(d: ModuleAccessMap) {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(KEY, JSON.stringify(d));
@@ -131,8 +175,12 @@ export const moduleAccessStore = {
    * Returns true (enabled) by default — missing key means enabled.
    * Admin and Superadmin always return true regardless.
    */
-  isEnabled(role: string, moduleKey: string): boolean {
+  isEnabled(role: string, moduleKey: string, userId?: string): boolean {
     if ((ALWAYS_FULL_ACCESS_ROLES as readonly string[]).includes(role)) return true;
+    if (userId) {
+      const userValue = readUsers()[userId]?.[moduleKey];
+      if (typeof userValue === "boolean") return userValue;
+    }
     const d = read();
     // If a role entry doesn't exist or the key isn't set, default = enabled.
     return d[role]?.[moduleKey] !== false;
@@ -143,6 +191,18 @@ export const moduleAccessStore = {
     if (!d[role]) d[role] = {};
     d[role][moduleKey] = enabled;
     write(d);
+  },
+
+  setUserEnabled(userId: string, role: string, moduleKey: string, enabled: boolean) {
+    if ((ALWAYS_FULL_ACCESS_ROLES as readonly string[]).includes(role)) return;
+    const d = readUsers();
+    if (!d[userId]) d[userId] = {};
+    d[userId][moduleKey] = enabled;
+    writeUsers(d);
+  },
+
+  getForUser(userId: string): Record<string, boolean> {
+    return readUsers()[userId] ?? {};
   },
 
   getForRole(role: string): Record<string, boolean> {
@@ -158,5 +218,12 @@ export const moduleAccessStore = {
     const d = read();
     delete d[role];
     write(d);
+  },
+
+  enableAllForUser(userId: string, role: string, moduleKeys: string[]) {
+    if ((ALWAYS_FULL_ACCESS_ROLES as readonly string[]).includes(role)) return;
+    const d = readUsers();
+    d[userId] = Object.fromEntries(moduleKeys.map((key) => [key, true]));
+    writeUsers(d);
   },
 };

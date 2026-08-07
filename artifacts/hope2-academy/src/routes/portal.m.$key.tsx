@@ -22,7 +22,13 @@ import type { AppRole } from "@/hooks/use-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { scopeRows, canWrite, canDownload, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
 import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
-import { moduleAccessStore, CONTROLLABLE_ROLES, CONTROLLABLE_ROLE_LABELS, ROLE_MODULE_KEYS, MODULE_LABELS } from "@/lib/module-access";
+import {
+  moduleAccessStore,
+  MODULE_ACCESS_ROLES,
+  MODULE_ACCESS_ROLE_LABELS,
+  ROLE_MODULE_KEYS,
+  MODULE_LABELS,
+} from "@/lib/module-access";
 import { moduleConfigStore, useModuleConfigs, type ModuleConfig } from "@/lib/module-config";
 import { nextAdmissionNo } from "@/lib/mock-backend";
 import { Switch } from "@/components/ui/switch";
@@ -400,48 +406,96 @@ function AdmissionsModule() {
 }
 
 // =========================================================================
-// Module Access Control — Admin/Superadmin toggle modules per staff role
+// Module Access Control — Admin/Superadmin toggle modules per account
 // =========================================================================
 function ModuleAccessModule() {
-  const [selectedRole, setSelectedRole] = useState<string>(CONTROLLABLE_ROLES[0]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [, forceUpdate] = useState(0);
 
-  const moduleKeys = ROLE_MODULE_KEYS[selectedRole as keyof typeof ROLE_MODULE_KEYS] ?? [];
+  useEffect(() => {
+    (async () => {
+      try {
+        setUsers(await apiClient.listUsers());
+      } catch {
+        setUsers((await mockAuth.listUsers()) as any[]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedUserId && users[0]?.id) setSelectedUserId(users[0].id);
+    if (selectedUserId && !users.some((user) => user.id === selectedUserId)) {
+      setSelectedUserId(users[0]?.id ?? "");
+    }
+  }, [users, selectedUserId]);
+
+  const selectedUser = users.find((user) => user.id === selectedUserId);
+  const selectedRole = (selectedUser?.role ?? "student") as keyof typeof ROLE_MODULE_KEYS;
+  const moduleKeys = ROLE_MODULE_KEYS[selectedRole] ?? [];
+  const isAlwaysFullAccess = selectedRole === "superadmin" || selectedRole === "admin";
 
   const toggle = (moduleKey: string) => {
-    const current = moduleAccessStore.isEnabled(selectedRole, moduleKey);
-    moduleAccessStore.setEnabled(selectedRole, moduleKey, !current);
+    if (!selectedUser || isAlwaysFullAccess) return;
+    const current = moduleAccessStore.isEnabled(selectedRole, moduleKey, selectedUser.id);
+    moduleAccessStore.setUserEnabled(selectedUser.id, selectedRole, moduleKey, !current);
     forceUpdate((n) => n + 1);
-    toast.success(`${MODULE_LABELS[moduleKey] ?? moduleKey}: ${!current ? "enabled" : "disabled"} for ${CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}`);
+    toast.success(`${MODULE_LABELS[moduleKey] ?? moduleKey}: ${!current ? "enabled" : "disabled"} for ${selectedUser.name ?? selectedUser.email}`);
   };
 
   const enableAll = () => {
-    moduleAccessStore.enableAll(selectedRole);
+    if (!selectedUser || isAlwaysFullAccess) return;
+    moduleAccessStore.enableAllForUser(selectedUser.id, selectedRole, moduleKeys);
     forceUpdate((n) => n + 1);
-    toast.success(`All modules enabled for ${CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}`);
+    toast.success(`All modules enabled for ${selectedUser.name ?? selectedUser.email}`);
   };
 
-  const enabledCount = moduleKeys.filter((k) => moduleAccessStore.isEnabled(selectedRole, k)).length;
+  const enabledCount = moduleKeys.filter((k) => moduleAccessStore.isEnabled(selectedRole, k, selectedUser?.id)).length;
 
   return (
     <>
       <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
         <p className="text-sm text-muted-foreground mb-3">
-          Use the toggle switches below to grant or remove module access from each staff role.
-          Superadmin and Admin always retain full access regardless of these settings.
+          Select any user account to grant or remove access to the modules available for that account.
+          Superadmin and Admin always retain full access.
         </p>
         <div className="flex flex-wrap gap-2">
-          {CONTROLLABLE_ROLES.map((role) => (
+          {MODULE_ACCESS_ROLES.map((role) => (
             <button
               key={role}
-              onClick={() => setSelectedRole(role)}
+              onClick={() => {
+                const first = users.find((user) => user.role === role);
+                if (first) setSelectedUserId(first.id);
+              }}
               className={`px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                selectedRole === role
+                selectedRole === role && users.some((user) => user.id === selectedUserId)
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background border-border hover:border-primary/60"
               }`}
             >
-              {CONTROLLABLE_ROLE_LABELS[role]}
+              {MODULE_ACCESS_ROLE_LABELS[role]}
+              <span className="ml-1 opacity-60">{users.filter((user) => user.role === role).length}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+          {users.map((user) => (
+            <button
+              key={user.id}
+              onClick={() => setSelectedUserId(user.id)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors ${
+                selectedUserId === user.id
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background hover:border-primary/60"
+              }`}
+            >
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                {(user.name ?? user.email ?? "?").slice(0, 1).toUpperCase()}
+              </span>
+              <span className="min-w-0">
+                <span className="block max-w-[150px] truncate text-xs font-semibold">{user.name ?? "Unnamed user"}</span>
+                <span className="block max-w-[150px] truncate text-[10px] text-muted-foreground">{user.email}</span>
+              </span>
             </button>
           ))}
         </div>
@@ -450,15 +504,17 @@ function ModuleAccessModule() {
       <div className="rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
-            <h3 className="font-display text-lg font-semibold">{CONTROLLABLE_ROLE_LABELS[selectedRole as keyof typeof CONTROLLABLE_ROLE_LABELS]}</h3>
-            <p className="text-sm text-muted-foreground">{enabledCount} of {moduleKeys.length} modules enabled</p>
+            <h3 className="font-display text-lg font-semibold">{selectedUser?.name ?? "Select a user account"}</h3>
+            <p className="text-sm text-muted-foreground">
+              {selectedUser ? `${MODULE_ACCESS_ROLE_LABELS[selectedRole]} · ${isAlwaysFullAccess ? "Full access" : `${enabledCount} of ${moduleKeys.length} modules enabled`}` : "Loading user accounts…"}
+            </p>
           </div>
-          <Button variant="outline" size="sm" onClick={enableAll}>Enable all</Button>
+          <Button variant="outline" size="sm" onClick={enableAll} disabled={!selectedUser || isAlwaysFullAccess}>Enable all</Button>
         </div>
 
         <div className="divide-y divide-border">
           {moduleKeys.map((moduleKey) => {
-            const enabled = moduleAccessStore.isEnabled(selectedRole, moduleKey);
+            const enabled = moduleAccessStore.isEnabled(selectedRole, moduleKey, selectedUser?.id);
             return (
               <motion.div
                 key={moduleKey}
@@ -475,12 +531,16 @@ function ModuleAccessModule() {
                 <Switch
                   checked={enabled}
                   onCheckedChange={() => toggle(moduleKey)}
+                  disabled={!selectedUser || isAlwaysFullAccess}
                   aria-label={`Toggle ${moduleKey} for ${selectedRole}`}
                 />
               </motion.div>
             );
           })}
         </div>
+        {selectedUser && moduleKeys.length === 0 && (
+          <p className="p-8 text-center text-muted-foreground">No modules are configured for this account role yet.</p>
+        )}
       </div>
     </>
   );
@@ -2423,12 +2483,9 @@ function AuditModule() {
   );
 }
 
-/** Staff roles subject to module access control (admin/superadmin always pass). */
-const CONTROLLED_ROLES = new Set(["admin_assistant","registrar","admissions_officer","teacher","nurse"]);
-
 function ModuleRoute() {
   const { key } = useParams<{ key: string }>();
-  const { primaryRole } = useAuth();
+  const { primaryRole, profile } = useAuth();
   const moduleConfigs = useModuleConfigs();
   const def = key ? MODULES[key] : undefined;
   const config = key ? moduleConfigs.find((module) => module.key === key) : undefined;
@@ -2452,8 +2509,8 @@ function ModuleRoute() {
   const isBlocked =
     key &&
     primaryRole &&
-    CONTROLLED_ROLES.has(primaryRole) &&
-    !moduleAccessStore.isEnabled(primaryRole, key);
+    MODULE_ACCESS_ROLES.includes(primaryRole) &&
+    !moduleAccessStore.isEnabled(primaryRole, key, profile?.$id);
   const isDisabled = Boolean(config && !config.enabled && primaryRole !== "superadmin");
 
   if (isBlocked || isDisabled) {
