@@ -24,6 +24,7 @@ import {
 import { mockDb } from "@/lib/mock-backend";
 import { approvalsStore } from "@/lib/approvals";
 import { Logo, BrandWordmark } from "@/components/Logo";
+import { useModuleConfigs } from "@/lib/module-config";
 
 type NavItem = { to: string; label: string; icon: any };
 type NavGroup = { group: string; items: NavItem[] };
@@ -489,7 +490,21 @@ export function PortalShell({ children, title, subtitle }: { children: ReactNode
   const { profile, primaryRole, signOut } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const groups = primaryRole ? navByRole[primaryRole] : [];
+  const moduleConfigs = useModuleConfigs();
+  const moduleMap = new Map(moduleConfigs.map((module) => [module.key, module]));
+  const groups = (primaryRole ? navByRole[primaryRole] : []).map((group) => ({
+    ...group,
+    items: group.items
+      .filter((item) => {
+        const key = item.to.startsWith("/portal/m/") ? item.to.slice("/portal/m/".length) : null;
+        return !key || moduleMap.get(key)?.enabled !== false || primaryRole === "superadmin";
+      })
+      .map((item) => {
+        const key = item.to.startsWith("/portal/m/") ? item.to.slice("/portal/m/".length) : null;
+        const config = key ? moduleMap.get(key) : undefined;
+        return config ? { ...item, label: config.title } : item;
+      }),
+  })).filter((group) => group.items.length > 0);
 
   // Persist sidebar collapsed/expanded across refreshes & sessions via cookie set by SidebarProvider.
   const sidebarDefaultOpen = (() => {

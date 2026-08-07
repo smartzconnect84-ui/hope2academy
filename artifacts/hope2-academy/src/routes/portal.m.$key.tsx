@@ -14,7 +14,7 @@ import {
   DollarSign, Briefcase, Library, FileText, Image as ImageIcon, Newspaper,
   MessageSquare, Megaphone, BarChart3, FolderTree, Settings, Search,
   Plus, Inbox, CheckCircle2, Upload, Download, ArrowUpRight, Sparkles,
-  Trash2, Edit3, Copy, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw, Loader2,
+  Trash2, Edit3, ChevronUp, ChevronDown as ChevronDownIcon, ListTree, RotateCcw, Loader2,
 } from "lucide-react";
 import { Mail, Send, Wallet, Receipt, PieChart, FileSpreadsheet, LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
@@ -23,10 +23,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { scopeRows, canWrite, canDownload, stampOwner, isAdminLevel, type Principal } from "@/lib/rbac";
 import { approvalsStore, APPROVAL_CATEGORIES, CATEGORY_LOCKS, type ApprovalRequest, type ApprovalAttachment } from "@/lib/approvals";
 import { moduleAccessStore, CONTROLLABLE_ROLES, CONTROLLABLE_ROLE_LABELS, ROLE_MODULE_KEYS, MODULE_LABELS } from "@/lib/module-access";
+import { moduleConfigStore, useModuleConfigs, type ModuleConfig } from "@/lib/module-config";
 import { nextAdmissionNo } from "@/lib/mock-backend";
 import { Switch } from "@/components/ui/switch";
-import { cmsStore, useCmsVersion, readFileAsDataUrl, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
-import { brandStore, useBrand, readFileAsDataUrl as readBrandFile, type BrandSettings } from "@/lib/brand";
+import { cmsStore, useCmsVersion, type CmsPage, type CmsMedia, type NavItem } from "@/lib/cms-store";
+import { brandStore, useBrand, type BrandSettings } from "@/lib/brand";
 import { heroStore, useHeroSlides, type HeroSlide } from "@/lib/hero-store";
 import { teamStore, useTeamContent, type TeamMember } from "@/lib/team-store";
 import { ProjectsContentModule, StoriesContentModule, DivisionsContentModule, HomepageContentModule } from "@/components/portal/ContentEditors";
@@ -1701,8 +1702,14 @@ function MediaModule() {
     for (const f of Array.from(files)) {
       if (f.size > limit) { toast.error(`${f.name} is larger than 4 MB`); continue; }
       try {
-        const url = await readFileAsDataUrl(f);
-        cmsStore.addMedia({ name: f.name, type: f.type || "application/octet-stream", size: f.size, folder: folder === "All" ? "Uploads" : folder, url });
+        const uploaded = await apiClient.uploadFile(f);
+        cmsStore.addMedia({
+          name: uploaded.name,
+          type: uploaded.type,
+          size: uploaded.size,
+          folder: folder === "All" ? "Uploads" : folder,
+          url: uploaded.url,
+        });
       } catch { toast.error(`Failed to upload ${f.name}`); }
     }
     toast.success("Upload complete");
@@ -1749,7 +1756,6 @@ function MediaModule() {
                   <p className="text-sm font-medium truncate" title={m.name}>{m.name}</p>
                   <p className="text-xs text-muted-foreground">{m.folder} · {fmt(m.size)}</p>
                   <div className="mt-2 flex items-center gap-1">
-                    <Button size="sm" variant="ghost" className="h-8 px-2" onClick={()=>{ navigator.clipboard.writeText(m.url); toast.success("URL copied"); }}><Copy className="h-3.5 w-3.5"/></Button>
                     <Button size="sm" variant="ghost" className="h-8 px-2" onClick={()=>setRenaming(m)}><Edit3 className="h-3.5 w-3.5"/></Button>
                     <Button size="sm" variant="ghost" className="h-8 px-2 ml-auto" onClick={()=>{ cmsStore.deleteMedia(m.id); toast.success("Removed"); }}><Trash2 className="h-3.5 w-3.5 text-destructive"/></Button>
                   </div>
@@ -2423,7 +2429,11 @@ const CONTROLLED_ROLES = new Set(["admin_assistant","registrar","admissions_offi
 function ModuleRoute() {
   const { key } = useParams<{ key: string }>();
   const { primaryRole } = useAuth();
+  const moduleConfigs = useModuleConfigs();
   const def = key ? MODULES[key] : undefined;
+  const config = key ? moduleConfigs.find((module) => module.key === key) : undefined;
+  const moduleTitle = config?.title ?? def?.title;
+  const moduleSubtitle = config?.subtitle ?? def?.subtitle;
 
   if (!def) {
     return (
@@ -2444,16 +2454,17 @@ function ModuleRoute() {
     primaryRole &&
     CONTROLLED_ROLES.has(primaryRole) &&
     !moduleAccessStore.isEnabled(primaryRole, key);
+  const isDisabled = Boolean(config && !config.enabled && primaryRole !== "superadmin");
 
-  if (isBlocked) {
+  if (isBlocked || isDisabled) {
     return (
       <RequireAuth allow={def.allow}>
-        <PortalShell title={def.title} subtitle="Access restricted">
+        <PortalShell title={moduleTitle ?? def.title} subtitle="Access restricted">
           <Card className="p-10 text-center">
             <Settings className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
             <h3 className="font-display text-xl font-semibold">Module access restricted</h3>
             <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-              Your administrator has disabled access to this module. Contact your school admin if you need access.
+               This module is currently disabled by your Superadmin. Contact your school administrator if you need access.
             </p>
             <Link to="/portal" className="mt-5 inline-flex text-primary font-semibold underline text-sm">Back to dashboard</Link>
           </Card>
@@ -2464,7 +2475,7 @@ function ModuleRoute() {
 
   return (
     <RequireAuth allow={def.allow}>
-      <PortalShell title={def.title} subtitle={def.subtitle}>
+      <PortalShell title={moduleTitle ?? def.title} subtitle={moduleSubtitle ?? def.subtitle}>
         {def.render()}
       </PortalShell>
     </RequireAuth>
@@ -2479,8 +2490,10 @@ export default ModuleRoute;
 // =========================================================================
 function SiteSettingsModule() {
   const brand = useBrand();
+  const { primaryRole } = useAuth();
+  const moduleConfigs = useModuleConfigs();
   const [form, setForm] = useState<BrandSettings>(brand);
-  const [tab, setTab] = useState<"brand" | "contact" | "appearance" | "system">("brand");
+  const [tab, setTab] = useState<"brand" | "contact" | "appearance" | "system" | "modules">("brand");
   const dirty = JSON.stringify(form) !== JSON.stringify(brand);
 
   const set = <K extends keyof BrandSettings>(k: K, v: BrandSettings[K]) =>
@@ -2489,14 +2502,24 @@ function SiteSettingsModule() {
   const onLogo = async (file: File | null) => {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { toast.error("Logo must be under 4 MB"); return; }
-    const url = await readBrandFile(file);
-    set("logoUrl", url);
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      set("logoUrl", uploaded.url);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload logo");
+      return;
+    }
     toast.success("Logo updated — click Save to publish");
   };
   const onFavicon = async (file: File | null) => {
     if (!file) return;
-    const url = await readBrandFile(file);
-    set("faviconUrl", url);
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      set("faviconUrl", uploaded.url);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload favicon");
+      return;
+    }
     toast.success("Favicon updated — click Save to publish");
   };
 
@@ -2536,6 +2559,7 @@ function SiteSettingsModule() {
         <TabBtn id="contact" label="Contact & Address" />
         <TabBtn id="appearance" label="Appearance & Logo" />
         <TabBtn id="system" label="System Text" />
+        {primaryRole === "superadmin" && <TabBtn id="modules" label="Portal Modules" />}
       </div>
 
       {tab === "brand" && (
@@ -2575,7 +2599,7 @@ function SiteSettingsModule() {
                 <input id="logo-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onLogo(e.target.files?.[0] ?? null)}/>
                 <label htmlFor="logo-upload"><Button asChild className="gap-2"><span><Upload className="h-4 w-4"/>Upload new logo</span></Button></label>
                 <p className="text-xs text-muted-foreground">PNG, JPG or SVG up to 4 MB. Used in navbar, footer, sidebar, login & chatbot.</p>
-                <Input value={form.logoUrl} onChange={(e)=>set("logoUrl", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+                <p className="text-xs text-muted-foreground">Attach a PNG, JPG, WebP or SVG from your device.</p>
               </div>
             </div>
           </div>
@@ -2631,7 +2655,74 @@ function SiteSettingsModule() {
           </div>
         </Card>
       )}
+      {tab === "modules" && primaryRole === "superadmin" && (
+        <ModuleSettingsPanel configs={moduleConfigs} />
+      )}
     </div>
+  );
+}
+
+function ModuleSettingsPanel({ configs }: { configs: ModuleConfig[] }) {
+  const [editing, setEditing] = useState<ModuleConfig | null>(null);
+  const [saving, setSaving] = useState(false);
+  const update = async (module: ModuleConfig, patch: Partial<Pick<ModuleConfig, "title" | "subtitle" | "enabled">>) => {
+    try {
+      await moduleConfigStore.update(module.id, patch);
+      toast.success(`${module.title} updated`);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not update module");
+    }
+  };
+  const save = async () => {
+    if (!editing?.title.trim()) { toast.error("Module name is required"); return; }
+    setSaving(true);
+    try {
+      await update(editing, { title: editing.title.trim(), subtitle: editing.subtitle.trim() });
+      setEditing(null);
+    } finally { setSaving(false); }
+  };
+  return (
+    <>
+      <Card className="p-5">
+        <h3 className="font-display text-lg font-semibold">Portal module controls</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Rename any module, update its description, or turn it off for every non-Superadmin account.
+          Changes are stored in the backend and apply to navigation and module routes.
+        </p>
+      </Card>
+      <Card className="overflow-hidden">
+        <div className="divide-y divide-border">
+          {configs.map((module) => (
+            <div key={module.id} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/30">
+              <div className="min-w-0 flex-1">
+                <p className={`font-medium ${!module.enabled ? "text-muted-foreground line-through" : ""}`}>{module.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{module.subtitle} · /portal/m/{module.key}</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setEditing(module)} className="gap-1.5">
+                <Edit3 className="h-3.5 w-3.5" />Edit
+              </Button>
+              <Switch checked={module.enabled} onCheckedChange={(enabled) => void update(module, { enabled })} aria-label={`Toggle ${module.title}`} />
+            </div>
+          ))}
+        </div>
+      </Card>
+      {editing && (
+        <Dialog open onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Edit module</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div><Label>Module name</Label><Input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} /></div>
+              <div><Label>Description</Label><Textarea rows={3} value={editing.subtitle} onChange={(e) => setEditing({ ...editing, subtitle: e.target.value })} /></div>
+              <p className="text-xs text-muted-foreground">Module key: <code>{editing.key}</code></p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>Cancel</Button>
+              <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 
@@ -2998,8 +3089,13 @@ function HeroSlideEditor({ slide, onClose }: { slide: HeroSlide | null; onClose:
   const onImage = async (file: File | null) => {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
-    const url = await readBrandFile(file);
-    set("img", url);
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      set("img", uploaded.url);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload image");
+      return;
+    }
     toast.success("Image attached — click Save to publish");
   };
 
@@ -3026,7 +3122,7 @@ function HeroSlideEditor({ slide, onClose }: { slide: HeroSlide | null; onClose:
               <div className="flex-1 space-y-2">
                 <input id="hero-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onImage(e.target.files?.[0] ?? null)}/>
                 <label htmlFor="hero-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload image</span></Button></label>
-                <Input value={form.img} onChange={(e)=>set("img", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+                <p className="text-xs text-muted-foreground">Attach an image from your device.</p>
               </div>
             </div>
           </div>
@@ -3142,8 +3238,14 @@ function TeamMemberEditor({ member, onClose }: { member: TeamMember | null; onCl
   const onImage = async (file: File | null) => {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
-    const url = await readBrandFile(file);
-    set("img", url); toast.success("Photo attached — click Save");
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      set("img", uploaded.url);
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload photo");
+      return;
+    }
+    toast.success("Photo attached — click Save");
   };
   const save = () => {
     if (!form.name.trim() || !form.role.trim()) { toast.error("Name and role are required"); return; }
@@ -3164,7 +3266,7 @@ function TeamMemberEditor({ member, onClose }: { member: TeamMember | null; onCl
               <div className="flex-1 space-y-2">
                 <input id="tm-upload" type="file" accept="image/*" className="hidden" onChange={(e)=>onImage(e.target.files?.[0] ?? null)}/>
                 <label htmlFor="tm-upload"><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4"/>Upload photo</span></Button></label>
-                <Input value={form.img} onChange={(e)=>set("img", e.target.value)} placeholder="…or paste an image URL" className="text-xs"/>
+                <p className="text-xs text-muted-foreground">Attach a photo from your device.</p>
               </div>
             </div>
           </div>
@@ -3694,13 +3796,12 @@ function ApprovalsModule() {
     const picked: ApprovalAttachment[] = [];
     for (const f of Array.from(list)) {
       if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4MB`); continue; }
-      const dataUrl: string = await new Promise((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(String(fr.result));
-        fr.onerror = () => rej(fr.error);
-        fr.readAsDataURL(f);
-      });
-      picked.push({ name: f.name, type: f.type || "file", size: f.size, dataUrl });
+      try {
+        const uploaded = await apiClient.uploadFile(f);
+        picked.push({ name: uploaded.name, type: uploaded.type, size: uploaded.size, url: uploaded.url });
+      } catch (error: any) {
+        toast.error(error?.message ?? `Could not upload ${f.name}`);
+      }
     }
     setFiles((prev) => [...prev, ...picked]);
   };
@@ -3836,7 +3937,7 @@ function ApprovalsModule() {
                     {open.attachments.map((f, i) => (
                       <li key={f.name + i} className="flex items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2">
                         <span className="text-sm truncate">{f.name}</span>
-                        <a href={f.dataUrl} download={f.name} className="text-sm font-semibold text-primary shrink-0">Download</a>
+                        <a href={f.url} download={f.name} className="text-sm font-semibold text-primary shrink-0">Download</a>
                       </li>
                     ))}
                   </ul>

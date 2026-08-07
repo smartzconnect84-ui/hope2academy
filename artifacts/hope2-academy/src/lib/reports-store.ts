@@ -32,7 +32,7 @@ export interface ReportAttachment {
   name: string;
   type: string;
   size: number;
-  dataUrl: string;
+  url: string;
 }
 
 export interface Report {

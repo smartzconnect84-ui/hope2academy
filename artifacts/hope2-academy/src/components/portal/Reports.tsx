@@ -31,6 +31,7 @@ import {
   type ReportAttachment,
 } from "@/lib/reports-store";
 import { StatCard } from "@/components/PortalShell";
+import { apiClient } from "@/lib/api-client";
 
 type Principal = { id: string; name: string; role: string };
 
@@ -123,13 +124,12 @@ export function ReportsModule() {
     const picked: ReportAttachment[] = [];
     for (const f of Array.from(list)) {
       if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4 MB`); continue; }
-      const dataUrl: string = await new Promise((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(String(fr.result));
-        fr.onerror = () => rej(fr.error);
-        fr.readAsDataURL(f);
-      });
-      picked.push({ name: f.name, type: f.type || "file", size: f.size, dataUrl });
+       try {
+         const uploaded = await apiClient.uploadFile(f);
+         picked.push({ name: uploaded.name, type: uploaded.type, size: uploaded.size, url: uploaded.url });
+       } catch (error: any) {
+         toast.error(error?.message ?? `Could not upload ${f.name}`);
+       }
     }
     setFiles((prev) => [...prev, ...picked]);
   };
@@ -399,7 +399,7 @@ export function ReportsModule() {
                   <ul className="space-y-1">
                     {open.attachments.map((a, i) => (
                       <li key={i}>
-                        <a href={a.dataUrl} download={a.name} className="text-sm text-primary hover:underline flex items-center gap-1">
+                         <a href={a.url} download={a.name} className="text-sm text-primary hover:underline flex items-center gap-1">
                           <FileText className="h-3.5 w-3.5" /> {a.name}
                         </a>
                       </li>

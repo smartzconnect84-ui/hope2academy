@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { readFileAsDataUrl } from "@/lib/cms-store";
+import { apiClient } from "@/lib/api-client";
 import {
   siteContent, useSiteContent,
   type ProjectItem, type StoryItem, type DivisionItem, type HomeChapter,
@@ -25,8 +25,13 @@ function ImagePicker({ value, onChange, id }: { value: string; onChange: (v: str
   const upload = async (file: File | null) => {
     if (!file) return;
     if (file.size > 4 * 1024 * 1024) { toast.error("Image must be under 4 MB"); return; }
-    onChange(await readFileAsDataUrl(file));
-    toast.success("Image attached — remember to save");
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      onChange(uploaded.url);
+      toast.success("Image attached — remember to save");
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload image");
+    }
   };
   return (
     <div className="flex items-start gap-4">
@@ -38,7 +43,7 @@ function ImagePicker({ value, onChange, id }: { value: string; onChange: (v: str
       <div className="flex-1 space-y-2">
         <input id={id} type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0] ?? null)} />
         <label htmlFor={id}><Button asChild variant="outline" className="gap-2"><span><Upload className="h-4 w-4" />Upload image</span></Button></label>
-        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="…or paste an image URL" className="text-xs" />
+        <p className="text-xs text-muted-foreground">Attach an image from your device. JPG, PNG, GIF or WebP up to 10 MB.</p>
       </div>
     </div>
   );

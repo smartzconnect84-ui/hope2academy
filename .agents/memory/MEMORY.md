@@ -6,3 +6,4 @@
 - [Mobile write operations](mobile-attendance.md) — useMutation + apiClient.createItem() is the correct pattern for teacher POST operations on mobile
 - [Teacher data isolation](teacher-data-isolation.md) — all operational records need `teacher` field; scopeRows uses strict ownership for teachers; TEACHER_GLOBAL_READ for reference tables; grade-prefix matching for students
 - [Bundled brand assets](bundled-brand-assets.md) — use local Vite-bundled assets for core branding; legacy `/__l5e/` asset URLs can render as broken images in preview
+- [Object storage fallback](object-storage-fallback.md) — retain authenticated multipart uploads when App Storage provisioning is unavailable; keep UI attachment-first

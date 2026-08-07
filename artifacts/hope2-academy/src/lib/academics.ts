@@ -101,7 +101,7 @@ export function computeReport(row: MarkRow): ReportRow {
 /* Submissions                                                         */
 /* ------------------------------------------------------------------ */
 
-export type SubmissionFile = { name: string; size: number; type: string; dataUrl: string };
+export type SubmissionFile = { name: string; size: number; type: string; url: string };
 
 export type SubmissionStatus = "Draft" | "Submitted" | "Accepted" | "Returned" | "Graded";
 
@@ -278,22 +278,4 @@ export function postAttemptToMarks(attempt: Attempt, year = String(new Date().ge
       updatedAt: new Date().toISOString(),
     } as Omit<MarkRow, "id">);
   }
-}
-
-export function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(String(fr.result));
-    fr.onerror = () => reject(fr.error);
-    fr.readAsDataURL(file);
-  });
-}
-
-export function downloadFile(name: string, dataUrl: string) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
 }

@@ -33,6 +33,15 @@ export interface ApiUser {
   createdAt: string;
 }
 
+export interface ApiModule {
+  id: string;
+  key: string;
+  title: string;
+  subtitle: string;
+  enabled: boolean;
+  updatedAt?: string;
+}
+
 function getToken(): string | null {
   try { return localStorage.getItem(KEY_TOKEN); } catch { return null; }
 }
@@ -75,6 +84,32 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const apiClient = {
+  /** Upload a browser attachment and return its API-backed serving URL. */
+  async uploadFile(file: File): Promise<{ url: string; objectPath: string; name: string; type: string; size: number }> {
+    const token = getToken();
+    const body = new FormData();
+    body.append("file", file, file.name);
+    let res: Response;
+    try {
+      res = await fetch(`${BASE}/uploads`, {
+        method: "POST",
+        body,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    } catch {
+      throw new ApiUnavailableError("API server unreachable");
+    }
+    const ct = res.headers.get("content-type") ?? "";
+    if (res.status === 404 || res.status === 405 || res.status >= 500 || !ct.includes("application/json")) {
+      throw new ApiUnavailableError("API server unavailable");
+    }
+    const payload = await res.json() as { error?: string; objectPath?: string; url?: string; name: string; type: string; size: number };
+    if (!res.ok || !payload.objectPath || !payload.url) {
+      throw new Error(payload.error ?? `Upload failed (${res.status})`);
+    }
+    return { ...payload, url: `${BASE}${payload.url}` } as { url: string; objectPath: string; name: string; type: string; size: number };
+  },
+
   /** Returns true if the API server is reachable. */
   async ping(): Promise<boolean> {
     try {
@@ -145,6 +180,16 @@ export const apiClient = {
   /** GET /users — list all users (admin/superadmin only). */
   async listUsers(): Promise<ApiUser[]> {
     return apiFetch<ApiUser[]>("/users");
+  },
+
+  /** GET /modules — backend-owned portal module configuration. */
+  async listModules(): Promise<ApiModule[]> {
+    return apiFetch<ApiModule[]>("/modules");
+  },
+
+  /** PATCH /modules/:id — Superadmin-only module editor. */
+  async updateModule(id: string, patch: Partial<Pick<ApiModule, "title" | "subtitle" | "enabled">>): Promise<ApiModule> {
+    return apiFetch<ApiModule>(`/modules/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
   },
 
   /** POST /users — create/invite a new user. */

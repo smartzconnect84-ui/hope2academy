@@ -18,9 +18,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/use-auth";
 import { mockDb } from "@/lib/mock-backend";
 import {
-  submissionsStore, useAcademicsVersion, readFileAsDataUrl, downloadFile,
+  submissionsStore, useAcademicsVersion,
   type Submission, type SubmissionFile,
 } from "@/lib/academics";
+import { apiClient } from "@/lib/api-client";
 
 type AssignmentRow = { id: string; title: string; class: string; due: string; status: string };
 
@@ -99,7 +100,7 @@ export function SubmissionsModule() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {s.files.map((f) => (
                   <Button key={f.name} size="sm" variant="outline" className="gap-1.5"
-                    onClick={() => downloadFile(f.name, f.dataUrl)}>
+                     onClick={() => window.open(f.url, "_blank", "noopener,noreferrer")}>
                     <Download className="h-3.5 w-3.5" />{f.name}
                   </Button>
                 ))}
@@ -175,7 +176,12 @@ function SubmissionEditor({
     const next: SubmissionFile[] = [];
     for (const f of Array.from(list)) {
       if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name} is larger than 5 MB`); continue; }
-      next.push({ name: f.name, size: f.size, type: f.type, dataUrl: await readFileAsDataUrl(f) });
+       try {
+         const uploaded = await apiClient.uploadFile(f);
+         next.push({ name: uploaded.name, size: uploaded.size, type: uploaded.type, url: uploaded.url });
+       } catch (error: any) {
+         toast.error(error?.message ?? `Could not upload ${f.name}`);
+       }
     }
     setFiles((prev) => [...prev, ...next]);
   };
@@ -279,7 +285,7 @@ function ReviewDialog({ row, reviewer, onClose }: { row: Submission; reviewer: s
           {row.note && <p className="rounded-lg bg-muted/50 p-3 text-sm">{row.note}</p>}
           <div className="flex flex-wrap gap-2">
             {row.files.map((f) => (
-              <Button key={f.name} size="sm" variant="outline" className="gap-1.5" onClick={() => downloadFile(f.name, f.dataUrl)}>
+              <Button key={f.name} size="sm" variant="outline" className="gap-1.5" onClick={() => window.open(f.url, "_blank", "noopener,noreferrer")}>
                 <Download className="h-3.5 w-3.5" />{f.name}
               </Button>
             ))}

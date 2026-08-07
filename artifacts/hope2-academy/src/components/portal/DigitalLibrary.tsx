@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
+import { apiClient } from "@/lib/api-client";
 import { canWrite } from "@/lib/rbac";
 import {
   ck12Store, useCk12, CK12_SUBJECTS, GRADE_LEVELS, SUBJECT_TONE,
@@ -303,6 +304,23 @@ function BookEditor({ book, onClose }: { book: Ck12Book | null; onClose: () => v
     },
   );
   const [chapters, setChapters] = useState((book?.chapters ?? []).map((c) => c.title).join("\n"));
+  const [uploading, setUploading] = useState(false);
+
+  const attachCover = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10 MB"); return; }
+    setUploading(true);
+    try {
+      const uploaded = await apiClient.uploadFile(file);
+      setForm((current) => ({ ...current, cover: uploaded.url }));
+      toast.success("Cover image attached");
+    } catch (error: any) {
+      toast.error(error?.message ?? "Could not upload cover image");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = () => {
     if (!form.title.trim() || !form.url.trim()) { toast.error("Title and CK-12 link are required"); return; }
@@ -339,7 +357,16 @@ function BookEditor({ book, onClose }: { book: Ck12Book | null; onClose: () => v
           </div>
           <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div><Label>CK-12 link</Label><Input value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://www.ck12.org/book/…" /></div>
-          <div><Label>Cover image URL (optional)</Label><Input value={form.cover ?? ""} onChange={(e) => setForm({ ...form, cover: e.target.value })} /></div>
+          <div>
+            <Label>Cover image (optional)</Label>
+            <div className="mt-1 flex items-center gap-3">
+              {form.cover && <img src={form.cover} alt="Cover preview" className="h-14 w-10 rounded object-cover border border-border" />}
+              <label className="inline-flex cursor-pointer items-center rounded-md border border-border px-3 py-2 text-sm hover:bg-muted">
+                {uploading ? "Uploading…" : form.cover ? "Replace cover" : "Attach cover"}
+                <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { void attachCover(e.target.files?.[0] ?? null); e.currentTarget.value = ""; }} />
+              </label>
+            </div>
+          </div>
           <div><Label>Chapters (one per line)</Label><Textarea rows={4} value={chapters} onChange={(e) => setChapters(e.target.value)} /></div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={!!form.embeddable} onChange={(e) => setForm({ ...form, embeddable: e.target.checked })} />

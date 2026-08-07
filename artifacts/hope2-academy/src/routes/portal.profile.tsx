@@ -16,15 +16,6 @@ import { toast } from "sonner";
 
 const MAX_AVATAR_BYTES = 3 * 1024 * 1024;
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(String(fr.result));
-    fr.onerror = () => reject(new Error("Could not read the image"));
-    fr.readAsDataURL(file);
-  });
-}
-
 function ProfilePage() {
   const { profile, user, primaryRole, refresh } = useAuth();
   const [form, setForm] = useState<any>({});
@@ -110,6 +101,7 @@ function ProfilePage() {
 function AvatarCard() {
   const { profile, user, refresh } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -120,23 +112,29 @@ function AvatarCard() {
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
     if (file.size > MAX_AVATAR_BYTES) { toast.error("Image must be under 3 MB"); return; }
-    try { setPreview(await readFileAsDataUrl(file)); }
+    try {
+      setPendingFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
     catch { toast.error("Could not read that image"); }
   };
 
-  const persist = async (dataUrl: string | null) => {
+  const persist = async (file: File | null) => {
     if (!user) return;
     setBusy(true);
     try {
       try {
-        await apiClient.updateProfile({ avatar: dataUrl });
+        const avatar = file ? (await apiClient.uploadFile(file)).url : null;
+        await apiClient.updateProfile({ avatar });
       } catch (e) {
         if (!isNetworkError(e)) throw e;
-        await mockAuth.setAvatar(user.$id, dataUrl);
+        throw new Error("Profile picture uploads require the API server to be available");
       }
+      setPendingFile(null);
+      if (preview) URL.revokeObjectURL(preview);
       setPreview(null);
       await refresh();
-      toast.success(dataUrl ? "Profile picture updated" : "Profile picture removed");
+      toast.success(file ? "Profile picture updated" : "Profile picture removed");
     } catch (e: any) {
       toast.error(e?.message ?? "Could not update picture");
     } finally {
@@ -160,13 +158,13 @@ function AvatarCard() {
             <Upload className="h-4 w-4"/>Choose image
           </Button>
           {preview && (
-            <Button className="gap-2" onClick={() => persist(preview)} disabled={busy}>
+               <Button className="gap-2" onClick={() => persist(pendingFile)} disabled={busy}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4"/>}Save picture
             </Button>
           )}
-          {preview && <Button variant="ghost" onClick={() => setPreview(null)} disabled={busy}>Cancel</Button>}
+           {preview && <Button variant="ghost" onClick={() => { setPendingFile(null); URL.revokeObjectURL(preview); setPreview(null); }} disabled={busy}>Cancel</Button>}
           {!preview && profile?.avatar_url && (
-            <Button variant="ghost" className="gap-2 text-destructive" onClick={() => persist(null)} disabled={busy}>
+             <Button variant="ghost" className="gap-2 text-destructive" onClick={() => persist(null)} disabled={busy}>
               <Trash2 className="h-4 w-4"/>Remove
             </Button>
           )}
