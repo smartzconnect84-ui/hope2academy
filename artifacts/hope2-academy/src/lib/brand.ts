@@ -4,9 +4,10 @@
  * All values are persisted to localStorage and broadcast via a CustomEvent
  * so React components re-render the moment they change.
  */
-import logoAsset from "@/assets/hope2-logo.png.asset.json";
 import { useEffect, useState } from "react";
 import { pushDoc } from "./content-sync";
+
+const bundledLogoUrl = new URL("../assets/hope2-logo.svg", import.meta.url).href;
 
 export interface BrandSettings {
   name: string;          // HOPE2 ACADEMY
@@ -36,8 +37,8 @@ export const DEFAULT_BRAND: BrandSettings = {
   tagline: "Learning To Serve For God's Purpose",
   motto: "Learning To Serve For God's Purpose",
   established: "2013",
-  logoUrl: logoAsset.url,
-  faviconUrl: logoAsset.url,
+  logoUrl: bundledLogoUrl,
+  faviconUrl: bundledLogoUrl,
   address: "Barber's Joe Town, Marshall Road",
   city: "Lower Margibi County",
   country: "Liberia",
@@ -61,7 +62,15 @@ function read(): BrandSettings {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULT_BRAND;
-    return { ...DEFAULT_BRAND, ...(JSON.parse(raw) as Partial<BrandSettings>) };
+    const saved = JSON.parse(raw) as Partial<BrandSettings>;
+    const legacyAsset = (value: unknown) =>
+      typeof value === "string" && value.startsWith("/__l5e/");
+    return {
+      ...DEFAULT_BRAND,
+      ...saved,
+      ...(legacyAsset(saved.logoUrl) ? { logoUrl: DEFAULT_BRAND.logoUrl } : {}),
+      ...(legacyAsset(saved.faviconUrl) ? { faviconUrl: DEFAULT_BRAND.faviconUrl } : {}),
+    };
   } catch {
     return DEFAULT_BRAND;
   }

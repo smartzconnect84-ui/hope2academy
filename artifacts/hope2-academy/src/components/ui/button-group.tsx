@@ -44,7 +44,10 @@ function ButtonGroupText({
 }: React.ComponentProps<"div"> & {
   asChild?: boolean
 }) {
-  const Comp = asChild ? Slot : "div"
+  // Slot's event handler types are intentionally broader than a div's
+  // intrinsic props in React 19. Keep the polymorphic component boundary
+  // explicit so consumers can pass normal div attributes in either mode.
+  const Comp = (asChild ? Slot : "div") as React.ElementType
 
   return (
     <Comp

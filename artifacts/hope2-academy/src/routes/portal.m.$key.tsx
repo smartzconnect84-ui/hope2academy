@@ -39,6 +39,7 @@ import {
   FeesModule, ExpensesModule, PayrollModule, DonationsModule,
 } from "@/components/portal/ReceiptGenerator";
 import { ck12Store } from "@/lib/ck12-library";
+import { publicForms } from "@/lib/public-forms";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -86,6 +87,32 @@ export function usePrincipal(): Principal | null {
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-2xl bg-card border border-border shadow-[var(--shadow-soft)] ${className}`}>{children}</div>;
+}
+
+function MentorshipModule() {
+  const principal = usePrincipal();
+
+  const apply = () => {
+    if (!principal?.email) {
+      toast.error("We couldn't find your account email. Please update your profile first.");
+      return;
+    }
+    publicForms.submitMentorship({
+      name: principal.name,
+      email: principal.email,
+      motivation: "Alumni mentorship application",
+    });
+    toast.success("Mentorship application recorded — our team will reach out.");
+  };
+
+  return (
+    <Card className="p-8 text-center">
+      <Heart className="h-10 w-10 text-primary mx-auto"/>
+      <h3 className="mt-3 font-display text-2xl font-semibold">Become a mentor</h3>
+      <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">Pair with a student in their final two years and meet monthly. We provide structure, you provide perspective.</p>
+      <Button className="mt-5" onClick={apply}>Sign me up</Button>
+    </Card>
+  );
 }
 
 function TableShell({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
@@ -643,14 +670,7 @@ const MODULES: Record<string, ModuleDef> = {
   },
   mentorship: {
     title: "Mentorship Programme", subtitle: "Guide a current student through their final years", icon: Heart,
-    render: () => (
-      <Card className="p-8 text-center">
-        <Heart className="h-10 w-10 text-primary mx-auto"/>
-        <h3 className="mt-3 font-display text-2xl font-semibold">Become a mentor</h3>
-        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">Pair with a student in their final two years and meet monthly. We provide structure, you provide perspective.</p>
-        <Button className="mt-5" onClick={()=>toast.success("Application submitted — our team will reach out")}>Sign me up</Button>
-      </Card>
-    ),
+    render: () => <MentorshipModule />,
   },
   donations: {
     title: "Donations", subtitle: "Recent contributions to the school", icon: DollarSign,

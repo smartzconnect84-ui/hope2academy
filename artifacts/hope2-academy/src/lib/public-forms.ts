@@ -21,6 +21,16 @@ export const publicForms = {
   submitVolunteer(input: Omit<VolunteerApplication, "id" | "received" | "status">) {
     return mockDb.create<VolunteerApplication>("volunteers", { ...input, received: today(), status: "Pending" });
   },
+  submitMentorship(input: { name: string; email: string; phone?: string; motivation?: string }) {
+    return this.submitVolunteer({
+      name: input.name,
+      email: input.email,
+      country: "",
+      phone: input.phone ?? "",
+      interest: "Mentorship Programme",
+      motivation: input.motivation ?? "Alumni mentorship application",
+    });
+  },
   subscribe(email: string) {
     const existing = mockDb.list<Subscriber>("subscribers").find((s) => s.email.toLowerCase() === email.toLowerCase());
     if (existing) return existing;

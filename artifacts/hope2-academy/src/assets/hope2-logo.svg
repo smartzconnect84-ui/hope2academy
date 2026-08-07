@@ -1,0 +1,9 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">HOPE2 ACADEMY logo</title>
+  <desc id="desc">A circular green, gold and red mark with the letters H2.</desc>
+  <circle cx="128" cy="128" r="122" fill="#0B5D3B"/>
+  <circle cx="128" cy="128" r="103" stroke="#F4C542" stroke-width="8"/>
+  <path d="M72 76V180M72 128H145M145 76V180" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M174 85C184 75 201 79 205 91C209 103 202 112 193 121L166 148C156 158 154 173 168 180C182 187 198 180 205 169" stroke="#E72437" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="128" cy="128" r="119" stroke="#E72437" stroke-width="7" stroke-dasharray="86 664" transform="rotate(-52 128 128)"/>
+</svg>
