@@ -32,8 +32,8 @@ export const MODULE_ACCESS_ROLES = [
 
 export type ModuleAccessRole = typeof MODULE_ACCESS_ROLES[number];
 
-/** Roles that always have full access (not subject to module access control). */
-export const ALWAYS_FULL_ACCESS_ROLES = ["superadmin", "admin"] as const;
+/** Only Superadmin is exempt from module access control. */
+export const ALWAYS_FULL_ACCESS_ROLES = ["superadmin"] as const;
 
 /** Human-readable labels for controllable roles. */
 export const CONTROLLABLE_ROLE_LABELS: Record<ControllableRole, string> = {
@@ -56,7 +56,19 @@ export const MODULE_ACCESS_ROLE_LABELS: Record<ModuleAccessRole, string> = {
 /** Modules available to each account role. */
 export const ROLE_MODULE_KEYS: Record<ModuleAccessRole, string[]> = {
   superadmin: [],
-  admin: [],
+  admin: [
+    "analytics", "approvals", "departments", "staff", "leaverequests",
+    "admissions", "scholarships", "classes", "timetable", "attendance",
+    "grades", "assessments", "submissions", "gradesheet", "reportcard",
+    "behavior", "lessonplans", "library", "exams", "academicyear",
+    "counselling", "bookstock", "ptmeetings", "calendar", "transport",
+    "clinic", "inventory", "visitorlog", "immunizations", "medications",
+    "healthalerts", "medicalscreenings", "fees", "hero", "homepage", "team",
+    "projectspage", "storiespage", "divisionspage", "posts", "media",
+    "announcements", "messages", "broadcast", "campaigns", "forms",
+    "inquiries", "volunteers", "subscribers", "pledges", "reports",
+    "settings", "moduleaccess",
+  ],
   admin_assistant: [
     "calendar", "announcements", "messages", "broadcast", "campaigns",
     "forms", "inquiries", "volunteers", "subscribers", "staff",
@@ -173,7 +185,7 @@ function write(d: ModuleAccessMap) {
 export const moduleAccessStore = {
   /**
    * Returns true (enabled) by default — missing key means enabled.
-   * Admin and Superadmin always return true regardless.
+   * Superadmin always returns true regardless.
    */
   isEnabled(role: string, moduleKey: string, userId?: string): boolean {
     if ((ALWAYS_FULL_ACCESS_ROLES as readonly string[]).includes(role)) return true;

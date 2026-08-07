@@ -29,3 +29,9 @@ Module registry reads and writes must avoid calling the secured API when the bro
 **Why:** Local demo sign-ins intentionally do not create JWTs, so sending their module-toggle requests to the API produces a misleading `Unauthorized — no token` error.
 
 **How to apply:** Check for the stored API token before module-config API calls; preserve API-first behavior for live JWT sessions and local persistence for mock sessions.
+
+Module access policy: Superadmin is the only role with unconditional full access; Admin and all other account roles must use the configured module access controls.
+
+**Why:** Access governance needs to remain centrally enforceable for Admin accounts rather than treating Admin as an implicit bypass.
+
+**How to apply:** Keep `superadmin` as the sole full-access exception in both the settings UI and the module route guard.

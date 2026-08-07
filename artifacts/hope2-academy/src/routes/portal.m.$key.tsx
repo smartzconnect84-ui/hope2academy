@@ -406,7 +406,7 @@ function AdmissionsModule() {
 }
 
 // =========================================================================
-// Module Access Control — Admin/Superadmin toggle modules per account
+// Module Access Control — Superadmin/Admin toggle modules per account
 // =========================================================================
 function ModuleAccessModule() {
   const [users, setUsers] = useState<any[]>([]);
@@ -433,7 +433,7 @@ function ModuleAccessModule() {
   const selectedUser = users.find((user) => user.id === selectedUserId);
   const selectedRole = (selectedUser?.role ?? "student") as keyof typeof ROLE_MODULE_KEYS;
   const moduleKeys = ROLE_MODULE_KEYS[selectedRole] ?? [];
-  const isAlwaysFullAccess = selectedRole === "superadmin" || selectedRole === "admin";
+  const isAlwaysFullAccess = selectedRole === "superadmin";
 
   const toggle = (moduleKey: string) => {
     if (!selectedUser || isAlwaysFullAccess) return;
@@ -457,7 +457,7 @@ function ModuleAccessModule() {
       <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
         <p className="text-sm text-muted-foreground mb-3">
           Select any user account to grant or remove access to the modules available for that account.
-          Superadmin and Admin always retain full access.
+          Superadmin always retains full access. Admin access can be managed here like any other account.
         </p>
         <div className="flex flex-wrap gap-2">
           {MODULE_ACCESS_ROLES.map((role) => (
