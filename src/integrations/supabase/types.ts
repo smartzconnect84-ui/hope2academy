@@ -1473,7 +1473,56 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      staff_directory: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          email: string | null
+          hire_date: string | null
+          id: string | null
+          name: string | null
+          phone: string | null
+          profile_id: string | null
+          role: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          hire_date?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          profile_id?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          email?: string | null
+          hire_date?: string | null
+          id?: string | null
+          name?: string | null
+          phone?: string | null
+          profile_id?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
