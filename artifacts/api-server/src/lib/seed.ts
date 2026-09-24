@@ -4,22 +4,22 @@
  */
 import { db } from "@workspace/db";
 import { usersTable, itemsTable } from "@workspace/db/schema";
-import { dbStore } from "./db-store.js";
+import { dbStore, generateUsername } from "./db-store.js";
 import { sql } from "drizzle-orm";
 
 const now = new Date().toISOString();
 
 const SEED_USERS = [
-  { id: "usr_superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole",     role: "superadmin" as const, bio: "Director of Programs and Governance.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_admin",      email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah",   role: "admin" as const,      department: "Operations", bio: "Manages campuses and staffing.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman",    role: "teacher" as const,    department: "Mathematics", subjects: ["Mathematics","Civics","Literature"], bio: "Lead teacher, Marshall Road Campus.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe",     role: "student" as const,    grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe",      role: "parent" as const,     linked_children: ["Mariama Doe","Ezekiel Doe"], bio: "Father of two HOPE2 students.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie", role: "alumni" as const,     graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_assistant",  email: "assistant@hope2.demo",  password: "demo1234", name: "Bendu Sirleaf",   role: "admin_assistant" as const,    department: "Administration", bio: "Administrative Assistant.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_registrar",  email: "registrar@hope2.demo",  password: "demo1234", name: "Emmanuel Gbaba",  role: "registrar" as const,          department: "Registry", bio: "Registrar.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_nurse",      email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor",    role: "nurse" as const,          department: "Health & Wellness", bio: "School Nurse.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_admissions", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi",  role: "admissions_officer" as const, department: "Admissions", bio: "Admission Officer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_superadmin", username: "aaliyah@hope2academy", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole",     role: "superadmin" as const, bio: "Director of Programs and Governance.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_admin",      username: "joseph@hope2academy", email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah",   role: "admin" as const,      department: "Operations", bio: "Manages campuses and staffing.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_teacher",    username: "grace@hope2academy", email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman",    role: "teacher" as const,    department: "Mathematics", subjects: ["Mathematics","Civics","Literature"], bio: "Lead teacher, Marshall Road Campus.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_student",    username: "mariama@hope2academy", email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe",     role: "student" as const,    grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_parent",     username: "samuel@hope2academy", email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe",      role: "parent" as const,     linked_children: ["Mariama Doe","Ezekiel Doe"], bio: "Father of two HOPE2 students.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_alumni",     username: "patience@hope2academy", email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie", role: "alumni" as const,     graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_assistant",  username: "bendu@hope2academy", email: "assistant@hope2.demo",  password: "demo1234", name: "Bendu Sirleaf",   role: "admin_assistant" as const,    department: "Administration", bio: "Administrative Assistant.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_registrar",  username: "emmanuel@hope2academy", email: "registrar@hope2.demo",  password: "demo1234", name: "Emmanuel Gbaba",  role: "registrar" as const,          department: "Registry", bio: "Registrar.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_nurse",      username: "helen@hope2academy", email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor",    role: "nurse" as const,          department: "Health & Wellness", bio: "School Nurse.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_admissions", username: "korto@hope2academy", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi",  role: "admissions_officer" as const, department: "Admissions", bio: "Admission Officer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
 ];
 
 // Structural reference data only — departments, settings, pages.
@@ -50,6 +50,7 @@ export async function seedIfEmpty() {
   if (count > 0) {
     console.log(`[seed] Database already has ${count} users — skipping seed.`);
     await ensureDemoUsers();
+    await ensureUsernames();
     return;
   }
 
@@ -76,7 +77,19 @@ export async function ensureDemoUsers() {
     const existing = await dbStore.findUserByEmail(u.email);
     if (!existing) {
       await dbStore.createUser(u as any);
-      console.log(`[seed] Added missing demo user ${u.email}`);
+      console.log(`[seed] Added missing demo user ${u.username}`);
     }
+  }
+}
+
+/** Give pre-existing database users unique school usernames, without changing email/password. */
+async function ensureUsernames() {
+  const users = (await dbStore.listUsers()).sort((a, b) => a.id.localeCompare(b.id));
+  const taken = new Set(users.map((user) => user.username.trim().toLowerCase()).filter(Boolean));
+  for (const user of users) {
+    if (user.username.trim()) continue;
+    const username = generateUsername(user.name, taken);
+    await dbStore.updateUser(user.id, { username });
+    taken.add(username);
   }
 }

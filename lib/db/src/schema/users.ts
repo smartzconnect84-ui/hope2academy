@@ -18,6 +18,7 @@ export type AppRole = (typeof APP_ROLES)[number];
 
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(),
+  username: text("username").unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),

@@ -13,8 +13,19 @@ import type { AppRole } from "@workspace/db/schema";
 export { APP_ROLES };
 export type { AppRole };
 
+export function generateUsername(name: string, existingUsernames: Iterable<string> = []): string {
+  const base = name.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
+  const taken = new Set(Array.from(existingUsernames, (username) => username.toLowerCase()));
+  const first = `${base}@hope2academy`;
+  if (!taken.has(first)) return first;
+  let suffix = 2;
+  while (taken.has(`${base}${suffix}@hope2academy`)) suffix += 1;
+  return `${base}${suffix}@hope2academy`;
+}
+
 export interface User {
   id: string;
+  username: string;
   email: string;
   password: string;
   name: string;
@@ -37,6 +48,7 @@ export interface User {
 function rowToUser(row: typeof usersTable.$inferSelect): User {
   return {
     id: row.id,
+    username: row.username ?? "",
     email: row.email,
     password: row.password,
     name: row.name,
@@ -118,6 +130,14 @@ export const dbStore = {
     return rows.length ? rowToUser(rows[0]) : null;
   },
 
+  async findUserByUsername(username: string): Promise<User | null> {
+    const rows = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username.trim().toLowerCase()));
+    return rows.length ? rowToUser(rows[0]) : null;
+  },
+
   async findUserById(id: string): Promise<User | null> {
     const rows = await db
       .select()
@@ -129,6 +149,7 @@ export const dbStore = {
   async createUser(user: User): Promise<User> {
     await db.insert(usersTable).values({
       id: user.id,
+      username: user.username?.trim().toLowerCase() || null,
       email: user.email.toLowerCase(),
       password: user.password,
       name: user.name,
@@ -154,6 +175,7 @@ export const dbStore = {
     if (!existing) return null;
     const { id: _id, createdAt: _c, ...updateFields } = patch as any;
     const cleanPatch: Record<string, any> = {};
+    if (updateFields.username != null) cleanPatch.username = updateFields.username.trim().toLowerCase();
     if (updateFields.email != null) cleanPatch.email = updateFields.email.toLowerCase();
     if (updateFields.password != null) cleanPatch.password = updateFields.password;
     if (updateFields.name != null) cleanPatch.name = updateFields.name;

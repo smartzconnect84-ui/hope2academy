@@ -15,6 +15,7 @@ const KEY_TOKEN = "h2l.apiToken";
 
 export interface ApiUser {
   id: string;
+  username: string;
   email: string;
   name: string;
   role: AppRole;
@@ -40,6 +41,31 @@ export interface ApiModule {
   subtitle: string;
   enabled: boolean;
   updatedAt?: string;
+}
+
+export type ApiReportStatus =
+  | "Submitted"
+  | "Under Review"
+  | "Approved"
+  | "Returned for Revision"
+  | "Rejected";
+
+export interface ApiReport {
+  id: string;
+  title: string;
+  category: string;
+  details: string;
+  submittedBy: string;
+  submittedById: string;
+  submitterRole: AppRole;
+  recipientRoles: string;
+  attachments?: Array<{ name: string; type: string; size: number; url: string; objectPath?: string }>;
+  status: ApiReportStatus;
+  reviewedBy?: string;
+  reviewerComment?: string;
+  createdAt: string;
+  updatedAt: string;
+  history: Array<{ at: string; actor: string; actorRole: AppRole; action: string; comment?: string }>;
 }
 
 function getToken(): string | null {
@@ -121,10 +147,10 @@ export const apiClient = {
   },
 
   /** POST /auth/login — returns user and stores token. */
-  async signIn(email: string, password: string): Promise<ApiUser> {
+  async signIn(username: string, password: string): Promise<ApiUser> {
     const { token, user } = await apiFetch<{ token: string; user: ApiUser }>("/auth/login", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
     setToken(token);
     return user;
@@ -192,9 +218,33 @@ export const apiClient = {
     return apiFetch<ApiModule>(`/modules/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
   },
 
+  /** GET /reports — list reports visible to the signed-in account. */
+  async listReports(): Promise<ApiReport[]> {
+    return apiFetch<ApiReport[]>("/reports");
+  },
+
+  /** POST /reports — submit a report; identity and routing are server-owned. */
+  async submitReport(data: {
+    title: string;
+    category: string;
+    details: string;
+    attachments?: Array<{ name: string; type: string; size: number; url: string; objectPath?: string }>;
+  }): Promise<ApiReport> {
+    return apiFetch<ApiReport>("/reports", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  /** PATCH /reports/:id — submit a review decision. */
+  async reviewReport(id: string, action: "approve" | "reject" | "return", comment: string): Promise<ApiReport> {
+    return apiFetch<ApiReport>(`/reports/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ action, comment }),
+    });
+  },
+
   /** POST /users — create/invite a new user. */
   async createUser(data: {
     email: string;
+    username?: string;
     name: string;
     role: AppRole;
     password?: string;

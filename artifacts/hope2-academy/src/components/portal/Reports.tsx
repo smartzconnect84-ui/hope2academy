@@ -9,7 +9,7 @@
  *   student
  *       → Teacher + Admin Assistant (both can review)
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Plus, Send, Eye, CheckCircle2, RotateCcw, X, FileText, Inbox, Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -69,18 +69,43 @@ export function ReportsModule() {
   const [open, setOpen] = useState<Report | null>(null);
   const [comment, setComment] = useState("");
   const [files, setFiles] = useState<ReportAttachment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const loadGeneration = useRef(0);
   const [form, setForm] = useState({
     title: "",
     category: "",
     details: "",
   });
 
-  const reload = useCallback(() => {
-    if (!principal) return;
-    setRows(reportsStore.visible(principal.id, principal.role as any));
+  const reload = useCallback(async () => {
+    const generation = ++loadGeneration.current;
+    if (!principal) {
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError("");
+    try {
+      const visible = await reportsStore.visible(principal.id, principal.role as any);
+      if (generation === loadGeneration.current) setRows(visible);
+    } catch (error: any) {
+      if (generation === loadGeneration.current) {
+        setRows([]);
+        setLoadError(error?.message ?? "Reports could not be loaded.");
+      }
+    } finally {
+      if (generation === loadGeneration.current) setLoading(false);
+    }
   }, [principal?.id, principal?.role]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    void reload();
+    return () => { loadGeneration.current += 1; };
+  }, [reload]);
 
   if (!principal) return null;
 
@@ -99,48 +124,73 @@ export function ReportsModule() {
   const recipientRoles = recipientRolesForSubmitter(principal.role as any);
   const recipientDisplay = recipientLabel(recipientRoles);
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.title.trim()) { toast.error("Title is required"); return; }
     if (!form.category) { toast.error("Please select a category"); return; }
     if (!form.details.trim()) { toast.error("Details are required"); return; }
-    reportsStore.submit({
-      title: form.title,
-      category: form.category,
-      details: form.details,
-      submittedBy: principal.name,
-      submittedById: principal.id,
-      submitterRole: principal.role,
-      attachments: files,
-    });
-    toast.success(`Report submitted to ${recipientDisplay}`);
-    setForm({ title: "", category: "", details: "" });
-    setFiles([]);
-    setCreating(false);
-    reload();
+    setSaving(true);
+    try {
+      await reportsStore.submit({
+        title: form.title,
+        category: form.category,
+        details: form.details,
+        submittedBy: principal.name,
+        submittedById: principal.id,
+        submitterRole: principal.role,
+        attachments: files,
+      });
+      toast.success(`Report submitted to ${recipientDisplay}`);
+      setForm({ title: "", category: "", details: "" });
+      setFiles([]);
+      setCreating(false);
+      await reload();
+    } catch (error: any) {
+      toast.error(error?.message ?? "Report could not be submitted.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onPickFiles = async (list: FileList | null) => {
     if (!list?.length) return;
-    const picked: ReportAttachment[] = [];
-    for (const f of Array.from(list)) {
-      if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4 MB`); continue; }
-       try {
-         const uploaded = await apiClient.uploadFile(f);
-         picked.push({ name: uploaded.name, type: uploaded.type, size: uploaded.size, url: uploaded.url });
-       } catch (error: any) {
-         toast.error(error?.message ?? `Could not upload ${f.name}`);
-       }
+    setUploading(true);
+    try {
+      const picked: ReportAttachment[] = [];
+      for (const f of Array.from(list)) {
+        if (f.size > 4 * 1024 * 1024) { toast.error(`${f.name} is larger than 4 MB`); continue; }
+        try {
+          const uploaded = await apiClient.uploadFile(f);
+          picked.push({
+            name: uploaded.name,
+            type: uploaded.type,
+            size: uploaded.size,
+            url: uploaded.url,
+            objectPath: uploaded.objectPath,
+          });
+        } catch (error: any) {
+          toast.error(error?.message ?? `Could not upload ${f.name}`);
+        }
+      }
+      setFiles((prev) => [...prev, ...picked]);
+    } finally {
+      setUploading(false);
     }
-    setFiles((prev) => [...prev, ...picked]);
   };
 
-  const act = (action: "approve" | "reject" | "return") => {
+  const act = async (action: "approve" | "reject" | "return") => {
     if (!open) return;
-    reportsStore.review(open.id, action, { name: principal.name, role: principal.role, id: principal.id }, comment);
-    toast.success("Decision recorded");
-    setComment("");
-    setOpen(null);
-    reload();
+    setSaving(true);
+    try {
+      await reportsStore.review(open.id, action, { name: principal.name, role: principal.role, id: principal.id }, comment);
+      toast.success("Decision recorded");
+      setComment("");
+      setOpen(null);
+      await reload();
+    } catch (error: any) {
+      toast.error(error?.message ?? "The decision could not be recorded.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const canDecide = (r: Report) => {
@@ -169,10 +219,21 @@ export function ReportsModule() {
         {isReviewer && (
           <StatCard icon={Inbox} label="Awaiting Review" value={String(stats.incomingCount)} accent="primary" />
         )}
-        <StatCard icon={Send} label="Reports Submitted" value={String(stats.submitted)} />
-        <StatCard icon={FileText} label="Pending" value={String(stats.pending)} />
-        <StatCard icon={CheckCircle2} label="Approved" value={String(stats.approved)} />
+        {canSubmit && (
+          <>
+            <StatCard icon={Send} label="Reports Submitted" value={String(stats.submitted)} />
+            <StatCard icon={FileText} label="Pending" value={String(stats.pending)} />
+            <StatCard icon={CheckCircle2} label="Approved" value={String(stats.approved)} />
+          </>
+        )}
       </div>
+
+      {loadError && (
+        <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {loadError}
+        </p>
+      )}
+      {loading && <p className="mb-4 text-sm text-muted-foreground">Loading reports…</p>}
 
       {/* Incoming reports for reviewers */}
       {isReviewer && incoming.length > 0 && (
@@ -218,7 +279,7 @@ export function ReportsModule() {
         </Button>
       </div>
 
-      {mine.length === 0 ? (
+      {loading ? null : mine.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
           <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
           <p className="font-medium">No reports yet</p>
@@ -339,8 +400,9 @@ export function ReportsModule() {
                 <label className="mt-1.5 flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-border p-3 hover:border-primary/40 transition text-sm text-muted-foreground">
                   <Upload className="h-4 w-4 shrink-0" />
                   <span>Click to attach files (max 4 MB each)</span>
-                  <input type="file" multiple className="hidden" onChange={(e) => onPickFiles(e.target.files)} />
+                   <input type="file" multiple className="hidden" disabled={uploading} onChange={(e) => { void onPickFiles(e.target.files); e.currentTarget.value = ""; }} />
                 </label>
+                {uploading && <p className="mt-2 text-xs text-muted-foreground">Uploading attachments…</p>}
                 {files.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {files.map((f, i) => (
@@ -357,8 +419,8 @@ export function ReportsModule() {
             </div>
             <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
-              <Button onClick={submit} className="gap-2">
-                <Send className="h-4 w-4" /> Submit Report
+              <Button onClick={() => void submit()} disabled={saving || uploading} className="gap-2">
+                <Send className="h-4 w-4" /> {saving ? "Submitting…" : "Submit Report"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -447,13 +509,13 @@ export function ReportsModule() {
                     rows={3}
                   />
                   <div className="flex gap-2 mt-3 flex-wrap">
-                    <Button onClick={() => act("approve")} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+                     <Button disabled={saving} onClick={() => void act("approve")} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
                       <CheckCircle2 className="h-4 w-4" /> Approve
                     </Button>
-                    <Button onClick={() => act("return")} variant="outline" className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50">
+                     <Button disabled={saving} onClick={() => void act("return")} variant="outline" className="gap-2 text-orange-600 border-orange-200 hover:bg-orange-50">
                       <RotateCcw className="h-4 w-4" /> Return for Revision
                     </Button>
-                    <Button onClick={() => act("reject")} variant="destructive" className="gap-2">
+                     <Button disabled={saving} onClick={() => void act("reject")} variant="destructive" className="gap-2">
                       <X className="h-4 w-4" /> Reject
                     </Button>
                   </div>

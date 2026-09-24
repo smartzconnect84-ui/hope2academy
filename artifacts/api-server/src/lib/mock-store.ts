@@ -12,6 +12,7 @@ export type AppRole = (typeof APP_ROLES)[number];
 
 export interface User {
   id: string;
+  username: string;
   email: string;
   password: string;
   name: string;
@@ -34,16 +35,16 @@ export interface User {
 const now = new Date().toISOString();
 
 const USERS: User[] = [
-  { id: "usr_superadmin", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole",     role: "superadmin", bio: "Director of Programs and Governance.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_admin",      email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah",   role: "admin",      department: "Operations", bio: "Manages campuses and staffing.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_teacher",    email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman",    role: "teacher",    department: "Mathematics", subjects: ["Mathematics","Civics","Literature"], bio: "Lead teacher, Marshall Road Campus.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_student",    email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe",     role: "student",    grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_parent",     email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe",      role: "parent",     linked_children: ["Mariama Doe","Ezekiel Doe"], bio: "Father of two HOPE2 students.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_alumni",     email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie", role: "alumni",     graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_assistant",  email: "assistant@hope2.demo",  password: "demo1234", name: "Bendu Sirleaf",   role: "admin_assistant",    department: "Administration", bio: "Administrative Assistant.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_registrar",  email: "registrar@hope2.demo",  password: "demo1234", name: "Emmanuel Gbaba",  role: "registrar",          department: "Registry", bio: "Registrar.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_nurse",      email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor",    role: "nurse",          department: "Health & Wellness", bio: "School Nurse.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
-  { id: "usr_admissions", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi",  role: "admissions_officer", department: "Admissions", bio: "Admission Officer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_superadmin", username: "aaliyah@hope2academy", email: "superadmin@hope2.demo", password: "demo1234", name: "Aaliyah Cole",     role: "superadmin", bio: "Director of Programs and Governance.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_admin",      username: "joseph@hope2academy", email: "admin@hope2.demo",      password: "demo1234", name: "Joseph Mensah",   role: "admin",      department: "Operations", bio: "Manages campuses and staffing.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_teacher",    username: "grace@hope2academy", email: "teacher@hope2.demo",    password: "demo1234", name: "Grace Tubman",    role: "teacher",    department: "Mathematics", subjects: ["Mathematics","Civics","Literature"], bio: "Lead teacher, Marshall Road Campus.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_student",    username: "mariama@hope2academy", email: "student@hope2.demo",    password: "demo1234", name: "Mariama Doe",     role: "student",    grade: "9", class_name: "Grade 9 — Blue", bio: "Aspiring engineer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_parent",     username: "samuel@hope2academy", email: "parent@hope2.demo",     password: "demo1234", name: "Samuel Doe",      role: "parent",     linked_children: ["Mariama Doe","Ezekiel Doe"], bio: "Father of two HOPE2 students.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_alumni",     username: "patience@hope2academy", email: "alumni@hope2.demo",     password: "demo1234", name: "Patience Kollie", role: "alumni",     graduation_year: 2019, bio: "Class of 2019. Software engineer in Monrovia.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_assistant",  username: "bendu@hope2academy", email: "assistant@hope2.demo",  password: "demo1234", name: "Bendu Sirleaf",   role: "admin_assistant",    department: "Administration", bio: "Administrative Assistant.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_registrar",  username: "emmanuel@hope2academy", email: "registrar@hope2.demo",  password: "demo1234", name: "Emmanuel Gbaba",  role: "registrar",          department: "Registry", bio: "Registrar.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_nurse",      username: "helen@hope2academy", email: "nurse@hope2.demo",      password: "demo1234", name: "Helen Wortor",    role: "nurse",          department: "Health & Wellness", bio: "School Nurse.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
+  { id: "usr_admissions", username: "korto@hope2academy", email: "admissions@hope2.demo", password: "demo1234", name: "Korto Nyanquoi",  role: "admissions_officer", department: "Admissions", bio: "Admission Officer.", phone: "+231 775 975 544", address: "Marshall Road, Liberia", createdAt: now },
 ];
 
 type DataShape = Record<string, any[]>;
@@ -153,6 +154,12 @@ export const mockStore = {
   findUserByEmail(email: string): User | null {
     return (DB.users as User[]).find(
       (u) => u.email.toLowerCase() === email.toLowerCase(),
+    ) ?? null;
+  },
+
+  findUserByUsername(username: string): User | null {
+    return (DB.users as User[]).find(
+      (u) => u.username.toLowerCase() === username.trim().toLowerCase(),
     ) ?? null;
   },
 

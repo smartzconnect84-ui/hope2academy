@@ -116,12 +116,14 @@ export const DEMO_CREDENTIALS: Array<{ role: AppRole; username: string; email: s
  * Format: firstname@hope2academy — e.g. "Grace Tubman" → "grace@hope2academy"
  * If the base username is already taken, a numeric suffix is added.
  */
-export function generateUsername(name: string, existingUsers?: MockUser[]): string {
+export function generateUsername(name: string, existingUsers: Array<MockUser | string> = []): string {
   const base = name.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "");
   const domain = "hope2academy";
   const candidate = `${base}@${domain}`;
-  if (!existingUsers || !existingUsers.length) return candidate;
-  const taken = new Set(existingUsers.map(u => (u.username ?? "").toLowerCase()));
+  if (!existingUsers.length) return candidate;
+  const taken = new Set(existingUsers.map((u) =>
+    (typeof u === "string" ? u : u.username ?? "").toLowerCase()
+  ));
   if (!taken.has(candidate)) return candidate;
   let n = 2;
   while (taken.has(`${base}${n}@${domain}`)) n++;
@@ -171,11 +173,17 @@ function seedIfEmpty() {
           || demoEmails.has(u.email.toLowerCase())
           || (!u.email.toLowerCase().endsWith("@hope2.demo") && !(u.username ?? "").toLowerCase().endsWith("@hope2academy"))
       );
-      // Back-fill username onto any user that doesn't have one yet.
-      const withUsernames = retained.map(u => {
+      // Back-fill unique usernames onto legacy accounts.
+      const claimed = new Set(
+        retained.map((u) => (u.username ?? "").trim().toLowerCase()).filter(Boolean),
+      );
+      const withUsernames = retained.map((u) => {
         if (u.username) return u;
         const demo = DEMO_CREDENTIALS.find(c => c.email.toLowerCase() === u.email.toLowerCase());
-        const username = demo ? demo.username : generateUsername(u.name, retained);
+        const username = demo
+          ? demo.username
+          : generateUsername(u.name, [...retained.filter((r) => r !== u).map((r) => r.username ?? ""), ...claimed]);
+        claimed.add(username.toLowerCase());
         return { ...u, username };
       });
       // Ensure every demo credential exists with the new username.
@@ -226,10 +234,8 @@ export const mockAuth = {
   async signIn(username: string, password: string): Promise<MockUser> {
     seedIfEmpty();
     const needle = username.trim().toLowerCase();
-    // Match by username first; fall back to email for backward compatibility.
-    const u = readUsers().find(
-      x => (x.username ?? "").toLowerCase() === needle || x.email.toLowerCase() === needle
-    );
+    // Email is reserved for account recovery and is never a portal login.
+    const u = readUsers().find(x => (x.username ?? "").toLowerCase() === needle);
     if (!u || u.password !== password) throw new Error("Invalid username or password");
     if (isBrowser()) localStorage.setItem(KEY_SESSION, u.id);
     return u;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { dbStore, APP_ROLES, type AppRole, type User } from "../lib/db-store.js";
+import { dbStore, APP_ROLES, generateUsername, type AppRole } from "../lib/db-store.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = Router();
@@ -25,7 +25,7 @@ router.get("/users/:id", requireAuth, async (req, res) => {
 
 /** POST /api/users */
 router.post("/users", requireAuth, requireRole("superadmin", "admin"), async (req, res) => {
-  const { email, name, role, password, student_id, grade, class_name } = req.body ?? {};
+  const { email, username: requestedUsername, name, role, password, student_id, grade, class_name } = req.body ?? {};
   if (!email || !name || !role) {
     res.status(400).json({ error: "email, name, and role are required" });
     return;
@@ -37,8 +37,17 @@ router.post("/users", requireAuth, requireRole("superadmin", "admin"), async (re
   const existing = await dbStore.findUserByEmail(email);
   if (existing) { res.status(409).json({ error: "Email already exists" }); return; }
 
+  const users = await dbStore.listUsers();
+  const username = String(requestedUsername ?? "").trim().toLowerCase()
+    || generateUsername(name, users.map((user) => user.username));
+  if (users.some((user) => user.username.toLowerCase() === username)) {
+    res.status(409).json({ error: `Username "${username}" is already taken` });
+    return;
+  }
+
   const user = await dbStore.createUser({
     id: `usr_${Math.random().toString(36).slice(2, 9)}`,
+    username,
     email,
     name,
     role: role as AppRole,

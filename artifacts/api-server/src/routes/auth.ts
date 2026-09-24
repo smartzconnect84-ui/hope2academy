@@ -11,16 +11,17 @@ function sanitize(u: Awaited<ReturnType<typeof dbStore.findUserById>>) {
   return safe;
 }
 
-/** POST /api/auth/login  { email, password } */
+/** POST /api/auth/login  { username, password } */
 router.post("/auth/login", async (req, res) => {
-  const { email, password } = req.body ?? {};
-  if (!email || !password) {
-    res.status(400).json({ error: "email and password are required" });
+  const username = String(req.body?.username ?? "").trim();
+  const password = req.body?.password;
+  if (!username || !password) {
+    res.status(400).json({ error: "username and password are required" });
     return;
   }
-  const user = await dbStore.findUserByEmail(email);
+  const user = await dbStore.findUserByUsername(username);
   if (!user || user.password !== password) {
-    res.status(401).json({ error: "Invalid email or password" });
+    res.status(401).json({ error: "Invalid username or password" });
     return;
   }
   const token = signToken({ sub: user.id, role: user.role });
