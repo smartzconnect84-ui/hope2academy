@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb, timestamp, primaryKey } from "drizzle-orm/pg-core";
 
 /**
  * Generic JSONB store for all non-user collections.
@@ -9,4 +9,6 @@ export const itemsTable = pgTable("items", {
   id: text("id").notNull(),
   data: jsonb("data").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  primaryKey({ name: "items_collection_id_pk", columns: [table.collection, table.id] }),
+]);
