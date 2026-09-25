@@ -186,13 +186,12 @@ export const apiClient = {
     });
   },
 
-  /** POST /auth/password-reset/request — returns the demo reset code. */
-  async requestPasswordReset(email: string): Promise<string> {
-    const { code } = await apiFetch<{ code: string }>("/auth/password-reset/request", {
+  /** POST /auth/password-reset/request — sends a recovery code by email. */
+  async requestPasswordReset(email: string): Promise<void> {
+    await apiFetch<{ ok: true }>("/auth/password-reset/request", {
       method: "POST",
       body: JSON.stringify({ email }),
     });
-    return code;
   },
 
   /** POST /auth/password-reset/confirm — completes a reset. */

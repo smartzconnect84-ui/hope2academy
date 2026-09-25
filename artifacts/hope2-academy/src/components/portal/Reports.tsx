@@ -181,7 +181,8 @@ export function ReportsModule() {
     if (!open) return;
     setSaving(true);
     try {
-      await reportsStore.review(open.id, action, { name: principal.name, role: principal.role, id: principal.id }, comment);
+      const updated = await reportsStore.review(open.id, action, { name: principal.name, role: principal.role, id: principal.id }, comment);
+      if (!updated) throw new Error("This report is no longer available for review.");
       toast.success("Decision recorded");
       setComment("");
       setOpen(null);

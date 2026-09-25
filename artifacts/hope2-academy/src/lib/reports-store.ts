@@ -188,37 +188,29 @@ export const reportsStore = {
     return withLocalFallback(
       () => apiClient.submitReport(apiInput),
       () => {
-    const row: Report = {
-      id: `rpt_${Math.random().toString(36).slice(2, 9)}`,
-      ...input,
-      recipientRoles,
-      status: "Submitted",
-      createdAt: now(),
-      updatedAt: now(),
-      history: [{
-        at: now(),
-        actor: input.submittedBy,
-        actorRole: input.submitterRole,
-        action: "Submitted",
-        comment: input.details,
-      }],
-    };
-    mockDb.create(COL, row);
-    audit(input.submittedBy, `Submitted report "${row.title}"`);
-
-    // Notify all designated reviewers
-    const recipientLabel =
-      recipientRoles === "superadmin"
-        ? "Superadmin"
-        : recipientRoles.includes(",")
-        ? "Teacher and Administrative Assistant"
-        : "Admin";
-    notify(
-      recipientRoles,
-      "New report submitted",
-      `${input.submittedBy} submitted "${row.title}" for review.`
-    );
-    return row;
+        const row: Report = {
+          id: `rpt_${Math.random().toString(36).slice(2, 9)}`,
+          ...input,
+          recipientRoles,
+          status: "Submitted",
+          createdAt: now(),
+          updatedAt: now(),
+          history: [{
+            at: now(),
+            actor: input.submittedBy,
+            actorRole: input.submitterRole,
+            action: "Submitted",
+            comment: input.details,
+          }],
+        };
+        mockDb.create(COL, row);
+        audit(input.submittedBy, `Submitted report "${row.title}"`);
+        notify(
+          recipientRoles,
+          "New report submitted",
+          `${input.submittedBy} submitted "${row.title}" for review.`,
+        );
+        return row;
       },
     );
   },

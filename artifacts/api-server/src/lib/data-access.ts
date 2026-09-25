@@ -17,6 +17,65 @@ const MEDICAL_COLLECTIONS = [
   "clinic", "immunizations", "medications", "healthalerts", "medicalscreenings",
 ];
 const CONFIDENTIAL_COLLECTIONS = ["payroll"];
+const READ_ROLE_OVERRIDES: Record<string, AppRole[]> = {
+  audit: ["superadmin"],
+  payroll: ["superadmin", "registrar"],
+  expenses: ["superadmin", "admin", "registrar"],
+  settings: ["superadmin", "admin"],
+  pages: ["superadmin", "admin"],
+  media: ["superadmin", "admin"],
+  staff: ["superadmin", "admin", "admin_assistant", "registrar", "teacher"],
+  clinic: ["superadmin", "admin", "nurse", "parent", "student"],
+  immunizations: ["superadmin", "admin", "nurse", "parent", "student"],
+  medications: ["superadmin", "admin", "nurse", "parent"],
+  healthalerts: ["superadmin", "admin", "nurse", "parent"],
+  medicalscreenings: ["superadmin", "admin", "nurse", "parent", "student"],
+  behavior: ["superadmin", "admin", "teacher"],
+  lessonplans: ["superadmin", "admin", "teacher"],
+  transport: ["superadmin", "admin", "teacher"],
+  inventory: ["superadmin", "admin", "teacher"],
+  admissions: ["superadmin", "admin", "admin_assistant", "registrar", "admissions_officer", "teacher"],
+  scholarships: ["superadmin", "admin", "teacher"],
+  fees: ["superadmin", "admin", "registrar", "teacher", "student", "parent"],
+  counselling: ["superadmin", "admin", "teacher", "nurse"],
+  bookstock: ["superadmin", "admin", "teacher", "registrar"],
+  ptmeetings: ["superadmin", "admin", "teacher", "parent"],
+  leaverequests: ["superadmin", "admin", "teacher", "registrar"],
+};
+const WRITE_ROLE_OVERRIDES: Record<string, AppRole[]> = {
+  audit: [],
+  payroll: ["superadmin", "registrar"],
+  expenses: ["superadmin", "admin", "registrar"],
+  settings: ["superadmin", "admin"],
+  pages: ["superadmin", "admin"],
+  media: ["superadmin", "admin"],
+  sitecontent: ["superadmin", "admin"],
+  departments: ["superadmin", "admin"],
+  team: ["superadmin", "admin"],
+  posts: ["superadmin", "admin"],
+  staff: ["superadmin", "admin", "admin_assistant", "registrar"],
+  inventory: ["superadmin", "admin"],
+  transport: ["superadmin", "admin"],
+  scholarships: ["superadmin", "admin"],
+  fees: ["superadmin", "admin", "registrar"],
+  donations: ["superadmin", "admin", "registrar"],
+  classes: ["superadmin", "admin"],
+  timetable: ["superadmin", "admin"],
+  calendar: ["superadmin", "admin"],
+  children: ["superadmin", "admin"],
+  clinic: ["superadmin", "admin", "nurse"],
+  immunizations: ["superadmin", "admin", "nurse"],
+  medications: ["superadmin", "admin", "nurse"],
+  healthalerts: ["superadmin", "admin", "nurse"],
+  medicalscreenings: ["superadmin", "admin", "nurse"],
+  behavior: ["superadmin", "admin", "teacher"],
+  lessonplans: ["superadmin", "admin", "teacher"],
+  admissions: ["superadmin", "admin", "admin_assistant", "registrar", "admissions_officer"],
+  counselling: ["superadmin", "admin", "teacher", "nurse"],
+  bookstock: ["superadmin", "admin", "teacher", "registrar"],
+  ptmeetings: ["superadmin", "admin", "teacher", "parent"],
+  leaverequests: ["superadmin", "admin", "teacher", "registrar"],
+};
 const ANNOUNCEMENT_WRITERS: AppRole[] = [
   "admin", "superadmin", "admin_assistant", "admissions_officer", "registrar",
 ];
@@ -53,12 +112,16 @@ const matchesAny = (value: unknown, names: string[]) => names.some((name) => eq(
 const isStaff = (role: AppRole) => STAFF_ROLES.includes(role);
 
 export function canReadCollection(collection: string, role: AppRole): boolean {
+  const allowedRoles = READ_ROLE_OVERRIDES[collection];
+  if (allowedRoles && !allowedRoles.includes(role)) return false;
   return !CONFIDENTIAL_COLLECTIONS.includes(collection)
     || role === "superadmin"
     || role === "registrar";
 }
 
 export function canWriteCollection(collection: string, role: AppRole): boolean {
+  const allowedRoles = WRITE_ROLE_OVERRIDES[collection];
+  if (allowedRoles) return allowedRoles.includes(role);
   if (CONFIDENTIAL_COLLECTIONS.includes(collection)) {
     return role === "superadmin" || role === "registrar";
   }
@@ -129,11 +192,12 @@ export function scopeDataRows<T extends Record<string, any>>(
 }
 
 export function canMutateExisting(
+  collection: string,
   row: Record<string, any>,
   principal: DataPrincipal,
 ): boolean {
   if (isStaff(principal.role)) return true;
-  if (principal.role === "nurse") return true;
+  if (principal.role === "nurse" && MEDICAL_COLLECTIONS.includes(collection)) return true;
   const actorFields = [...OWNER_FIELDS, "from", "createdById", "created_by_id", "authorId"];
   return actorFields.some((field) =>
     field in row && (eq(row[field], principal.name) || eq(row[field], principal.id))
@@ -150,6 +214,9 @@ export function stampServerOwnership<T extends Record<string, any>>(
     createdBy: principal.name,
     createdById: principal.id,
   };
+  for (const field of ["created_by", "author", "submittedBy", "owner", "reporter", "driver"]) {
+    if (field in stamped) stamped[field] = principal.name;
+  }
   if (collection === "messages") {
     stamped.from = principal.name;
     stamped.fromId = principal.id;

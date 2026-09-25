@@ -117,7 +117,7 @@ router.post("/:collection", requireAuth, async (req, res) => {
   if (!guardCollection(col, res)) return;
   const principal = await loadPrincipal(req, res);
   if (!principal || !ensureWriteAccess(col, principal, res)) return;
-  if (!req.body || typeof req.body !== "object") {
+  if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
     res.status(400).json({ error: "JSON body required" });
     return;
   }
@@ -134,7 +134,7 @@ router.patch("/:collection/:id", requireAuth, async (req, res) => {
   if (!principal || !ensureWriteAccess(col, principal, res)) return;
   const existing = await dbStore.get<Record<string, any>>(col, id);
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
-  if (!canMutateExisting(existing, principal)) {
+  if (!canMutateExisting(col, existing, principal)) {
     res.status(403).json({ error: "Forbidden — you cannot update this record" });
     return;
   }
@@ -154,7 +154,7 @@ router.delete("/:collection/:id", requireAuth, async (req, res) => {
   if (!principal || !ensureWriteAccess(col, principal, res)) return;
   const existing = await dbStore.get<Record<string, any>>(col, id);
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
-  if (!canMutateExisting(existing, principal)) {
+  if (!canMutateExisting(col, existing, principal)) {
     res.status(403).json({ error: "Forbidden — you cannot delete this record" });
     return;
   }

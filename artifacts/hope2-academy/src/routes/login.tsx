@@ -32,11 +32,9 @@ function ForgotPasswordDialog({
   const request = async () => {
     setBusy(true);
     try {
-      let token: string;
-      try { token = await apiClient.requestPasswordReset(email); }
-      catch (err) { if (!isNetworkError(err)) throw err; token = await mockAuth.requestPasswordReset(email); }
-      setCode(token); setStep("reset");
-      toast.success("Reset code generated", { description: `Demo mode — your code is ${token}` });
+      await apiClient.requestPasswordReset(email);
+      setStep("reset");
+      toast.success("If the address matches an account, a reset code has been sent.");
     } catch (e: any) { toast.error(e?.message ?? "Could not start password reset"); }
     finally { setBusy(false); }
   };
@@ -44,10 +42,7 @@ function ForgotPasswordDialog({
   const reset = async () => {
     setBusy(true);
     try {
-      try {
-        await apiClient.resetPassword(email, code, newPassword);
-        try { const local = await mockAuth.requestPasswordReset(email); await mockAuth.resetPassword(email, local, newPassword); } catch { /* not in local store */ }
-      } catch (err) { if (!isNetworkError(err)) throw err; await mockAuth.resetPassword(email, code, newPassword); }
+      await apiClient.resetPassword(email, code, newPassword);
       toast.success("Password updated — you can sign in with your username now"); onOpenChange(false);
     } catch (e: any) { toast.error(e?.message ?? "Could not reset password"); }
     finally { setBusy(false); }
@@ -60,7 +55,7 @@ function ForgotPasswordDialog({
           <DialogTitle className="flex items-center gap-2"><KeyRound className="h-4 w-4 text-primary" /> Reset your password</DialogTitle>
           <DialogDescription>
             {step === "request"
-              ? "Enter the email address linked to your account and we'll issue a reset code."
+              ? "Enter the email address linked to your account. A reset code will be sent to that address when email recovery is available."
               : "Enter the reset code and choose a new password."}
           </DialogDescription>
         </DialogHeader>
